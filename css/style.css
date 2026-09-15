@@ -187,8 +187,13 @@ header {
     padding: 0.25rem;
 }
 
-/* ================= HOME — HERO OSCURO ================= */
-.hero-dark {
+/* ================= HOME — SECCIÓN "INICIO" (hero + cómo funciona) =================
+   Todo este bloque pinta la franja oscura de arriba de index.html: a la
+   izquierda el mensaje principal con las tarjetas de ejemplo, a la derecha
+   el resumen de "cómo funciona". Si hay que cambiar colores del fondo,
+   tocar acá (.hero-combined); si hay que cambiar las proporciones de las
+   columnas, tocar .hero-combined-inner. */
+.hero-combined {
     position: relative;
     background:
         radial-gradient(ellipse 900px 500px at 85% 0%, rgba(47, 127, 250, 0.20), transparent 60%),
@@ -198,21 +203,40 @@ header {
     overflow: hidden;
 }
 
-.hero-inner {
-    max-width: 1300px;
+/* Grid de 4 "columnas": texto | tarjetas | línea divisoria | cómo funciona */
+.hero-combined-inner {
+    max-width: 1360px;
     margin: 0 auto;
-    padding: 3.5rem 2rem 3rem;
+    padding: 3.5rem 2rem 4rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 1fr 0.95fr 1px 0.9fr;
+    gap: 2.75rem;
     align-items: center;
     position: relative;
     z-index: 1;
 }
 
+/* Línea vertical que separa "hero" de "cómo funciona" (como en la referencia) */
+.hero-divider {
+    align-self: stretch;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Pastilla chica con guion, tipo "— ASÍ DE SIMPLE" (reutilizada en las dos mitades) */
+.eyebrow-badge-dark {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--fog);
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+    margin-bottom: 1.1rem;
+}
+.eyebrow-badge-dark .eyebrow-dash { width: 12px; height: 2px; background: var(--fog); border-radius: 2px; }
+
 .hero-title {
-    font-size: 3.4rem;
-    line-height: 1.05;
+    font-size: 2.7rem;
+    line-height: 1.08;
     font-weight: 800;
     letter-spacing: -0.01em;
     text-transform: uppercase;
@@ -222,18 +246,18 @@ header {
 
 .accent-underline {
     display: block;
-    width: 64px;
+    width: 56px;
     height: 4px;
     background: var(--green);
     border-radius: 2px;
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.3rem;
 }
 
 .hero-sub {
     color: var(--fog);
-    font-size: 1.05rem;
-    max-width: 420px;
-    margin-bottom: 2rem;
+    font-size: 0.98rem;
+    max-width: 380px;
+    margin-bottom: 1.75rem;
     line-height: 1.6;
 }
 
@@ -245,11 +269,12 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 380px;
+    min-height: 340px;
 }
 
+/* Ancho de cada tarjeta: si se agranda, revisar los translate() de --a/--b más abajo */
 .swap-card-v2 {
-    width: 200px;
+    width: 180px;
     background: var(--paper);
     color: var(--ink);
     border-radius: var(--radius-md);
@@ -257,7 +282,7 @@ header {
     overflow: hidden;
     animation: swap-in 0.6s ease-out both;
 }
-.swap-card-v2 img { height: 130px; width: 100%; object-fit: cover; }
+.swap-card-v2 img { height: 115px; width: 100%; object-fit: cover; }
 .swap-card-v2 .swap-tag {
     position: absolute;
     top: 0.6rem; left: 0.6rem;
@@ -278,8 +303,8 @@ header {
 .swap-card-v2 .swap-loc { margin-top: 0.55rem; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
 .swap-card-v2 .swap-loc i { color: var(--blue); }
 
-.swap-card-v2--a { transform: translate(-42px, -8px) rotate(-4deg); z-index: 1; animation-delay: 0.05s; }
-.swap-card-v2--b { transform: translate(42px, 26px) rotate(4deg); z-index: 0; animation-delay: 0.2s; }
+.swap-card-v2--a { transform: translate(-36px, -8px) rotate(-4deg); z-index: 1; animation-delay: 0.05s; }
+.swap-card-v2--b { transform: translate(36px, 24px) rotate(4deg); z-index: 0; animation-delay: 0.2s; }
 
 .swap-match-circle {
     position: absolute;
@@ -383,38 +408,43 @@ header {
 .search-field-v2 input:focus, .search-field-v2 select:focus { border-color: var(--blue); background: var(--paper); }
 .search-fields-row .btn { height: 46px; }
 
-/* ================= ¿CÓMO FUNCIONA? — dark ================= */
-.how-dark { background: var(--ink); color: #fff; padding: 4rem 2rem; }
-.how-dark-inner { max-width: 1200px; margin: 0 auto; }
-.how-dark-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
-.how-dark-head h2 { font-size: 1.9rem; }
-.how-dark-head h2 span { color: var(--green); }
-.how-dark-head p { color: var(--fog); font-size: 0.95rem; }
+/* ================= "¿Cómo funciona?" — mitad derecha del hero ================= */
+.hero-how-title { font-size: 1.9rem; }
+.hero-how-title span { color: var(--green); }
+.hero-how-sub { color: var(--fog); font-size: 0.95rem; margin-bottom: 2.2rem; }
 
-.steps-timeline-v2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; position: relative; }
-.steps-timeline-v2::before {
-    content: '';
-    position: absolute;
-    top: 18px; left: 12%; right: 12%; height: 0;
-    border-top: 1px dashed rgba(255,255,255,0.18);
-}
-.step-v2 { text-align: left; position: relative; }
-.step-num-badge {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: var(--blue); color: #fff; font-weight: 800; font-size: 0.9rem;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 1.1rem; position: relative; z-index: 1;
-}
+/* Fila de los 3 pasos, con guiones "—" como separadores entre círculos */
+.steps-timeline-v2 { display: flex; align-items: flex-start; gap: 0.5rem; }
+.step-v2 { flex: 1; text-align: center; position: relative; min-width: 0; }
+/* Guion separador entre pasos: se alinea con el centro del círculo de ícono */
+.step-sep { color: rgba(255,255,255,0.3); font-size: 1.1rem; margin-top: 28px; flex-shrink: 0; }
+
+/* Círculo con el ícono del paso. El número queda "montado" abajo, superpuesto al borde. */
 .step-icon-circle {
+    position: relative;
     width: 56px; height: 56px; border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.18);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; margin-bottom: 1rem;
+    font-size: 1.3rem; margin: 0 auto 1.1rem;
 }
-.step-v2:nth-child(odd) .step-icon-circle { color: var(--green); border-color: rgba(166,255,62,0.35); }
-.step-v2:nth-child(even) .step-icon-circle { color: var(--blue); border-color: rgba(47,127,250,0.4); }
-.step-v2 h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
-.step-v2 p { color: var(--fog); font-size: 0.87rem; line-height: 1.55; }
+/* Variantes de color del ícono/círculo. Cambiar acá si se quiere otra combinación. */
+.step-icon-circle.step-icon--green { color: var(--green); border-color: rgba(166,255,62,0.4); box-shadow: 0 0 30px -6px rgba(166,255,62,0.55); }
+.step-icon-circle.step-icon--blue { color: var(--blue); border-color: rgba(47,127,250,0.45); box-shadow: 0 0 30px -6px rgba(47,127,250,0.55); }
+.step-icon-circle.step-icon--mixed { border-color: rgba(47,127,250,0.45); box-shadow: 0 0 30px -6px rgba(47,127,250,0.5); }
+.step-icon-circle.step-icon--mixed i { background: linear-gradient(135deg, var(--blue), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Numerito azul superpuesto abajo del círculo (1, 2, 3) */
+.step-num-badge {
+    position: absolute;
+    bottom: -8px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--blue); color: #fff; font-weight: 800; font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    border: 3px solid var(--ink);
+}
+
+.step-v2 h3 { font-size: 1rem; font-weight: 800; letter-spacing: 0.01em; margin-bottom: 0.35rem; }
+.step-v2 p { color: var(--fog); font-size: 0.85rem; line-height: 1.5; }
 
 /* ================= Collage de historias ================= */
 .story-section { background: var(--mist); padding: 4.5rem 2rem; }
@@ -681,13 +711,13 @@ header {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
-    .hero-inner { grid-template-columns: 1fr; }
+    /* Sección "inicio": todo pasa a una sola columna y se oculta la línea divisoria */
+    .hero-combined-inner { grid-template-columns: 1fr; }
+    .hero-divider { display: none; }
     .swap-visual-v2 { min-height: 260px; order: -1; }
     .feature-strip { grid-template-columns: repeat(2, 1fr); }
     .search-fields-row { grid-template-columns: 1fr 1fr; }
     .search-fields-row .btn { grid-column: 1 / -1; }
-    .steps-timeline-v2 { grid-template-columns: repeat(2, 1fr); }
-    .steps-timeline-v2::before { display: none; }
     .story-inner { grid-template-columns: 1fr; }
     .catalog-layout { grid-template-columns: 1fr; }
     .filters-panel { position: static; }
@@ -726,7 +756,9 @@ header {
     .property-hero-img { height: 240px; }
     .steps-timeline { grid-template-columns: 1fr; gap: 2rem; }
     .steps-timeline::before { display: none; }
-    .steps-timeline-v2 { grid-template-columns: 1fr; gap: 2rem; }
+    /* Los 3 pasos de "cómo funciona" se apilan y se ocultan los guiones separadores */
+    .steps-timeline-v2 { flex-direction: column; gap: 1.75rem; }
+    .step-sep { display: none; }
     .story-collage { flex-direction: column; }
     .story-collage img { width: 100%; height: 200px; transform: none !important; }
     .form-card { padding: 1.75rem; }

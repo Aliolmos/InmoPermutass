@@ -31,9 +31,22 @@
         </div>
     </header>
 
-    <section class="hero-dark">
-        <div class="hero-inner">
-            <div>
+    <!--
+        SECCIÓN "INICIO" (hero + cómo funciona en un solo bloque oscuro)
+        ---------------------------------------------------------------
+        Recreada a partir de la imagen de referencia: una única franja
+        oscura dividida en dos mitades por una línea vertical (.hero-divider).
+        Izquierda = mensaje principal + tarjetas de ejemplo de permuta.
+        Derecha   = resumen de "cómo funciona" con 3 pasos (sin el 4to paso
+        "Cerrá" y sin el bloque de estadísticas +500/+300, tal como se pidió).
+        Todo lo que va DESPUÉS de esta sección (historias, destacados) no se tocó.
+    -->
+    <section class="hero-combined">
+        <div class="hero-combined-inner">
+
+            <!-- Texto principal: título, bajada y botones de acción -->
+            <div class="hero-left">
+                <span class="eyebrow-badge-dark"><span class="eyebrow-dash"></span> Permutas reales, personas reales</span>
                 <h1 class="hero-title">TU PROPIEDAD,<br><span class="accent-green">OTRA</span><br>OPORTUNIDAD</h1>
                 <span class="accent-underline"></span>
                 <p class="hero-sub">Conectamos personas que quieren permutar propiedades. Más opciones. Más posibilidades. Un mejor futuro.</p>
@@ -43,6 +56,7 @@
                 </div>
             </div>
 
+            <!-- Tarjetas ilustrativas de una permuta (contenido de ejemplo, no viene de data.js) -->
             <div class="swap-visual-v2" aria-hidden="true">
                 <div class="swap-card-v2 swap-card-v2--a">
                     <div class="swap-img-wrap">
@@ -78,41 +92,49 @@
                 </div>
                 <span class="match-pill">¡Match!</span>
             </div>
-        </div>
-    </section>
 
-    <section class="how-dark" id="como-funciona">
-        <div class="how-dark-inner">
-            <div class="how-dark-head">
-                <h2>¿Cómo <span>funciona</span>?</h2>
-                <p>Simple, seguro y efectivo.</p>
+            <!-- Línea vertical que separa las dos mitades (se oculta en mobile) -->
+            <div class="hero-divider" aria-hidden="true"></div>
+
+            <!-- "Cómo funciona": 3 pasos con ícono + numerito -->
+            <div class="hero-how" id="como-funciona">
+                <span class="eyebrow-badge-dark"><span class="eyebrow-dash"></span> Así de simple</span>
+                <h2 class="hero-how-title">¿Cómo <span>funciona</span>?</h2>
+                <p class="hero-how-sub">Intercambiá tu propiedad en 3 simples pasos.</p>
+
+                <div class="steps-timeline-v2">
+                    <!-- Paso 1 -->
+                    <div class="step-v2">
+                        <div class="step-icon-circle step-icon--green">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span class="step-num-badge">1</span>
+                        </div>
+                        <h3>BUSCÁ</h3>
+                        <p>la propiedad que te interesa</p>
+                    </div>
+                    <span class="step-sep">—</span>
+                    <!-- Paso 2 -->
+                    <div class="step-v2">
+                        <div class="step-icon-circle step-icon--mixed">
+                            <i class="fa-solid fa-right-left"></i>
+                            <span class="step-num-badge">2</span>
+                        </div>
+                        <h3>PUBLICÁ</h3>
+                        <p>la tuya para permutar</p>
+                    </div>
+                    <span class="step-sep">—</span>
+                    <!-- Paso 3 -->
+                    <div class="step-v2">
+                        <div class="step-icon-circle step-icon--blue">
+                            <i class="fa-solid fa-bullseye"></i>
+                            <span class="step-num-badge">3</span>
+                        </div>
+                        <h3>ENCONTRÁ</h3>
+                        <p>el match perfecto</p>
+                    </div>
+                </div>
             </div>
-            <div class="steps-timeline-v2">
-                <div class="step-v2">
-                    <div class="step-num-badge">1</div>
-                    <div class="step-icon-circle"><i class="fa-solid fa-magnifying-glass"></i></div>
-                    <h3>Buscá</h3>
-                    <p>Explorá las propiedades publicadas.</p>
-                </div>
-                <div class="step-v2">
-                    <div class="step-num-badge">2</div>
-                    <div class="step-icon-circle"><i class="fa-solid fa-circle-plus"></i></div>
-                    <h3>Publicá</h3>
-                    <p>Subí tu propiedad para permutar.</p>
-                </div>
-                <div class="step-v2">
-                    <div class="step-num-badge">3</div>
-                    <div class="step-icon-circle"><i class="fa-solid fa-right-left"></i></div>
-                    <h3>Encontrá</h3>
-                    <p>Recibí propuestas y hacé match.</p>
-                </div>
-                <div class="step-v2">
-                    <div class="step-num-badge">4</div>
-                    <div class="step-icon-circle"><i class="fa-solid fa-handshake"></i></div>
-                    <h3>Cerrá</h3>
-                    <p>Coordiná el intercambio directo.</p>
-                </div>
-            </div>
+
         </div>
     </section>
 
