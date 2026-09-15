@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favoritos — InmoPermutas</title>
+    <meta name="description" content="Tus propiedades guardadas como favoritas en InmoPermutas.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-page="favoritos">
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn has-favs" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="section-header">
+            <div class="section-title">
+                <h1 style="font-size: 1.75rem; font-weight: 600;">Tus favoritos</h1>
+                <p id="fav-subtitle">Las propiedades que guardaste para comparar más tarde.</p>
+            </div>
+        </div>
+
+        <div id="favorites-grid" class="grid-cards"></div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        function renderFavorites() {
+            const favIds = getFavorites();
+            const props = getProperties();
+            const favProps = props.filter(p => favIds.includes(p.id));
+            const grid = document.getElementById('favorites-grid');
+            const subtitle = document.getElementById('fav-subtitle');
+
+            subtitle.innerText = favProps.length
+                ? `Tenés ${favProps.length} propiedad${favProps.length === 1 ? '' : 'es'} guardada${favProps.length === 1 ? '' : 's'}.`
+                : 'Todavía no guardaste ninguna propiedad.';
+
+            if (favProps.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-heart"></i>
+                        <h3>Tu lista de favoritos está vacía</h3>
+                        <p>Tocá el corazón de cualquier propiedad del catálogo para guardarla acá.</p>
+                        <a href="catalogo.html" class="btn btn-primary" style="margin-top: 1.25rem;">Explorar catálogo</a>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = favProps.map(p => renderPropertyCard(p)).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', renderFavorites);
+    </script>
+</body>
+</html>

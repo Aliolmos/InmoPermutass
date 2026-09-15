@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicar Propiedad — InmoPermutas</title>
+    <meta name="description" content="Publicá tu propiedad para permuta en InmoPermutas: contanos qué ofrecés y qué te gustaría recibir a cambio.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="max-width: 900px;">
+        <div class="page-hero" style="margin-bottom: 2.5rem;">
+            <span class="eyebrow-badge"><i class="fa-solid fa-house-circle-check"></i> Publicación de prueba</span>
+            <h1>Publicá tu propiedad</h1>
+            <p>Se guarda en este navegador y ya queda visible en el catálogo, con su propio % de match calculado.</p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-success" id="form-success"><i class="fa-solid fa-circle-check"></i> ¡Publicada! Te llevamos a tu nueva ficha…</div>
+
+            <form id="publish-form">
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label>Título de la propiedad</label>
+                        <input type="text" id="p-title" placeholder="Ej: Casa con parque en Villa Belgrano" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Tipo de inmueble</label>
+                        <select id="p-type" required>
+                            <option value="Casa">Casa</option>
+                            <option value="Departamento">Departamento</option>
+                            <option value="Terreno">Terreno</option>
+                            <option value="Negocio">Negocio</option>
+                            <option value="Galpón">Galpón</option>
+                            <option value="Garaje">Garaje</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Precio (US$)</label>
+                        <input type="number" id="p-price" placeholder="Ej: 220000" min="1" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Barrio / zona</label>
+                        <input type="text" id="p-location" placeholder="Ej: Cerro de las Rosas" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Ciudad</label>
+                        <input type="text" id="p-city" placeholder="Ej: Córdoba" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Dormitorios</label>
+                        <input type="number" id="p-bedrooms" min="0" value="2" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Superficie (m²)</label>
+                        <input type="number" id="p-area" min="1" value="80" required>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>URL de imagen</label>
+                        <input type="url" id="p-image" placeholder="https://...">
+                        <p class="form-hint">Si lo dejás vacío, usamos una imagen de referencia según el tipo de inmueble.</p>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>¿Qué tipo de inmueble aceptás recibir a cambio?</label>
+                        <div class="checkbox-row">
+                            <label class="checkbox-chip"><input type="checkbox" value="Casa" name="wants-type"> Casa</label>
+                            <label class="checkbox-chip"><input type="checkbox" value="Departamento" name="wants-type" checked> Departamento</label>
+                            <label class="checkbox-chip"><input type="checkbox" value="Terreno" name="wants-type"> Terreno</label>
+                            <label class="checkbox-chip"><input type="checkbox" value="Negocio" name="wants-type"> Negocio</label>
+                            <label class="checkbox-chip"><input type="checkbox" value="Galpón" name="wants-type"> Galpón</label>
+                            <label class="checkbox-chip"><input type="checkbox" value="Garaje" name="wants-type"> Garaje</label>
+                        </div>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>¿En qué zonas te interesaría recibir la propiedad?</label>
+                        <input type="text" id="p-wants-locations" placeholder="Ej: Nordelta, Palermo, Recoleta" required>
+                        <p class="form-hint">Separá las zonas con comas.</p>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Tu nombre</label>
+                        <input type="text" id="p-seller-name" placeholder="Nombre y apellido" required>
+                    </div>
+                    <div class="form-field">
+                        <label>WhatsApp de contacto</label>
+                        <input type="text" id="p-seller-phone" placeholder="Ej: 5493511234567" required>
+                        <p class="form-hint">Código de país + área, sin espacios ni el "+".</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-accent btn-block" style="margin-top: 0.5rem;"><i class="fa-solid fa-right-left"></i> Publicar propiedad</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        const placeholderImages = {
+            Casa: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=800&q=80",
+            Departamento: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
+            Terreno: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
+            Negocio: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80",
+            Galpón: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80",
+            Garaje: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80"
+        };
+
+        document.getElementById('publish-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const type = document.getElementById('p-type').value;
+            const wantsTypes = Array.from(document.querySelectorAll('input[name="wants-type"]:checked')).map(i => i.value);
+            const wantsLocations = document.getElementById('p-wants-locations').value.split(',').map(s => s.trim()).filter(Boolean);
+
+            if (wantsTypes.length === 0) {
+                alert('Elegí al menos un tipo de inmueble que aceptarías recibir a cambio.');
+                return;
+            }
+            if (wantsLocations.length === 0) {
+                alert('Indicá al menos una zona donde te interesaría recibir la propiedad.');
+                return;
+            }
+
+            const props = getProperties();
+            const newId = props.length ? Math.max(...props.map(p => p.id)) + 1 : 1;
+
+            const newProperty = {
+                id: newId,
+                title: document.getElementById('p-title').value.trim(),
+                type: type,
+                location: document.getElementById('p-location').value.trim(),
+                city: document.getElementById('p-city').value.trim(),
+                price: Number(document.getElementById('p-price').value),
+                currency: "US$",
+                bedrooms: Number(document.getElementById('p-bedrooms').value),
+                area: Number(document.getElementById('p-area').value),
+                image: document.getElementById('p-image').value.trim() || placeholderImages[type],
+                seller: {
+                    name: document.getElementById('p-seller-name').value.trim(),
+                    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                    phone: document.getElementById('p-seller-phone').value.trim().replace(/\D/g, '')
+                },
+                wants: { types: wantsTypes, locations: wantsLocations }
+            };
+
+            props.push(newProperty);
+            saveProperties(props);
+
+            document.getElementById('form-success').classList.add('show');
+            document.getElementById('publish-form').style.display = 'none';
+
+            setTimeout(() => {
+                window.location.href = `propiedad.html?id=${newId}`;
+            }, 1100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cómo Funciona — InmoPermutas</title>
+    <meta name="description" content="Descubrí cómo funciona InmoPermutas: publicá tu propiedad, encontrá tu match y hacé realidad el intercambio.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="funcionamiento.html" class="active">Cómo funciona</a>
+                <a href="catalogo.html">Propiedades</a>
+                <a href="vendedores.html">Vendedores</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-hero">
+            <h1>Así de simple</h1>
+            <p>Intercambiar bien empieza por conectar mejor.</p>
+        </div>
+
+        <div class="steps-timeline">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Publicá tu propiedad</h3>
+                <p>Contanos qué ofrecés y qué te gustaría recibir a cambio para activar los criterios de búsqueda cruzada.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Encontrá tu match</h3>
+                <p>Nuestro algoritmo cruza valor, ubicación y necesidades específicas para arrojar un porcentaje exacto de compatibilidad.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Hagan realidad el intercambio</h3>
+                <p>Los conectamos directamente por WhatsApp para que negocien la permuta de forma directa y segura.</p>
+            </div>
+        </div>
+
+        <div class="section-header" style="margin-top: 4rem;">
+            <div class="section-title">
+                <h2>¿Cómo se calcula el % de match?</h2>
+                <p>Tres factores, con peso distinto, evaluados en las dos direcciones.</p>
+            </div>
+        </div>
+        <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div class="info-card" style="text-align:center;">
+                <h3 style="font-size:2rem; font-family:'Fraunces',serif; color:var(--teal);">35%</h3>
+                <p style="color:var(--stone); font-size:0.9rem;">Coincide el tipo de inmueble que cada parte busca recibir.</p>
+            </div>
+            <div class="info-card" style="text-align:center;">
+                <h3 style="font-size:2rem; font-family:'Fraunces',serif; color:var(--teal);">30%</h3>
+                <p style="color:var(--stone); font-size:0.9rem;">La zona ofrecida está entre las zonas que la otra parte acepta.</p>
+            </div>
+            <div class="info-card" style="text-align:center;">
+                <h3 style="font-size:2rem; font-family:'Fraunces',serif; color:var(--teal);">35%</h3>
+                <p style="color:var(--stone); font-size:0.9rem;">Qué tan parejo es el valor entre las dos propiedades.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>

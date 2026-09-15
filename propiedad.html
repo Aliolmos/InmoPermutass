@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Propiedad — InmoPermutas</title>
+    <meta name="description" content="Detalle de propiedad disponible para permuta en InmoPermutas, con opciones similares y contacto directo.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="catalogo.html" class="btn btn-outline btn-sm">Volver al catálogo</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="property-container" id="property-detail-view">
+        <!-- Se inyecta dinámicamente con JS según el ID de la URL -->
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = Number(params.get('id')) || 1;
+            const props = getProperties();
+            const property = props.find(p => p.id === id) || props[0];
+
+            // calcularCompatibilidad vive en utils.js (usa el campo "wants" de
+            // cada propiedad para calcular el match en las dos direcciones),
+            // así que no hace falta redefinirla acá.
+            const similarMatches = props.filter(p => p.id !== property.id).map(p => {
+                return { ...p, matchPercent: calcularCompatibilidad(property, p) };
+            }).sort((a, b) => b.matchPercent - a.matchPercent).slice(0, 3);
+
+            const fav = isFavorite(property.id);
+
+            const container = document.getElementById('property-detail-view');
+            container.innerHTML = `
+                <div style="margin-bottom: 1.5rem; display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;">
+                    <div>
+                        <span class="eyebrow-badge"><i class="fa-solid fa-right-left"></i> Propiedad verificada para permuta</span>
+                        <h1 style="font-size: 2.3rem; margin-top: 0.4rem;">${property.title}</h1>
+                        <p style="color: var(--stone); font-size: 1.05rem; margin-top:0.3rem;"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> ${property.location}, ${property.city}</p>
+                    </div>
+                    <button class="icon-btn ${fav ? 'has-favs' : ''}" style="width:48px;height:48px;font-size:1.15rem;" onclick="handleFavoriteClick(event, ${property.id})" aria-label="Guardar en favoritos">
+                        <i class="fa-${fav ? 'solid' : 'regular'} fa-heart" style="color:${fav ? 'var(--coral)' : 'inherit'};"></i>
+                    </button>
+                </div>
+
+                <img src="${property.image}" alt="${property.title}" class="property-hero-img">
+
+                <div class="property-grid">
+                    <div class="info-card">
+                        <div class="price-tag">${property.currency} ${property.price.toLocaleString()}</div>
+                        <h3>Características principales</h3>
+                        <p style="color: var(--stone); margin-bottom: 1.5rem;"><i class="fa-solid fa-bed"></i> ${property.bedrooms} dormitorios &nbsp;&bull;&nbsp; <i class="fa-solid fa-ruler-combined"></i> ${property.area} m² cubiertos</p>
+
+                        <h3>Descripción de la oportunidad</h3>
+                        <p style="color: var(--stone); line-height: 1.7; margin-bottom: 1.5rem;">Inmueble habilitado para intercambio directo. El propietario evalúa ofertas de menor o mayor valor con ajuste de diferencia en efectivo.</p>
+
+                        <div class="permuta-match-box">
+                            <h4><i class="fa-solid fa-arrows-rotate"></i> Criterio de permuta esperado</h4>
+                            <p>${describirWants(property.wants)}</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card seller-box">
+                        <img src="${property.seller.avatar}" alt="${property.seller.name}">
+                        <h3>${property.seller.name}</h3>
+                        <p class="seller-role"><i class="fa-solid fa-user"></i> Propietario &bull; publica directamente, sin inmobiliaria</p>
+                        <a href="https://wa.me/${property.seller.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
+                    </div>
+                </div>
+
+                <div style="margin-top: 4rem;">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h2>Opciones similares con % de match</h2>
+                            <p>Inmuebles calculados por nuestro algoritmo en base a ubicación y características.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid-cards" style="margin-top: 1rem;">
+                        ${similarMatches.map(m => renderPropertyCard(m, m.matchPercent)).join('')}
+                    </div>
+                </div>
+            `;
+
+            updateFavCount();
+        });
+    </script>
+</body>
+</html>

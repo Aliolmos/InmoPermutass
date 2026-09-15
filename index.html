@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InmoPermutas.com — Tu propiedad, otra oportunidad</title>
+    <meta name="description" content="Marketplace argentino de permutas inmobiliarias. Encontrá casas y departamentos disponibles para intercambio directo, sin intermediarios ocultos.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>
+                Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span>
+            </a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html" class="active">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar propiedad</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-dark">
+        <div class="hero-inner">
+            <div>
+                <h1 class="hero-title">TU PROPIEDAD,<br><span class="accent-green">OTRA</span><br>OPORTUNIDAD</h1>
+                <span class="accent-underline"></span>
+                <p class="hero-sub">Conectamos personas que quieren permutar propiedades. Más opciones. Más posibilidades. Un mejor futuro.</p>
+                <div class="hero-cta-row">
+                    <a href="catalogo.html" class="btn btn-accent btn-lg"><i class="fa-solid fa-magnifying-glass"></i> Buscar propiedades</a>
+                    <a href="publicar.html" class="btn btn-ghost-dark btn-lg"><i class="fa-solid fa-circle-plus"></i> Publicar la tuya</a>
+                </div>
+            </div>
+
+            <div class="swap-visual-v2" aria-hidden="true">
+                <div class="swap-card-v2 swap-card-v2--a">
+                    <div class="swap-img-wrap">
+                        <span class="swap-tag tag-green"><i class="fa-solid fa-house"></i> Tu propiedad</span>
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=80" alt="">
+                    </div>
+                    <div class="swap-body">
+                        <div class="swap-title">Casa en Nordelta</div>
+                        <div class="swap-meta">
+                            <span><i class="fa-solid fa-bed"></i> 4 dormitorios</span>
+                            <span><i class="fa-solid fa-ruler-combined"></i> 210 m² cubiertos</span>
+                        </div>
+                        <div class="swap-loc"><i class="fa-solid fa-location-dot"></i> Buenos Aires</div>
+                    </div>
+                </div>
+                <div class="swap-card-v2 swap-card-v2--b">
+                    <div class="swap-img-wrap">
+                        <span class="swap-tag tag-blue"><i class="fa-solid fa-house"></i> La otra propiedad</span>
+                        <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=500&q=80" alt="">
+                    </div>
+                    <div class="swap-body">
+                        <div class="swap-title">Depto. en Palermo</div>
+                        <div class="swap-meta">
+                            <span><i class="fa-solid fa-bed"></i> 2 dormitorios</span>
+                            <span><i class="fa-solid fa-ruler-combined"></i> 75 m² cubiertos</span>
+                        </div>
+                        <div class="swap-loc"><i class="fa-solid fa-location-dot"></i> Buenos Aires</div>
+                    </div>
+                </div>
+                <div class="swap-match-circle">
+                    <span class="rotate-icon"></span>
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+                <span class="match-pill">¡Match!</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-dark" id="como-funciona">
+        <div class="how-dark-inner">
+            <div class="how-dark-head">
+                <h2>¿Cómo <span>funciona</span>?</h2>
+                <p>Simple, seguro y efectivo.</p>
+            </div>
+            <div class="steps-timeline-v2">
+                <div class="step-v2">
+                    <div class="step-num-badge">1</div>
+                    <div class="step-icon-circle"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <h3>Buscá</h3>
+                    <p>Explorá las propiedades publicadas.</p>
+                </div>
+                <div class="step-v2">
+                    <div class="step-num-badge">2</div>
+                    <div class="step-icon-circle"><i class="fa-solid fa-circle-plus"></i></div>
+                    <h3>Publicá</h3>
+                    <p>Subí tu propiedad para permutar.</p>
+                </div>
+                <div class="step-v2">
+                    <div class="step-num-badge">3</div>
+                    <div class="step-icon-circle"><i class="fa-solid fa-right-left"></i></div>
+                    <h3>Encontrá</h3>
+                    <p>Recibí propuestas y hacé match.</p>
+                </div>
+                <div class="step-v2">
+                    <div class="step-num-badge">4</div>
+                    <div class="step-icon-circle"><i class="fa-solid fa-handshake"></i></div>
+                    <h3>Cerrá</h3>
+                    <p>Coordiná el intercambio directo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="story-section">
+        <div class="story-inner">
+            <div>
+                <h2>Más que propiedades,<br>son <span>nuevas historias</span></h2>
+                <p>La permuta es una forma inteligente de avanzar. En InmoPermutas.com te ayudamos a conectar con la propiedad que se adapta a tu vida.</p>
+                <a href="#como-funciona" class="btn btn-accent">Conocé más <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="story-collage">
+                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=500&q=80" alt="Casa con pileta">
+                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=500&q=80" alt="Departamento moderno">
+                <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=500&q=80" alt="Terreno en barrio cerrado">
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="section-header">
+            <div class="section-title">
+                <h2>Propiedades <span>destacadas</span></h2>
+                <p id="active-count-text">Encontrá la próxima oportunidad entre nuestras propiedades activas.</p>
+            </div>
+            <a href="catalogo.html" class="section-link">Ver todas <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div id="featured-grid" class="grid-cards">
+            <!-- Se inyecta dinámicamente mediante JS -->
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>

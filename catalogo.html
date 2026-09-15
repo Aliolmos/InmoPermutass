@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Permutas — InmoPermutas</title>
+    <meta name="description" content="Explorá el catálogo completo de propiedades disponibles para permuta en InmoPermutas, filtrando por tipo, zona y precio.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html" class="active">Propiedades</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="section-header">
+            <div class="section-title">
+                <h1 id="results-count" style="font-size: 1.75rem; font-weight: 600;">Catálogo de Permutas</h1>
+                <p>Explorá inmuebles listos para el intercambio inteligente.</p>
+            </div>
+        </div>
+
+        <div class="catalog-layout" style="margin-top: 1.5rem;">
+            <!-- Panel de Filtros -->
+            <aside class="filters-panel">
+                <h3><i class="fa-solid fa-sliders"></i> Filtrar búsqueda</h3>
+
+                <div class="filter-group">
+                    <label>Tipo de Inmueble</label>
+                    <select id="filter-type" onchange="applyCatalogFilters()">
+                        <option value="">Todos</option>
+                        <option value="Casa">Casa</option>
+                        <option value="Departamento">Departamento</option>
+                        <option value="Terreno">Terreno</option>
+                        <option value="Negocio">Negocio</option>
+                        <option value="Galpón">Galpón</option>
+                        <option value="Garaje">Garaje</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Ubicación / Zona</label>
+                    <input type="text" id="filter-location" placeholder="Cualquier ciudad o provincia de Argentina" oninput="applyCatalogFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label>Precio Máximo (US$)</label>
+                    <input type="number" id="filter-price" placeholder="Ej: 500000" oninput="applyCatalogFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label>Ordenar por</label>
+                    <select id="filter-sort" onchange="applyCatalogFilters()">
+                        <option value="default">Más relevantes</option>
+                        <option value="price-asc">Precio: menor a mayor</option>
+                        <option value="price-desc">Precio: mayor a menor</option>
+                        <option value="area-desc">Superficie: mayor a menor</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-outline btn-block" onclick="resetFilters()">Limpiar filtros</button>
+            </aside>
+
+            <!-- Grilla de Resultados -->
+            <section>
+                <div id="catalog-grid" class="grid-cards"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        function applyCatalogFilters() {
+            const type = document.getElementById('filter-type').value;
+            const location = document.getElementById('filter-location').value.toLowerCase();
+            const maxPrice = Number(document.getElementById('filter-price').value) || Infinity;
+            const sort = document.getElementById('filter-sort').value;
+
+            const props = getProperties();
+            let filtered = props.filter(p => {
+                if (type && p.type !== type) return false;
+                if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
+                if (p.price > maxPrice) return false;
+                return true;
+            });
+
+            if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+            else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+            else if (sort === 'area-desc') filtered.sort((a, b) => b.area - a.area);
+
+            const grid = document.getElementById('catalog-grid');
+            document.getElementById('results-count').innerText = `${filtered.length} propiedad${filtered.length === 1 ? '' : 'es'} encontrada${filtered.length === 1 ? '' : 's'}`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><h3>No se encontraron permutas con esos criterios.</h3><p>Probá ampliar la zona o subir el precio máximo.</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => renderPropertyCard(p)).join('');
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-location').value = '';
+            document.getElementById('filter-price').value = '';
+            document.getElementById('filter-sort').value = 'default';
+            applyCatalogFilters();
+        }
+
+        // Si venimos del buscador del home (index.html), precargamos los filtros
+        // con lo que el usuario escribió ahí.
+        function loadFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('type')) document.getElementById('filter-type').value = params.get('type');
+            if (params.get('location')) document.getElementById('filter-location').value = params.get('location');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFiltersFromURL();
+            applyCatalogFilters();
+        });
+    </script>
+</body>
+</html>
