@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InmoPermutas.com — Tu propiedad, otra oportunidad</title>
+    <title>InmoPermutas — Tu propiedad, otra oportunidad</title>
     <meta name="description" content="Marketplace argentino de permutas inmobiliarias. Encontrá casas y departamentos disponibles para intercambio directo, sin intermediarios ocultos.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -33,7 +33,7 @@
                     </svg>
                 </div>
                 <div class="logo-text-group">
-                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot"></span></div>
                     <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
                 </div>
             </a>
@@ -204,18 +204,51 @@
         </div>
     </section>
 
-    <div class="container">
-        <div class="section-header">
-            <div class="section-title">
-                <h2>Propiedades <span>destacadas</span></h2>
-                <p id="active-count-text">Encontrá la próxima oportunidad entre nuestras propiedades activas.</p>
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="index.html#inicio" class="logo-brand">
+                    <div class="logo-graphic">
+                        <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                            <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M 60 6 L 24 34 L 24 60" stroke="#3ef07a" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M 10 46 L 24 62 L 40 46" stroke="#3ef07a" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M 98 64 C 112 84 72 94 34 78" stroke="#2f7ffa" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M 36 64 L 19 78 L 36 92" stroke="#2f7ffa" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="logo-text-group">
+                        <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    </div>
+                </a>
+                <p class="footer-tagline">Conectamos personas que quieren permutar propiedades, sin intermediarios ocultos.</p>
             </div>
-            <a href="catalogo.html" class="section-link">Ver todas <i class="fa-solid fa-arrow-right"></i></a>
+
+            <div class="footer-links">
+                <h4>Navegación</h4>
+                <a href="index.html#inicio">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+                <a href="publicar.html">Publicar propiedad</a>
+                <a href="favoritos.html">Favoritos</a>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contacto</h4>
+                <p class="footer-contact-sub">¿Tenés dudas o querés contarnos algo? Escribinos.</p>
+                <form class="contact-form" id="contact-form">
+                    <input type="text" name="nombre" placeholder="Tu nombre" required>
+                    <input type="email" name="email" placeholder="Tu email" required>
+                    <textarea name="mensaje" rows="3" placeholder="Tu mensaje" required></textarea>
+                    <button type="submit" class="btn btn-accent btn-block">Enviar mensaje</button>
+                    <p class="contact-form-msg" id="contact-form-msg"></p>
+                </form>
+            </div>
         </div>
 
-        <div id="featured-grid" class="grid-cards">
+        <div class="footer-bottom">
+            <p>&copy; <span id="footer-year"></span> InmoPermutas.com — Todos los derechos reservados.</p>
         </div>
-    </div>
+    </footer>
 
     
     <script src="js/data.js"></script>

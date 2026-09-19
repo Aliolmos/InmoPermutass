@@ -1037,7 +1037,14 @@ header {
 }
 
 @media (max-width: 900px) {
-    .nav-toggle { display: inline-flex; }
+    .nav-toggle {
+        display: inline-flex;
+        order: 1;
+        flex-shrink: 0;
+    }
+    .nav-actions {
+        order: 2;
+    }
     .nav-menu {
         /* Define cómo se muestra y se comporta el elemento. */
         display: none;
@@ -1776,42 +1783,49 @@ header {
 
 
     /* =====================================================
-       BOTÓN PUBLICAR → SOLO "+"
+       BOTÓN PUBLICAR → "Publicar la tuya"
        ===================================================== */
 
     .nav-actions .btn-accent {
-        width: 30px !important;
         height: 30px !important;
         min-width: 30px !important;
-        padding: 0 !important;
+        padding: 0 0.75rem !important;
 
-        border-radius: 50% !important;
+        border-radius: 30px !important;
 
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
 
-        gap: 0 !important;
+        gap: 0.35rem !important;
         font-size: 0 !important;
         line-height: 1;
         flex-shrink: 0;
+        white-space: nowrap;
     }
 
-    /* Ocultamos el contenido original del botón */
-    .nav-actions .btn-accent i,
+    /* Dejamos el ícono "+" visible */
+    .nav-actions .btn-accent i {
+        display: inline-flex !important;
+        font-size: 0.85rem !important;
+        color: #0a0f1e !important;
+    }
+
+    /* Ocultamos el texto original ("Publicar" + " propiedad") */
     .nav-actions .btn-accent svg,
     .nav-actions .btn-accent span {
         display: none !important;
     }
 
-    /* Mostramos solamente el + */
-    .nav-actions .btn-accent::before {
-        content: "+" !important;
+    /* Mostramos el texto corto después del ícono */
+    .nav-actions .btn-accent::after {
+        content: "Publicar la tuya" !important;
         display: block !important;
 
-        font-size: 1.2rem !important;
+        font-size: 0.78rem !important;
         font-weight: 800 !important;
         line-height: 1 !important;
+        white-space: nowrap;
 
         color: #0a0f1e !important;
     }
@@ -2019,4 +2033,107 @@ header {
 @media (max-width: 480px) {
     .property-media-thumb { width: 66px; height: 50px; }
     .price-tag { font-size: 1.6rem; }
+}
+/* ================= FOOTER / CONTACTO ================= */
+.site-footer {
+    background: #060a16;
+    border-top: 1px solid var(--ink-line, rgba(255,255,255,0.12));
+    margin-top: 3rem;
+}
+
+.footer-inner {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 1.3fr 0.8fr 1.2fr;
+    gap: 2.5rem;
+}
+
+.footer-brand .logo-brand { margin-bottom: 1rem; }
+.footer-brand .logo-graphic { width: 40px; height: 34px; }
+.footer-brand .logo-title { font-size: 1.4rem; }
+.footer-tagline {
+    color: var(--stone, #aab3c8);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 340px;
+}
+
+.footer-links, .footer-contact { display: flex; flex-direction: column; }
+.footer-links h4, .footer-contact h4 {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+}
+.footer-links a {
+    color: var(--stone, #aab3c8);
+    text-decoration: none;
+    font-size: 0.92rem;
+    padding: 0.4rem 0;
+    transition: color 0.15s ease;
+}
+.footer-links a:hover { color: #3ef07a; }
+
+.footer-contact-sub {
+    color: var(--stone, #aab3c8);
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+}
+
+.contact-form { display: flex; flex-direction: column; gap: 0.7rem; }
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    background: #121b30;
+    border: 1px solid var(--ink-line, rgba(255,255,255,0.12));
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder { color: #6b7690; }
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: #3ef07a;
+}
+.contact-form-msg {
+    display: none;
+    color: #3ef07a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.2rem;
+}
+.contact-form-msg.show { display: block; }
+
+.footer-bottom {
+    border-top: 1px solid var(--ink-line, rgba(255,255,255,0.12));
+    padding: 1.25rem 2rem;
+    text-align: center;
+}
+.footer-bottom p {
+    color: #6b7690;
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+    }
+    .footer-brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+    .footer-inner {
+        grid-template-columns: 1fr;
+        padding: 2.75rem 1.25rem 2rem;
+        gap: 2.25rem;
+    }
 }

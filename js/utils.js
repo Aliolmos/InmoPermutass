@@ -248,7 +248,30 @@ function toggleMobileNav() {
     if (nav) nav.classList.toggle('nav-open');
 }
 
+// Pie de página: año actual y envío del formulario de contacto.
+// Por ahora el formulario no manda el mensaje a ningún lado real (no hay
+// backend de correo conectado): solo valida los campos y muestra un aviso
+// de que se recibió, para no dejar al usuario sin respuesta visual.
+function initFooterContactForm() {
+    const yearEl = document.getElementById('footer-year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msgEl = document.getElementById('contact-form-msg');
+        if (msgEl) {
+            msgEl.textContent = '¡Gracias! Recibimos tu mensaje y te vamos a contactar a la brevedad.';
+            msgEl.classList.add('show');
+        }
+        form.reset();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     renderFeaturedProperties();
     updateFavCount();
+    initFooterContactForm();
 });
