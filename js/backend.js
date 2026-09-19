@@ -110,6 +110,8 @@ function ipEscucharPropiedades() {
                     type: d.type,
                     location: d.location,
                     city: d.city,
+                    departamento: d.departamento || "",
+                    localidad: d.localidad || "",
                     price: Number(d.price) || 0,
                     currency: d.currency || "US$",
                     bedrooms: Number(d.bedrooms) || 0,

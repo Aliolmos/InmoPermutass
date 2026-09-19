@@ -41,6 +41,7 @@
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
                 <a href="catalogo.html">Propiedades</a>
+                <a href="planes.html">Planes</a>
             </nav>
             <div class="nav-actions">
                 <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
@@ -60,6 +61,9 @@
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
     <script>
+        // Pasar a false cuando el usuario tenga un plan que habilite el contacto.
+        const CONTACTO_BLOQUEADO = true;
+
         // Galería de fotos y videos. Si la propiedad no tiene archivos subidos
         // (o es una publicación vieja), se muestra solo la imagen principal.
         let galeriaItems = [];
@@ -132,6 +136,27 @@
                 .sort((a, b) => b.matchPercent - a.matchPercent)
                 .slice(0, 3);
 
+            const v = property.seller;
+            const avatarVendedor = v.avatar
+                ? `<img src="${v.avatar}" alt="${v.name}">`
+                : `<div class="seller-avatar-fallback">${(v.name || '?').charAt(0).toUpperCase()}</div>`;
+
+            // Bloqueado: el botón va difuminado y NO lleva el teléfono en el HTML.
+            const contactoHTML = CONTACTO_BLOQUEADO ? `
+                <div class="seller-contact">
+                    <div class="seller-contact-btnwrap">
+                        <div class="seller-contact-blur" aria-hidden="true">
+                            <span class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</span>
+                        </div>
+                        <span class="seller-lock-icon"><i class="fa-solid fa-lock"></i></span>
+                    </div>
+                    <p>Para ver el contacto, consultá nuestros planes.</p>
+                    <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
+                </div>` : `
+                <div class="seller-contact-open">
+                    <a href="https://wa.me/${v.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
+                </div>`;
+
             const fav = isFavorite(property.id);
             const idSeguro = String(property.id).replace(/'/g, "\\'");
 
@@ -165,10 +190,13 @@
                     </div>
 
                     <div class="info-card seller-box">
-                        <img src="${property.seller.avatar}" alt="${property.seller.name}">
-                        <h3>${property.seller.name}</h3>
-                        <p class="seller-role"><i class="fa-solid fa-user"></i> Propietario &bull; publica directamente, sin inmobiliaria</p>
-                        <a href="https://wa.me/${property.seller.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
+                        <div class="seller-head">
+                            <div class="seller-avatar-ring">${avatarVendedor}</div>
+                            <h3>${property.seller.name}</h3>
+                            <span class="seller-chip"><i class="fa-solid fa-user-check"></i> Propietario particular</span>
+                            <p class="seller-role">Publica directamente, sin inmobiliaria</p>
+                        </div>
+                        ${contactoHTML}
                     </div>
                 </div>
 

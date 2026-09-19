@@ -26,7 +26,6 @@ function getProperties() {
 function refrescarVista() {
     if (typeof applyCatalogFilters === 'function') applyCatalogFilters();
     if (typeof renderFavorites === 'function') renderFavorites();
-    if (typeof renderSellers === 'function') renderSellers();
     if (typeof renderDetalle === 'function') renderDetalle();
     renderFeaturedProperties();
     updateFavCount();
@@ -41,54 +40,81 @@ function refrescarVista() {
 //   Dormitorios mínimos ....... 15 pts
 //   Superficie mínima ......... 15 pts
 //   Precio máximo ............. 25 pts
-// Los campos minBedrooms / minArea / maxPrice son opcionales (propiedades
-// viejas de data.js no los tienen): si no están cargados, ese tramo se
-// otorga completo (dormitorios/superficie) o se calcula contra el precio
-// propio como antes (precio), para no penalizar publicaciones sin esos datos.
-function matchUnidireccional(owner, target) {
-    let score = 0;
-    const wants = owner.wants || { types: [], locations: [] };
+//
+// Cada apartado admite hasta 2 opciones (types con 2 tipos, zones con 2 zonas,
+// y minBedrooms2 / minArea2 / maxPrice2 como segunda opción). Se toma la que
+// mejor le queda a la propiedad comparada: si no encaja en una, puede encajar
+// en la otra.
+// Los campos numéricos son opcionales (propiedades viejas de data.js no los
+// tienen): si no están cargados, ese tramo se otorga completo
+// (dormitorios/superficie) o se calcula contra el precio propio (precio),
+// para no penalizar publicaciones sin esos datos.
 
-    // Tipo de inmueble deseado (25 pts)
+// Sin tildes ni mayúsculas, para comparar nombres de zonas.
+function _norm(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+// Se queda solo con las opciones cargadas (números > 0).
+function _opciones(...valores) {
+    return valores.map(Number).filter(n => n > 0);
+}
+
+// De 0 a 1: cuánto cumple "valor" el mínimo pedido. Con 2 opciones vale la que
+// mejor le queda. Sin ningún mínimo cargado, cumple del todo.
+function _cumpleMinimo(valor, ...mins) {
+    const m = _opciones(...mins);
+    if (!m.length) return 1;
+    return Math.max(...m.map(x => Math.min(1, (valor || 0) / x)));
+}
+
+// Puntos (0 a 25) del precio contra un máximo aceptado.
+function _puntosPrecio(precio, max) {
+    if (precio <= max) return 25;
+    const exceso = (precio - max) / max;
+    return exceso <= 0.15 ? 15 : exceso <= 0.30 ? 8 : 0;
+}
+
+// Puntos (0 a 20) de zona. wants.zones = [{ dep, city? }, ...] (hasta 2).
+//   - Coincide la ciudad, o pidió solo el departamento y coincide: 20.
+//   - Pidió una ciudad y la propiedad está en otra del mismo departamento: 10.
+// Las publicaciones viejas no tienen departamento cargado: se comparan por nombre.
+function _puntosZona(wants, target) {
+    const dep = _norm(target.departamento), loc = _norm(target.localidad);
+    const nombres = [target.location, target.city, target.departamento, target.localidad].map(_norm);
+    let pts = 0;
+
+    (wants.zones || []).forEach(z => {
+        if (dep) {
+            if (_norm(z.dep) === dep) pts = Math.max(pts, (!z.city || _norm(z.city) === loc) ? 20 : 10);
+        } else if (nombres.includes(_norm(z.city || z.dep))) {
+            pts = 20;
+        }
+    });
+
+    // Publicaciones viejas: zonas escritas a mano en wants.locations
+    if (!(wants.zones || []).length && (wants.locations || []).some(l => nombres.includes(_norm(l)))) pts = 20;
+    return pts;
+}
+
+function matchUnidireccional(owner, target) {
+    const wants = owner.wants || { types: [], locations: [] };
+    let score = 0;
+
+    // Tipo de inmueble deseado (25 pts): sirve cualquiera de las opciones
     if ((wants.types || []).includes(target.type)) score += 25;
 
     // Zona deseada (20 pts)
-    const wantsZone = (wants.locations || []).some(
-        loc => loc.toLowerCase() === (target.location || '').toLowerCase()
-    );
-    if (wantsZone) score += 20;
+    score += _puntosZona(wants, target);
 
-    // Dormitorios mínimos que acepta recibir (15 pts)
-    const minBedrooms = Number(wants.minBedrooms) || 0;
-    if (minBedrooms <= 0) {
-        score += 15; // sin preferencia cargada: no resta
-    } else if ((target.bedrooms || 0) >= minBedrooms) {
-        score += 15;
-    } else {
-        score += Math.max(0, (target.bedrooms || 0) / minBedrooms) * 15;
-    }
-
-    // Superficie mínima que acepta recibir (15 pts)
-    const minArea = Number(wants.minArea) || 0;
-    if (minArea <= 0) {
-        score += 15;
-    } else if ((target.area || 0) >= minArea) {
-        score += 15;
-    } else {
-        score += Math.max(0, (target.area || 0) / minArea) * 15;
-    }
+    // Dormitorios y superficie mínimos que acepta recibir (15 pts c/u)
+    score += 15 * _cumpleMinimo(target.bedrooms, wants.minBedrooms, wants.minBedrooms2);
+    score += 15 * _cumpleMinimo(target.area, wants.minArea, wants.minArea2);
 
     // Precio máximo que está dispuesto a recibir (25 pts)
-    const maxPrice = Number(wants.maxPrice) || 0;
-    if (maxPrice > 0) {
-        if (target.price <= maxPrice) {
-            score += 25;
-        } else {
-            const excesoSobrePrecio = (target.price - maxPrice) / maxPrice;
-            if (excesoSobrePrecio <= 0.15) score += 15;
-            else if (excesoSobrePrecio <= 0.30) score += 8;
-            // más de 30% por encima del máximo aceptado: 0 pts
-        }
+    const maximos = _opciones(wants.maxPrice, wants.maxPrice2);
+    if (maximos.length) {
+        score += Math.max(...maximos.map(m => _puntosPrecio(target.price, m)));
     } else {
         // Sin precio máximo cargado: comparamos contra el valor de "owner",
         // igual que hacía la versión anterior del algoritmo.
@@ -115,16 +141,23 @@ function calcularCompatibilidad(a, b) {
 }
 
 // Texto legible de lo que una propiedad acepta recibir a cambio.
+function nombreZona(z) {
+    return z.city ? `${z.city} (${z.dep})` : `Dpto. ${z.dep}`;
+}
+
 function describirWants(wants) {
     if (!wants || !(wants.types || []).length) return 'El propietario evalúa distintas propuestas.';
     const tipos = wants.types.join(' o ');
-    const zonas = (wants.locations || []).join(', ');
-    let texto = zonas ? `Busca ${tipos} en ${zonas}.` : `Busca ${tipos}.`;
+    const zonas = (wants.zones || []).length ? wants.zones.map(nombreZona) : (wants.locations || []);
+    let texto = zonas.length ? `Busca ${tipos} en ${zonas.join(' o ')}.` : `Busca ${tipos}.`;
 
+    const dorm = _opciones(wants.minBedrooms, wants.minBedrooms2);
+    const area = _opciones(wants.minArea, wants.minArea2);
+    const precio = _opciones(wants.maxPrice, wants.maxPrice2);
     const extras = [];
-    if (Number(wants.minBedrooms) > 0) extras.push(`${wants.minBedrooms}+ dormitorios`);
-    if (Number(wants.minArea) > 0) extras.push(`${wants.minArea}+ m²`);
-    if (Number(wants.maxPrice) > 0) extras.push(`hasta US$ ${Number(wants.maxPrice).toLocaleString()}`);
+    if (dorm.length) extras.push(`${dorm.map(n => n + '+').join(' o ')} dormitorios`);
+    if (area.length) extras.push(`${area.map(n => n + '+').join(' o ')} m²`);
+    if (precio.length) extras.push(`hasta ${precio.map(n => 'US$ ' + n.toLocaleString()).join(' o ')}`);
     if (extras.length) texto += ` Condiciones: ${extras.join(', ')}.`;
 
     return texto;

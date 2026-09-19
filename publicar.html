@@ -41,6 +41,7 @@
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
                 <a href="catalogo.html">Propiedades</a>
+                <a href="planes.html">Planes</a>
             </nav>
             <div class="nav-actions">
                 <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
@@ -137,12 +138,12 @@
                     </div>
 
                     <div class="form-field">
-                        <label>Barrio / zona</label>
-                        <input type="text" id="p-location" placeholder="Ej: Cerro de las Rosas" required>
+                        <label>Departamento</label>
+                        <select id="p-dep" required></select>
                     </div>
                     <div class="form-field">
-                        <label>Ciudad</label>
-                        <input type="text" id="p-city" placeholder="Ej: Córdoba" required>
+                        <label>Ciudad <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <select id="p-loc"></select>
                     </div>
 
                     <div class="form-field">
@@ -165,37 +166,74 @@
                         <div class="ip-media-preview" id="p-media-preview"></div>
                     </div>
 
+                    <div class="form-field full form-section">
+                        <h3>¿Qué te gustaría recibir a cambio?</h3>
+                        <p>En cada apartado podés poner hasta 2 opciones: si una propiedad no encaja en la primera, puede encajar en la segunda.</p>
+                    </div>
+
                     <div class="form-field full">
-                        <label>¿Qué tipo de inmueble aceptás recibir a cambio?</label>
-                        <div class="checkbox-row">
-                            <label class="checkbox-chip"><input type="checkbox" value="Casa" name="wants-type"> Casa</label>
-                            <label class="checkbox-chip"><input type="checkbox" value="Departamento" name="wants-type" checked> Departamento</label>
-                            <label class="checkbox-chip"><input type="checkbox" value="Terreno" name="wants-type"> Terreno</label>
-                            <label class="checkbox-chip"><input type="checkbox" value="Negocio" name="wants-type"> Negocio</label>
-                            <label class="checkbox-chip"><input type="checkbox" value="Galpón" name="wants-type"> Galpón</label>
-                            <label class="checkbox-chip"><input type="checkbox" value="Garaje" name="wants-type"> Garaje</label>
+                        <label>Tipo de inmueble que aceptás recibir</label>
+                        <div class="opt-pair">
+                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
+                                <select id="w-type-1" required><option value="">Elegí un tipo</option><option>Casa</option><option>Departamento</option><option>Terreno</option><option>Negocio</option><option>Galpón</option><option>Garaje</option></select>
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
+                                <select id="w-type-2"><option value="">Ninguno más</option><option>Casa</option><option>Departamento</option><option>Terreno</option><option>Negocio</option><option>Galpón</option><option>Garaje</option></select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="form-field full">
-                        <label>¿En qué zonas te interesaría recibir la propiedad?</label>
-                        <input type="text" id="p-wants-locations" placeholder="Ej: Nordelta, Palermo, Recoleta" required>
-                        <p class="form-hint">Separá las zonas con comas.</p>
+                        <label>Zona donde te interesaría recibir la propiedad</label>
+                        <div class="opt-pair">
+                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
+                                <select id="w-dep-1" required></select>
+                                <select id="w-city-1"></select>
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
+                                <select id="w-dep-2"></select>
+                                <select id="w-city-2"></select>
+                            </div>
+                        </div>
+                        <p class="form-hint">Elegí el departamento. La ciudad es opcional: si no la elegís, vale todo el departamento.</p>
                     </div>
 
-                    <div class="form-field">
+                    <div class="form-field full">
                         <label>Dormitorios mínimos que aceptás</label>
-                        <input type="number" id="p-wants-bedrooms" min="0" placeholder="Ej: 2">
+                        <div class="opt-pair">
+                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
+                                <input type="number" id="p-wants-bedrooms" min="0" placeholder="Ej: 3">
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
+                                <input type="number" id="p-wants-bedrooms2" min="0" placeholder="Ej: 2">
+                            </div>
+                        </div>
                         <p class="form-hint">Dejalo vacío o en 0 si no tenés preferencia.</p>
                     </div>
-                    <div class="form-field">
+
+                    <div class="form-field full">
                         <label>Superficie mínima que aceptás (m²)</label>
-                        <input type="number" id="p-wants-area" min="0" placeholder="Ej: 70">
+                        <div class="opt-pair">
+                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
+                                <input type="number" id="p-wants-area" min="0" placeholder="Ej: 100">
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
+                                <input type="number" id="p-wants-area2" min="0" placeholder="Ej: 70">
+                            </div>
+                        </div>
                         <p class="form-hint">Dejalo vacío o en 0 si no tenés preferencia.</p>
                     </div>
+
                     <div class="form-field full">
                         <label>Precio máximo que aceptarías recibir (US$)</label>
-                        <input type="number" id="p-wants-price" min="0" placeholder="Ej: 250000">
+                        <div class="opt-pair">
+                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
+                                <input type="number" id="p-wants-price" min="0" placeholder="Ej: 250000">
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
+                                <input type="number" id="p-wants-price2" min="0" placeholder="Ej: 300000">
+                            </div>
+                        </div>
                         <p class="form-hint">Dejalo vacío si evaluás cualquier valor cercano al de tu propiedad.</p>
                     </div>
 
@@ -217,6 +255,7 @@
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/zonas.js"></script>
     <script src="js/backend.js"></script>
     <script>
         const placeholderImages = {
@@ -404,15 +443,21 @@
             event.preventDefault();
 
             const type = document.getElementById('p-type').value;
-            const wantsTypes = Array.from(document.querySelectorAll('input[name="wants-type"]:checked')).map(i => i.value);
-            const wantsLocations = document.getElementById('p-wants-locations').value.split(',').map(s => s.trim()).filter(Boolean);
+            // Hasta 2 opciones por apartado; si repite la misma, cuenta una sola vez.
+            const sinRepetir = lista => lista.filter((x, i) => lista.findIndex(y => JSON.stringify(y) === JSON.stringify(x)) === i);
+            const wantsTypes = sinRepetir([document.getElementById('w-type-1').value, document.getElementById('w-type-2').value].filter(Boolean));
+            const wantsZones = sinRepetir([zonaLeer('w-dep-1', 'w-city-1'), zonaLeer('w-dep-2', 'w-city-2')].filter(Boolean));
+            const dep = document.getElementById('p-dep').value;
+            const localidad = document.getElementById('p-loc').value;
+            const nombreZonaPropia = localidad || dep;
+            const num = id => Number(document.getElementById(id).value) || 0;
 
             if (wantsTypes.length === 0) {
                 alert('Elegí al menos un tipo de inmueble que aceptarías recibir a cambio.');
                 return;
             }
-            if (wantsLocations.length === 0) {
-                alert('Indicá al menos una zona donde te interesaría recibir la propiedad.');
+            if (wantsZones.length === 0) {
+                alert('Elegí al menos una zona donde te interesaría recibir la propiedad.');
                 return;
             }
 
@@ -438,8 +483,11 @@
                 const nuevaPropiedad = {
                     title: document.getElementById('p-title').value.trim(),
                     type: type,
-                    location: document.getElementById('p-location').value.trim(),
-                    city: document.getElementById('p-city').value.trim(),
+                    departamento: dep,
+                    localidad: localidad,
+                    // location / city son lo que se muestra en tarjetas y fichas
+                    location: nombreZonaPropia,
+                    city: nombreZonaPropia === 'Córdoba' ? 'Capital' : 'Córdoba',
                     price: Number(document.getElementById('p-price').value),
                     currency: "US$",
                     bedrooms: Number(document.getElementById('p-bedrooms').value),
@@ -453,10 +501,14 @@
                     },
                     wants: {
                         types: wantsTypes,
-                        locations: wantsLocations,
-                        minBedrooms: Number(document.getElementById('p-wants-bedrooms').value) || 0,
-                        minArea: Number(document.getElementById('p-wants-area').value) || 0,
-                        maxPrice: Number(document.getElementById('p-wants-price').value) || 0
+                        zones: wantsZones,
+                        locations: wantsZones.map(z => z.city || z.dep),
+                        minBedrooms: num('p-wants-bedrooms'),
+                        minBedrooms2: num('p-wants-bedrooms2'),
+                        minArea: num('p-wants-area'),
+                        minArea2: num('p-wants-area2'),
+                        maxPrice: num('p-wants-price'),
+                        maxPrice2: num('p-wants-price2')
                     }
                 };
 
@@ -483,6 +535,9 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            zonaConectar('p-dep', 'p-loc', 'Elegí el departamento');
+            zonaConectar('w-dep-1', 'w-city-1', 'Departamento');
+            zonaConectar('w-dep-2', 'w-city-2', 'Departamento (opcional)');
             document.getElementById('google-logo').innerHTML =
                 (typeof IP_GOOGLE_SVG !== 'undefined' ? IP_GOOGLE_SVG : '');
         });

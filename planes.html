@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendedores — InmoPermutas</title>
-    <meta name="description" content="Conocé a las personas que publican sus propiedades para permuta directamente en InmoPermutas, sin intermediarios.">
+    <title>Planes — InmoPermutas</title>
+    <meta name="description" content="Elegí el plan de InmoPermutas que mejor se adapte a vos para acceder a los datos de contacto de los propietarios.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -40,9 +40,8 @@
             <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
-                <a href="funcionamiento.html">Cómo funciona</a>
                 <a href="catalogo.html">Propiedades</a>
-                <a href="vendedores.html" class="active">Vendedores</a>
+                <a href="planes.html" class="active">Planes</a>
             </nav>
             <div class="nav-actions">
                 <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
@@ -58,49 +57,68 @@
         <div class="container" style="padding-bottom: 2.5rem;">
             <div class="section-header">
                 <div class="section-title">
-                    <h1 style="font-size: 1.75rem; font-weight: 600;">Vendedores</h1>
-                    <p>Personas que publican sus propiedades directamente para encontrar su permuta, sin inmobiliarias de por medio.</p>
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Nuestros planes</h1>
+                    <p>Elegí cómo querés usar InmoPermutas y accedé al contacto directo con los propietarios.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <main class="container">
-        <div id="sellers-grid" class="sellers-grid" style="margin-top: -1rem;"></div>
+    <main class="container" style="padding-bottom: 4rem;">
+        <div class="plans-grid">
+
+            <div class="plan-card">
+                <div class="plan-header">
+                    <h3>Básico</h3>
+                    <p class="plan-desc">Para empezar a explorar permutas.</p>
+                </div>
+                <div class="plan-price"><span class="plan-amount">Gratis</span></div>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> Ver el catálogo completo</li>
+                    <li><i class="fa-solid fa-check"></i> Guardar favoritos</li>
+                    <li><i class="fa-solid fa-check"></i> Calculadora de % de match</li>
+                    <li class="plan-feature-off"><i class="fa-solid fa-xmark"></i> Datos de contacto del propietario</li>
+                </ul>
+                <a href="publicar.html" class="btn btn-outline btn-block">Empezar gratis</a>
+            </div>
+
+            <div class="plan-card plan-card--featured">
+                <span class="plan-badge">Más elegido</span>
+                <div class="plan-header">
+                    <h3>Pro</h3>
+                    <p class="plan-desc">Para quienes están permutando activamente.</p>
+                </div>
+                <div class="plan-price"><span class="plan-amount">US$ 9</span><span class="plan-period">/mes</span></div>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> Todo lo del plan Básico</li>
+                    <li><i class="fa-solid fa-check"></i> Contacto directo por WhatsApp</li>
+                    <li><i class="fa-solid fa-check"></i> Hasta 5 propiedades activas</li>
+                    <li><i class="fa-solid fa-check"></i> Destacado en el catálogo</li>
+                </ul>
+                <a href="publicar.html" class="btn btn-accent btn-block">Elegir Pro</a>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-header">
+                    <h3>Premium</h3>
+                    <p class="plan-desc">Para inmobiliarias y publicadores frecuentes.</p>
+                </div>
+                <div class="plan-price"><span class="plan-amount">US$ 19</span><span class="plan-period">/mes</span></div>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> Todo lo del plan Pro</li>
+                    <li><i class="fa-solid fa-check"></i> Permutas activas ilimitadas</li>
+                    <li><i class="fa-solid fa-check"></i> Estadísticas de tus publicaciones</li>
+                    <li><i class="fa-solid fa-check"></i> Soporte prioritario</li>
+                </ul>
+                <a href="publicar.html" class="btn btn-outline btn-block">Elegir Premium</a>
+            </div>
+
+        </div>
     </main>
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
-    <script>
-        // Agrupa las propiedades por vendedor para mostrar un perfil por persona,
-        // no por inmobiliaria: acá quien publica es siempre el propietario.
-        function renderSellers() {
-            const props = getProperties();
-            const sellersMap = {};
-
-            props.forEach(p => {
-                const key = p.seller.name;
-                if (!sellersMap[key]) {
-                    sellersMap[key] = { ...p.seller, count: 0, mainLocation: p.location, city: p.city };
-                }
-                sellersMap[key].count += 1;
-            });
-
-            const grid = document.getElementById('sellers-grid');
-            grid.innerHTML = Object.values(sellersMap).map(s => `
-                <div class="seller-card">
-                    <img src="${s.avatar}" alt="${s.name}" class="seller-avatar">
-                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">${s.name}</h3>
-                    <p style="color: var(--stone); font-size: 0.85rem; margin-bottom: 1rem;"><i class="fa-solid fa-location-dot"></i> ${s.mainLocation}, ${s.city}</p>
-                    <p style="font-size: 0.9rem; color: var(--ink); margin-bottom: 1.5rem;"><i class="fa-solid fa-user"></i> Propietario particular</p>
-                    <a href="catalogo.html?location=${encodeURIComponent(s.mainLocation)}" class="btn btn-outline btn-sm btn-block">Ver ${s.count} propiedad${s.count === 1 ? '' : 'es'}</a>
-                </div>
-            `).join('');
-        }
-
-        document.addEventListener('DOMContentLoaded', renderSellers);
-    </script>
     <script src="js/asistente.js"></script>
 </body>
 </html>

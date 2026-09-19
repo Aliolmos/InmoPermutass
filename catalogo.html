@@ -33,7 +33,7 @@
                     </svg>
                 </div>
                 <div class="logo-text-group">
-                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot"></span></div>
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
                     <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
                 </div>
             </a>
@@ -41,6 +41,7 @@
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
                 <a href="catalogo.html" class="active">Propiedades</a>
+                <a href="planes.html">Planes</a>
             </nav>
             <div class="nav-actions">
                 <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
@@ -141,7 +142,7 @@
             const props = getProperties();
             let filtered = props.filter(p => {
                 if (type && p.type !== type) return false;
-                if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
+                if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !(p.departamento || '').toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
                 if (p.price > maxPrice) return false;
                 return true;
             });
