@@ -12,7 +12,31 @@
 
     <header>
         <div class="nav-container">
-            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
             <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
@@ -34,23 +58,83 @@
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Galería de fotos y videos. Si la propiedad no tiene archivos subidos
+        // (o es una publicación vieja), se muestra solo la imagen principal.
+        let galeriaItems = [];
+
+        function pintarGaleriaPrincipal(i) {
+            const it = galeriaItems[i];
+            const main = document.getElementById('gallery-main');
+            if (!it || !main) return;
+            main.innerHTML = it.type === 'video'
+                ? `<video src="${it.url}" controls playsinline class="property-hero-img" style="object-fit:contain;"></video>`
+                : `<img src="${it.url}" alt="" class="property-hero-img">`;
+            document.querySelectorAll('.property-media-thumb').forEach((t, k) => t.classList.toggle('active', k === i));
+        }
+
+        function galeriaHTML(property) {
+            const media = Array.isArray(property.media) ? property.media.filter(m => m && m.url) : [];
+            galeriaItems = media.length ? media : [{ type: 'image', url: property.image }];
+            const primero = galeriaItems[0];
+            const principal = primero.type === 'video'
+                ? `<video src="${primero.url}" controls playsinline class="property-hero-img" style="object-fit:contain;"></video>`
+                : `<img src="${primero.url}" alt="${property.title}" class="property-hero-img">`;
+            const thumbs = galeriaItems.length > 1 ? `
+                <div class="property-media-thumbs">
+                    ${galeriaItems.map((m, i) => `
+                        <button type="button" class="property-media-thumb ${i === 0 ? 'active' : ''}" onclick="pintarGaleriaPrincipal(${i})" aria-label="Ver archivo ${i + 1}">
+                            ${m.type === 'video'
+                                ? `<video src="${m.url}" muted preload="metadata"></video><i class="fa-solid fa-circle-play thumb-play"></i>`
+                                : `<img src="${m.url}" alt="">`}
+                        </button>`).join('')}
+                </div>` : '';
+            return `<div class="property-gallery"><div id="gallery-main">${principal}</div>${thumbs}</div>`;
+        }
+
+        // renderDetalle() está declarada como función global a propósito:
+        // backend.js la vuelve a llamar cuando llegan los datos de la base,
+        // así una propiedad recién publicada se ve aunque entres con el link
+        // directo, sin datos todavía en el navegador.
+        function renderDetalle() {
+            const container = document.getElementById('property-detail-view');
+            if (!container) return;
+
             const params = new URLSearchParams(window.location.search);
-            const id = Number(params.get('id')) || 1;
+            const id = params.get('id');
             const props = getProperties();
-            const property = props.find(p => p.id === id) || props[0];
+
+            // Todavía no llegó nada de la base: mostramos un cartel de espera.
+            if (props.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><h3>Cargando la propiedad…</h3></div>`;
+                return;
+            }
+
+            const property = props.find(p => String(p.id) === String(id));
+
+            if (!property) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-house-circle-xmark"></i>
+                        <h3>No encontramos esta propiedad</h3>
+                        <p>Puede que se haya dado de baja o que el link esté incompleto.</p>
+                        <a href="catalogo.html" class="btn btn-primary" style="margin-top: 1.25rem;">Ver el catálogo</a>
+                    </div>`;
+                return;
+            }
 
             // calcularCompatibilidad vive en utils.js (usa el campo "wants" de
-            // cada propiedad para calcular el match en las dos direcciones),
-            // así que no hace falta redefinirla acá.
-            const similarMatches = props.filter(p => p.id !== property.id).map(p => {
-                return { ...p, matchPercent: calcularCompatibilidad(property, p) };
-            }).sort((a, b) => b.matchPercent - a.matchPercent).slice(0, 3);
+            // cada propiedad para calcular el match en las dos direcciones).
+            const similarMatches = props
+                .filter(p => String(p.id) !== String(property.id))
+                .map(p => ({ ...p, matchPercent: calcularCompatibilidad(property, p) }))
+                .sort((a, b) => b.matchPercent - a.matchPercent)
+                .slice(0, 3);
 
             const fav = isFavorite(property.id);
+            const idSeguro = String(property.id).replace(/'/g, "\\'");
 
-            const container = document.getElementById('property-detail-view');
             container.innerHTML = `
                 <div style="margin-bottom: 1.5rem; display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;">
                     <div>
@@ -58,16 +142,16 @@
                         <h1 style="font-size: 2.3rem; margin-top: 0.4rem;">${property.title}</h1>
                         <p style="color: var(--stone); font-size: 1.05rem; margin-top:0.3rem;"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> ${property.location}, ${property.city}</p>
                     </div>
-                    <button class="icon-btn ${fav ? 'has-favs' : ''}" style="width:48px;height:48px;font-size:1.15rem;" onclick="handleFavoriteClick(event, ${property.id})" aria-label="Guardar en favoritos">
+                    <button class="icon-btn ${fav ? 'has-favs' : ''}" style="width:48px;height:48px;font-size:1.15rem;" onclick="handleFavoriteClick(event, '${idSeguro}')" aria-label="Guardar en favoritos">
                         <i class="fa-${fav ? 'solid' : 'regular'} fa-heart" style="color:${fav ? 'var(--coral)' : 'inherit'};"></i>
                     </button>
                 </div>
 
-                <img src="${property.image}" alt="${property.title}" class="property-hero-img">
+                ${galeriaHTML(property)}
 
                 <div class="property-grid">
                     <div class="info-card">
-                        <div class="price-tag">${property.currency} ${property.price.toLocaleString()}</div>
+                        <div class="price-tag">${property.currency} ${Number(property.price).toLocaleString()}</div>
                         <h3>Características principales</h3>
                         <p style="color: var(--stone); margin-bottom: 1.5rem;"><i class="fa-solid fa-bed"></i> ${property.bedrooms} dormitorios &nbsp;&bull;&nbsp; <i class="fa-solid fa-ruler-combined"></i> ${property.area} m² cubiertos</p>
 
@@ -84,7 +168,7 @@
                         <img src="${property.seller.avatar}" alt="${property.seller.name}">
                         <h3>${property.seller.name}</h3>
                         <p class="seller-role"><i class="fa-solid fa-user"></i> Propietario &bull; publica directamente, sin inmobiliaria</p>
-                        <a href="https://wa.me/${property.seller.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
+                        <a href="https://wa.me/${property.seller.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
                     </div>
                 </div>
 
@@ -103,7 +187,10 @@
             `;
 
             updateFavCount();
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', renderDetalle);
     </script>
+    <script src="js/asistente.js"></script>
 </body>
 </html>

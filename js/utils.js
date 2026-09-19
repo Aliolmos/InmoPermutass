@@ -1,35 +1,104 @@
+// Devuelve todas las propiedades visibles: primero las que publicó la gente
+// (vienen de la base de datos, vía backend.js) y después las de ejemplo que
+// están escritas a mano en data.js.
+//
+// Cuando quieras sacar las de ejemplo y dejar solo las reales, vaciá el array
+// propertiesData de data.js. No hace falta tocar nada más.
+//
+// Todos los ids se manejan como texto, porque los que genera la base de datos
+// son códigos alfanuméricos, no números.
 function getProperties() {
-    return JSON.parse(localStorage.getItem('properties')) || [];
+    let remotas = [];
+    try {
+        remotas = JSON.parse(localStorage.getItem('ip_props_cache')) || [];
+    } catch (e) {
+        remotas = [];
+    }
+    const demo = (typeof propertiesData !== 'undefined' ? propertiesData : [])
+        .map(p => ({ ...p, id: String(p.id), esDemo: true }));
+
+    return [...remotas.map(p => ({ ...p, id: String(p.id) })), ...demo];
 }
 
-function saveProperties(props) {
-    localStorage.setItem('properties', JSON.stringify(props));
+// Vuelve a pintar la página actual con los datos más frescos. backend.js la
+// llama sola cada vez que la base de datos cambia, así que si alguien publica
+// una propiedad aparece en el catálogo sin recargar.
+function refrescarVista() {
+    if (typeof applyCatalogFilters === 'function') applyCatalogFilters();
+    if (typeof renderFavorites === 'function') renderFavorites();
+    if (typeof renderSellers === 'function') renderSellers();
+    if (typeof renderDetalle === 'function') renderDetalle();
+    renderFeaturedProperties();
+    updateFavCount();
 }
 
 // --- Algoritmo de compatibilidad de permuta -------------------------------
 // Calcula qué tan bien le sirve la propiedad "target" al dueño de "owner",
-// según lo que owner.wants indica que acepta recibir.
-// Devuelve un puntaje de 0 a 100 en una sola dirección (owner -> target).
+// según lo que owner.wants indica que acepta recibir. Devuelve un puntaje de
+// 0 a 100 en una sola dirección (owner -> target), repartido así:
+//   Tipo de inmueble ......... 25 pts
+//   Zona ...................... 20 pts
+//   Dormitorios mínimos ....... 15 pts
+//   Superficie mínima ......... 15 pts
+//   Precio máximo ............. 25 pts
+// Los campos minBedrooms / minArea / maxPrice son opcionales (propiedades
+// viejas de data.js no los tienen): si no están cargados, ese tramo se
+// otorga completo (dormitorios/superficie) o se calcula contra el precio
+// propio como antes (precio), para no penalizar publicaciones sin esos datos.
 function matchUnidireccional(owner, target) {
     let score = 0;
+    const wants = owner.wants || { types: [], locations: [] };
 
-    // Tipo de inmueble deseado (35 pts)
-    if (owner.wants.types.includes(target.type)) score += 35;
+    // Tipo de inmueble deseado (25 pts)
+    if ((wants.types || []).includes(target.type)) score += 25;
 
-    // Zona deseada (30 pts)
-    const wantsZone = owner.wants.locations.some(
-        loc => loc.toLowerCase() === target.location.toLowerCase()
+    // Zona deseada (20 pts)
+    const wantsZone = (wants.locations || []).some(
+        loc => loc.toLowerCase() === (target.location || '').toLowerCase()
     );
-    if (wantsZone) score += 30;
+    if (wantsZone) score += 20;
 
-    // Diferencia de valor entre las dos propiedades (hasta 35 pts)
-    const priceDiff = Math.abs(owner.price - target.price) / owner.price;
-    if (priceDiff <= 0.15) score += 35;
-    else if (priceDiff <= 0.30) score += 20;
-    else if (priceDiff <= 0.50) score += 8;
-    // más de 50% de diferencia: 0 pts, la permuta ya no es realista
+    // Dormitorios mínimos que acepta recibir (15 pts)
+    const minBedrooms = Number(wants.minBedrooms) || 0;
+    if (minBedrooms <= 0) {
+        score += 15; // sin preferencia cargada: no resta
+    } else if ((target.bedrooms || 0) >= minBedrooms) {
+        score += 15;
+    } else {
+        score += Math.max(0, (target.bedrooms || 0) / minBedrooms) * 15;
+    }
 
-    return score;
+    // Superficie mínima que acepta recibir (15 pts)
+    const minArea = Number(wants.minArea) || 0;
+    if (minArea <= 0) {
+        score += 15;
+    } else if ((target.area || 0) >= minArea) {
+        score += 15;
+    } else {
+        score += Math.max(0, (target.area || 0) / minArea) * 15;
+    }
+
+    // Precio máximo que está dispuesto a recibir (25 pts)
+    const maxPrice = Number(wants.maxPrice) || 0;
+    if (maxPrice > 0) {
+        if (target.price <= maxPrice) {
+            score += 25;
+        } else {
+            const excesoSobrePrecio = (target.price - maxPrice) / maxPrice;
+            if (excesoSobrePrecio <= 0.15) score += 15;
+            else if (excesoSobrePrecio <= 0.30) score += 8;
+            // más de 30% por encima del máximo aceptado: 0 pts
+        }
+    } else {
+        // Sin precio máximo cargado: comparamos contra el valor de "owner",
+        // igual que hacía la versión anterior del algoritmo.
+        const priceDiff = owner.price ? Math.abs(owner.price - target.price) / owner.price : 1;
+        if (priceDiff <= 0.15) score += 25;
+        else if (priceDiff <= 0.30) score += 14;
+        else if (priceDiff <= 0.50) score += 6;
+    }
+
+    return Math.round(score);
 }
 
 // Compatibilidad real de una permuta: hace falta que LAS DOS partes estén
@@ -45,28 +114,42 @@ function calcularCompatibilidad(a, b) {
     return Math.max(5, Math.min(Math.round(final), 98));
 }
 
-// Texto legible de lo que una propiedad acepta recibir a cambio, para
-// mostrar en la ficha de detalle sin tener que escribirlo a mano por cada
-// propiedad.
+// Texto legible de lo que una propiedad acepta recibir a cambio.
 function describirWants(wants) {
+    if (!wants || !(wants.types || []).length) return 'El propietario evalúa distintas propuestas.';
     const tipos = wants.types.join(' o ');
-    const zonas = wants.locations.join(', ');
-    return `Busca ${tipos} en ${zonas}.`;
+    const zonas = (wants.locations || []).join(', ');
+    let texto = zonas ? `Busca ${tipos} en ${zonas}.` : `Busca ${tipos}.`;
+
+    const extras = [];
+    if (Number(wants.minBedrooms) > 0) extras.push(`${wants.minBedrooms}+ dormitorios`);
+    if (Number(wants.minArea) > 0) extras.push(`${wants.minArea}+ m²`);
+    if (Number(wants.maxPrice) > 0) extras.push(`hasta US$ ${Number(wants.maxPrice).toLocaleString()}`);
+    if (extras.length) texto += ` Condiciones: ${extras.join(', ')}.`;
+
+    return texto;
 }
 // ---------------------------------------------------------------------------
 
 // --- Favoritos -------------------------------------------------------------
-// Guardados como un array simple de ids en localStorage. No hace falta nada
-// más sofisticado: es el mismo patrón que ya usa "properties".
+// Siguen siendo de cada navegador: son una lista personal, no información
+// que tenga sentido compartir con el resto del sitio.
 function getFavorites() {
-    return JSON.parse(localStorage.getItem('favorites')) || [];
+    let favs = [];
+    try {
+        favs = JSON.parse(localStorage.getItem('favorites')) || [];
+    } catch (e) {
+        favs = [];
+    }
+    return favs.map(String);
 }
 
 function isFavorite(id) {
-    return getFavorites().includes(id);
+    return getFavorites().includes(String(id));
 }
 
 function toggleFavorite(id) {
+    id = String(id);
     let favs = getFavorites();
     if (favs.includes(id)) {
         favs = favs.filter(f => f !== id);
@@ -79,8 +162,7 @@ function toggleFavorite(id) {
 }
 
 // Actualiza el contador del corazón en el header, en cualquier página que
-// tenga el ícono con id="fav-icon-btn". Se llama al cargar cada página y
-// cada vez que se togglea un favorito.
+// tenga el ícono con id="fav-icon-btn".
 function updateFavCount() {
     const count = getFavorites().length;
     const badge = document.getElementById('fav-count');
@@ -94,9 +176,7 @@ function updateFavCount() {
     }
 }
 
-// Handler del botón de corazón sobre cada tarjeta. Evita que el click
-// dispare cualquier link contenedor y re-pinta el ícono al toque, sin
-// esperar a un refresco completo de la grilla.
+// Handler del botón de corazón sobre cada tarjeta.
 function handleFavoriteClick(event, id) {
     event.preventDefault();
     event.stopPropagation();
@@ -105,8 +185,6 @@ function handleFavoriteClick(event, id) {
     btn.classList.toggle('is-fav', nowFav);
     btn.innerHTML = nowFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
 
-    // Si estamos en la página de favoritos, sacar la tarjeta de la vista
-    // directamente en vez de esperar a que el usuario recargue.
     if (!nowFav && document.body.dataset.page === 'favoritos') {
         const card = btn.closest('.card');
         if (card) card.remove();
@@ -117,19 +195,19 @@ function handleFavoriteClick(event, id) {
 }
 // ---------------------------------------------------------------------------
 
-// Tarjeta de propiedad reutilizable. Se usa en el home, el catálogo, favoritos
-// y las "opciones similares" de la ficha de detalle, para no tener el mismo
-// HTML copiado y pegado en varios archivos (y desincronizado, como pasaba antes).
+// Tarjeta de propiedad reutilizable (home, catálogo, favoritos y "opciones
+// similares" de la ficha de detalle).
 // matchPercent es opcional: solo tiene sentido mostrarlo cuando se está
-// comparando contra una propiedad puntual (ver "opciones similares" en
-// propiedad.html). En listados genéricos (home, catálogo) no hay nada
-// específico con qué comparar, así que no se muestra ningún % ahí.
+// comparando contra una propiedad puntual.
 function renderPropertyCard(p, matchPercent) {
     const fav = isFavorite(p.id);
+    const id = String(p.id).replace(/'/g, "\\'");
+    const tieneVideo = Array.isArray(p.media) && p.media.some(m => m.type === 'video');
     return `
         <div class="card">
             <div class="card-img" style="background-image: url('${p.image}')" role="img" aria-label="${p.title}">
-                <button class="fav-btn ${fav ? 'is-fav' : ''}" onclick="handleFavoriteClick(event, ${p.id})" aria-label="Guardar en favoritos" title="Guardar en favoritos">
+                ${tieneVideo ? `<span class="card-video-badge"><i class="fa-solid fa-circle-play"></i> Video</span>` : ''}
+                <button class="fav-btn ${fav ? 'is-fav' : ''}" onclick="handleFavoriteClick(event, '${id}')" aria-label="Guardar en favoritos" title="Guardar en favoritos">
                     <i class="fa-${fav ? 'solid' : 'regular'} fa-heart"></i>
                 </button>
                 ${matchPercent !== undefined ? `
@@ -139,12 +217,12 @@ function renderPropertyCard(p, matchPercent) {
                 </div>` : ''}
             </div>
             <div class="card-body">
-                <div class="card-price">${p.currency} ${p.price.toLocaleString()}</div>
+                <div class="card-price">${p.currency} ${Number(p.price).toLocaleString()}</div>
                 <h3 class="card-title">${p.title}</h3>
                 <p class="card-location"><i class="fa-solid fa-location-dot"></i>${p.location}, ${p.city}</p>
                 <div class="card-footer">
                     <span><i class="fa-solid fa-bed"></i> ${p.bedrooms} dorm. · ${p.area} m²</span>
-                    <a href="propiedad.html?id=${p.id}" class="btn btn-primary btn-sm">Ver detalle</a>
+                    <a href="propiedad.html?id=${encodeURIComponent(p.id)}" class="btn btn-primary btn-sm">Ver detalle</a>
                 </div>
             </div>
         </div>

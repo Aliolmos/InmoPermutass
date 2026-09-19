@@ -1,39 +1,79 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
+    /* Color oscuro principal. */
     --ink: #0a0f1e;
-    --ink-soft: #121b30;
-    --ink-line: rgba(255, 255, 255, 0.10);
-    --green: #a6ff3e;
-    --green-dark: #74c71e;
-    --green-text: #4f8a1a;
+    /* Variación del color oscuro principal. */
+    --ink-soft: #0d1424;
+    /* Color oscuro usado en tarjetas. */
+    --ink-card: #121b30;
+    /* Color/transparencia de líneas y bordes. */
+    --ink-line: rgba(255, 255, 255, 0.12);
+    /* Color verde principal de la identidad. */
+    --green: #3ef07a;
+    /* Versión oscura del verde. */
+    --green-dark: #2bc860;
+    /* Color verde para textos. */
+    --green-text: #3ef07a;
+    /* Color azul principal. */
     --blue: #2f7ffa;
+    /* Versión oscura del azul. */
     --blue-dark: #1c5fd1;
+    /* Color coral para favoritos/alertas. */
     --coral: #ff5470;
-    --paper: #ffffff;
-    --mist: #f4f6fa;
-    --stone: #5b6779;
+    /* Color auxiliar para superficies. */
+    --paper: #121b30;
+    /* Color oscuro auxiliar. */
+    --mist: #080d1a;
+    /* Color gris para textos secundarios. */
+    --stone: #aab3c8;
+    /* Versión clara del gris secundario. */
     --stone-light: #8a94a6;
+    /* Tono claro para textos secundarios. */
     --fog: #aab3c8;
-    --line: #e4e8f0;
+    /* Color auxiliar para líneas. */
+    --line: rgba(255, 255, 255, 0.12);
+    /* Radio grande de esquinas. */
     --radius-lg: 20px;
+    /* Radio medio de esquinas. */
     --radius-md: 14px;
+    /* Radio pequeño de esquinas. */
     --radius-sm: 8px;
-    --shadow: 0 1px 2px rgba(10, 15, 30, 0.05), 0 6px 20px -8px rgba(10, 15, 30, 0.10);
-    --shadow-lg: 0 20px 45px -18px rgba(10, 15, 30, 0.35);
+    /* Sombra estándar. */
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    /* Sombra grande y profunda. */
+    --shadow-lg: 0 20px 45px rgba(0, 0, 0, 0.65);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html { overflow-x: hidden; }
+
 body {
+    /* Define la tipografía que usará el elemento. */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #fbfcfd;
-    color: var(--ink);
+    /* Define el color de fondo. */
+    background-color: #0a0f1e;
+    /* Define una o varias imágenes o gradientes de fondo. */
+    background-image: 
+        radial-gradient(ellipse 900px 600px at 85% 10%, rgba(47, 127, 250, 0.18), transparent 60%),
+        radial-gradient(ellipse 800px 600px at 15% 85%, rgba(62, 240, 122, 0.14), transparent 60%),
+        linear-gradient(180deg, #0a0f1e 0%, #0d1424 100%);
+    /* Define si el fondo queda fijo o se desplaza con la página. */
+    background-attachment: fixed;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define la altura de cada línea de texto. */
     line-height: 1.55;
+    /* Define la propiedad CSS «-webkit-font-smoothing». */
     -webkit-font-smoothing: antialiased;
+    /* Controla el desbordamiento horizontal. */
+    overflow-x: hidden;
+    /* Define el ancho del elemento. */
+    width: 100%;
 }
 
-h1, h2, h3, .display { font-weight: 800; letter-spacing: -0.01em; }
+h1, h2, h3, .display { font-weight: 800; letter-spacing: -0.01em; color: #ffffff; }
 
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; }
@@ -45,58 +85,141 @@ img { max-width: 100%; display: block; }
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ---------- Header (siempre oscuro, sea cual sea el fondo de la página) ---------- */
+/* ---------- Header & Logo Recreación ---------- */
 header {
-    background: var(--ink);
+    /* Define el fondo del elemento. */
+    background: #0a0f1e;
+    /* Define el borde inferior. */
     border-bottom: 1px solid var(--ink-line);
+    /* Define el sistema de posicionamiento del elemento. */
     position: sticky;
+    /* Define la distancia desde arriba respecto de su referencia. */
     top: 0;
+    /* Define qué elemento queda delante o detrás cuando hay superposición. */
     z-index: 100;
 }
 
 .nav-container {
+    /* Limita el ancho máximo del elemento. */
     max-width: 1300px;
+    /* Define el espacio exterior alrededor del elemento. */
     margin: 0 auto;
-    padding: 0.9rem 2rem;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.85rem 2rem;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: space-between;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Define el espacio entre los elementos hijos. */
     gap: 1.5rem;
 }
 
-.logo {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #fff;
+/* Recreación del logo de la imagen adjunta */
+.logo-brand {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
-    gap: 0.6rem;
-    white-space: nowrap;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.85rem;
+    /* Define decoraciones del texto, como subrayado. */
+    text-decoration: none;
 }
-.logo .logo-accent { color: var(--green); }
-.logo .logo-suffix { font-weight: 500; color: var(--fog); }
 
-.logo-mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
-    color: var(--ink);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
+.logo-graphic {
+    /* Define el ancho del elemento. */
+    width: 50px;
+    /* Define la altura del elemento. */
+    height: 42px;
+    /* Controla cuánto puede reducirse el elemento dentro de un contenedor flex. */
     flex-shrink: 0;
 }
 
-.nav-menu {
+.brand-svg {
+    /* Define el ancho del elemento. */
+    width: 100%;
+    /* Define la altura del elemento. */
+    height: 100%;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: block;
+}
+
+.logo-text-group {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Define la dirección en la que se acomodan los elementos flex. */
+    flex-direction: column;
+    /* Alinea los elementos en el eje principal de flex. */
+    justify-content: center;
+}
+
+.logo-title {
+    /* Define el tamaño de la letra. */
+    font-size: 1.85rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: -0.02em;
+    /* Define la tipografía que usará el elemento. */
+    font-family: 'Inter', sans-serif;
+}
+
+.logo-title .accent-green {
+    /* Define el color del texto de permutas. */
+    color: #43f27e;
+}
+
+.logo-title .logo-dot {
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define el grosor de la letra. */
+    font-weight: 700;
+}
+
+.logo-tagline {
+    /* Define el tamaño de la letra. */
+    font-size: 0.65rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: 0.12em;
+    /* Define el espacio exterior superior. */
+    margin-top: 0.25rem;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
+    text-transform: uppercase;
+}
+
+.logo-tagline .accent-green {
+    /* Define el color del texto. */
+    color: #3ef07a;
+}
+
+.nav-menu {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Define el espacio entre los elementos hijos. */
     gap: 2rem;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Define el tamaño de la letra. */
     font-size: 0.94rem;
+    /* Define el grosor de la letra. */
     font-weight: 500;
+    /* Define el color del texto. */
     color: var(--fog);
+    /* Define cómo ocupa espacio el elemento dentro de un contenedor flex. */
     flex: 1;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
 }
 
@@ -104,72 +227,120 @@ header {
 .nav-menu a:hover { color: #fff; }
 .nav-menu a.active { color: #fff; font-weight: 700; }
 .nav-menu a.active::after {
+    /* Define contenido generado por CSS en pseudo-elementos. */
     content: '';
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    left: 0; right: 0; bottom: -4px;
+    /* Define la distancia desde la izquierda respecto de su referencia. */
+    left: 0;
+     right: 0;
+     bottom: -4px;
+    /* Define la altura del elemento. */
     height: 2px;
+    /* Define el fondo del elemento. */
     background: var(--green);
+    /* Redondea las esquinas. */
     border-radius: 2px;
 }
 
 .nav-actions { display: flex; gap: 0.6rem; align-items: center; }
 
 .icon-btn {
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
+    /* Define el ancho del elemento. */
     width: 40px;
+    /* Define la altura del elemento. */
     height: 40px;
+    /* Redondea las esquinas. */
     border-radius: 50%;
+    /* Define grosor, estilo y color del borde. */
     border: 1px solid var(--ink-line);
+    /* Define el fondo del elemento. */
     background: transparent;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define el color del texto. */
     color: var(--fog);
+    /* Define el tamaño de la letra. */
     font-size: 1rem;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
     cursor: pointer;
+    /* Define qué cambios de estilo se animan suavemente. */
     transition: border-color 0.15s ease, color 0.15s ease;
 }
 .icon-btn:hover { border-color: var(--green); color: var(--green); }
 .icon-btn.has-favs { color: var(--coral); border-color: var(--coral); }
 
 .fav-count {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    top: -6px; right: -6px;
+    /* Define la distancia desde arriba respecto de su referencia. */
+    top: -6px;
+     right: -6px;
+    /* Define el fondo del elemento. */
     background: var(--coral);
+    /* Define el color del texto. */
     color: #fff;
+    /* Define el tamaño de la letra. */
     font-size: 0.65rem;
+    /* Define el grosor de la letra. */
     font-weight: 700;
-    min-width: 18px; height: 18px;
+    /* Define la propiedad CSS «min-width». */
+    min-width: 18px;
+     height: 18px;
+    /* Redondea las esquinas. */
     border-radius: 50%;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: none;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0 3px;
+    /* Define grosor, estilo y color del borde. */
     border: 2px solid var(--ink);
 }
 .fav-count.show { display: flex; }
 
 .btn {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define el espacio entre los elementos hijos. */
     gap: 0.5rem;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0.65rem 1.3rem;
+    /* Redondea las esquinas. */
     border-radius: 30px;
+    /* Define el grosor de la letra. */
     font-weight: 700;
+    /* Define el tamaño de la letra. */
     font-size: 0.9rem;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
     cursor: pointer;
+    /* Define grosor, estilo y color del borde. */
     border: none;
+    /* Define qué cambios de estilo se animan suavemente. */
     transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    /* Controla los saltos de línea y espacios del texto. */
     white-space: nowrap;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background-color: var(--ink); color: #fff; border-radius: var(--radius-sm); }
-.btn-primary:hover { background-color: var(--ink-soft); }
-.btn-accent { background-color: var(--green); color: var(--ink); }
+.btn-primary { background-color: var(--green); color: #0a0f1e; border-radius: var(--radius-sm); }
+.btn-primary:hover { background-color: var(--green-dark); }
+.btn-accent { background-color: var(--green); color: #0a0f1e; }
 .btn-accent:hover { background-color: var(--green-dark); }
-.btn-outline { background: transparent; border: 1px solid #cbd5e1; color: var(--ink); border-radius: var(--radius-sm); }
-.btn-outline:hover { background: var(--mist); border-color: var(--stone-light); }
+.btn-outline { background: transparent; border: 1px solid var(--ink-line); color: #ffffff; border-radius: var(--radius-sm); }
+.btn-outline:hover { background: rgba(255,255,255,0.08); border-color: var(--green); color: var(--green); }
 .btn-ghost-dark { background: transparent; border: 1.5px solid rgba(255,255,255,0.35); color: #fff; }
 .btn-ghost-dark:hover { border-color: var(--green); color: var(--green); }
 .btn-sm { padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: var(--radius-sm); }
@@ -177,566 +348,718 @@ header {
 .btn-block { width: 100%; }
 
 .nav-toggle {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: none;
+    /* Cambia el orden visual dentro de flex. */
     order: 3;
+    /* Define el fondo del elemento. */
     background: transparent;
+    /* Define grosor, estilo y color del borde. */
     border: none;
+    /* Define el tamaño de la letra. */
     font-size: 1.4rem;
+    /* Define el color del texto. */
     color: #fff;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
     cursor: pointer;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0.25rem;
 }
 
-/* ================= HOME — SECCIÓN "INICIO" (hero + cómo funciona) =================
-   Todo este bloque pinta la franja oscura de arriba de index.html: a la
-   izquierda el mensaje principal con las tarjetas de ejemplo, a la derecha
-   el resumen de "cómo funciona". Si hay que cambiar colores del fondo,
-   tocar acá (.hero-combined); si hay que cambiar las proporciones de las
-   columnas, tocar .hero-combined-inner. */
+/* ================= HOME — SECCIÓN "INICIO" ================= */
 .hero-combined {
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
+    /* Define el fondo del elemento. */
     background:
         radial-gradient(ellipse 900px 500px at 85% 0%, rgba(47, 127, 250, 0.20), transparent 60%),
-        radial-gradient(ellipse 700px 500px at 10% 90%, rgba(166, 255, 62, 0.10), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 10% 90%, rgba(62, 240, 122, 0.15), transparent 60%),
         linear-gradient(180deg, #0a0f1e 0%, #0d1424 100%);
+    /* Define el color del texto. */
     color: #fff;
+    /* Controla qué ocurre con contenido que sale de los límites. */
     overflow: hidden;
 }
 
-/* Grid de 4 "columnas": texto | tarjetas | línea divisoria | cómo funciona */
 .hero-combined-inner {
+    /* Limita el ancho máximo del elemento. */
     max-width: 1360px;
+    /* Define el espacio exterior alrededor del elemento. */
     margin: 0 auto;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 3.5rem 2rem 4rem;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: grid;
+    /* Define las columnas de la cuadrícula y cuánto ocupa cada una. */
     grid-template-columns: 1fr 0.95fr 1px 0.9fr;
+    /* Define el espacio entre los elementos hijos. */
     gap: 2.75rem;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
+    /* Define qué elemento queda delante o detrás cuando hay superposición. */
     z-index: 1;
 }
 
-/* Línea vertical que separa "hero" de "cómo funciona" (como en la referencia) */
 .hero-divider {
+    /* Permite cambiar la alineación de este elemento individualmente. */
     align-self: stretch;
+    /* Define el fondo del elemento. */
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Pastilla chica con guion, tipo "— ASÍ DE SIMPLE" (reutilizada en las dos mitades) */
 .eyebrow-badge-dark {
-    display: inline-flex; align-items: center; gap: 0.5rem;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-flex;
+     align-items: center;
+     gap: 0.5rem;
+    /* Define grosor, estilo y color del borde. */
     border: 1px solid rgba(255, 255, 255, 0.18);
+    /* Define el color del texto. */
     color: var(--fog);
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0.35rem 0.9rem;
+    /* Redondea las esquinas. */
     border-radius: 20px;
-    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+    /* Define el tamaño de la letra. */
+    font-size: 0.68rem;
+     font-weight: 700;
+     letter-spacing: 0.03em;
+     text-transform: uppercase;
+    /* Define el espacio exterior inferior. */
     margin-bottom: 1.1rem;
 }
 .eyebrow-badge-dark .eyebrow-dash { width: 12px; height: 2px; background: var(--fog); border-radius: 2px; }
 
 .hero-title {
+    /* Define el tamaño de la letra. */
     font-size: 2.7rem;
+    /* Define la altura de cada línea de texto. */
     line-height: 1.08;
+    /* Define el grosor de la letra. */
     font-weight: 800;
+    /* Define el espacio entre caracteres. */
     letter-spacing: -0.01em;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
     text-transform: uppercase;
+    /* Define el espacio exterior inferior. */
     margin-bottom: 0.9rem;
 }
 .hero-title .accent-green { color: var(--green); }
 
 .accent-underline {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: block;
+    /* Define el ancho del elemento. */
     width: 56px;
+    /* Define la altura del elemento. */
     height: 4px;
+    /* Define el fondo del elemento. */
     background: var(--green);
+    /* Redondea las esquinas. */
     border-radius: 2px;
+    /* Define el espacio exterior inferior. */
     margin-bottom: 1.3rem;
 }
 
 .hero-sub {
+    /* Define el color del texto. */
     color: var(--fog);
+    /* Define el tamaño de la letra. */
     font-size: 0.98rem;
+    /* Limita el ancho máximo del elemento. */
     max-width: 380px;
+    /* Define el espacio exterior inferior. */
     margin-bottom: 1.75rem;
+    /* Define la altura de cada línea de texto. */
     line-height: 1.6;
 }
 
 .hero-cta-row { display: flex; flex-wrap: wrap; gap: 0.9rem; }
 
-/* Swap visual v2: dos tarjetas + círculo de match */
+
+/* Swap visual v2 */
 .swap-visual-v2 {
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
-    min-height: 340px;
+    /* Define la altura mínima del elemento. */
+    min-height: 380px;
 }
 
-/* Ancho de cada tarjeta: si se agranda, revisar los translate() de --a/--b más abajo */
 .swap-card-v2 {
+    /* Define el ancho del elemento. */
     width: 180px;
-    background: var(--paper);
-    color: var(--ink);
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Redondea las esquinas. */
     border-radius: var(--radius-md);
+    /* Añade una sombra alrededor del elemento. */
     box-shadow: var(--shadow-lg);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Controla qué ocurre con contenido que sale de los límites. */
     overflow: hidden;
+    /* Aplica una animación definida con @keyframes. */
     animation: swap-in 0.6s ease-out both;
 }
 .swap-card-v2 img { height: 115px; width: 100%; object-fit: cover; }
 .swap-card-v2 .swap-tag {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    top: 0.6rem; left: 0.6rem;
-    display: flex; align-items: center; gap: 0.3rem;
-    font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
+    /* Define la distancia desde arriba respecto de su referencia. */
+    top: 0.6rem;
+     left: 0.6rem;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+     align-items: center;
+     gap: 0.3rem;
+    /* Define el tamaño de la letra. */
+    font-size: 0.62rem;
+     font-weight: 800;
+     text-transform: uppercase;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0.28rem 0.6rem 0.28rem 0.4rem;
+    /* Redondea las esquinas. */
     border-radius: 20px;
-    color: var(--ink);
+    /* Define el color del texto. */
+    color: #0a0f1e;
 }
 .swap-card-v2 .swap-tag.tag-green { background: var(--green); }
 .swap-card-v2 .swap-tag.tag-blue { background: var(--blue); color: #fff; }
 .swap-card-v2 .swap-img-wrap { position: relative; }
 .swap-card-v2 .swap-body { padding: 0.85rem 1rem 1rem; }
-.swap-card-v2 .swap-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.55rem; }
+.swap-card-v2 .swap-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.55rem; color:#fff; }
 .swap-card-v2 .swap-meta { font-size: 0.72rem; color: var(--stone); display: flex; flex-direction: column; gap: 0.3rem; }
 .swap-card-v2 .swap-meta span { display: flex; align-items: center; gap: 0.4rem; }
 .swap-card-v2 .swap-meta i { color: var(--stone-light); width: 14px; }
-.swap-card-v2 .swap-loc { margin-top: 0.55rem; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
+.swap-card-v2 .swap-loc { margin-top: 0.55rem; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; color:#fff; }
 .swap-card-v2 .swap-loc i { color: var(--blue); }
 
-.swap-card-v2--a { transform: translate(-36px, -8px) rotate(-4deg); z-index: 1; animation-delay: 0.05s; }
-.swap-card-v2--b { transform: translate(36px, 24px) rotate(4deg); z-index: 0; animation-delay: 0.2s; }
+.swap-card-v2--a { transform: translate(-60px, -10px) rotate(-4deg); z-index: 1; animation-delay: 0.05s; }
+.swap-card-v2--b { transform: translate(60px, 24px) rotate(4deg); z-index: 0; animation-delay: 0.2s; }
 
+/* LOGO DE INICIO AGRANDADO CON LAS MANITOS ENTRE LAS DOS CASITAS */
 .swap-match-circle {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    width: 78px; height: 78px;
-    border-radius: 50%;
-    background: var(--ink);
-    border: 2px solid var(--green);
-    box-shadow: 0 0 0 6px rgba(166,255,62,0.08), var(--shadow-lg);
-    display: flex; align-items: center; justify-content: center;
+    /* Define el ancho del elemento. */
+    width: 165px;
+     height: 165px;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+     align-items: center;
+     justify-content: center;
+    /* Define qué elemento queda delante o detrás cuando hay superposición. */
     z-index: 2;
+    /* Aplica efectos visuales, como una sombra o desenfoque. */
+    filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.75));
+    /* Aplica una animación definida con @keyframes. */
     animation: swap-pop 0.5s ease-out 0.4s both;
 }
-.swap-match-circle .rotate-icon {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px dashed rgba(166,255,62,0.5);
-    animation: spin-slow 8s linear infinite;
-}
-.swap-match-circle i { font-size: 1.4rem; background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.swap-match-circle svg { width: 100%; height: 100%; display: block; }
 
-.match-pill {
+.match-pill-wrap {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    bottom: 34px;
-    background: var(--green);
-    color: var(--ink);
-    font-weight: 800;
-    font-size: 0.78rem;
-    padding: 0.35rem 0.9rem;
-    border-radius: 20px;
+    /* Define la distancia desde abajo respecto de su referencia. */
+    bottom: 24px;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Define la dirección en la que se acomodan los elementos flex. */
+    flex-direction: column;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.55rem;
+    /* Define qué elemento queda delante o detrás cuando hay superposición. */
     z-index: 3;
-    box-shadow: var(--shadow-lg);
+    /* Define la alineación horizontal del texto. */
+    text-align: center;
+    /* Aplica una animación definida con @keyframes. */
     animation: swap-pop 0.5s ease-out 0.6s both;
 }
 
-.swap-caption {
-    text-align: center;
-    color: var(--fog);
-    font-size: 0.8rem;
-    margin-top: 0.75rem;
+.match-pill {
+    /* Define el fondo del elemento match. */
+    background: var(--green);
+    /* Define el color del texto. */
+    color: var(--ink);
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el tamaño de la letra. */
+    font-size: 1.2rem;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
+    text-transform: uppercase;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: 0.01em;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.3rem 1.5rem;
+    /* Redondea las esquinas. */
+    border-radius: 40px;
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: var(--shadow-lg);
+}
+
+.match-caption {
+    /* Define el espacio exterior alrededor del elemento. */
+    margin: 0;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define el grosor de la letra. */
+    font-weight: 700;
+    /* Define el tamaño de la letra. */
+    font-size: 0.95rem;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1.35;
+    /* Limita el ancho máximo del elemento. */
+    max-width: 220px;
 }
 
 @keyframes swap-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; } }
 @keyframes swap-pop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
-@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Franja de features dentro del hero oscuro */
-.feature-strip {
-    max-width: 1300px;
-    margin: 1.5rem auto 0;
-    padding: 1.5rem 2rem 3.5rem;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-.feature-item { display: flex; align-items: flex-start; gap: 0.75rem; }
-.feature-icon {
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 1rem;
-    border: 1.5px solid;
-}
-.feature-icon.fi-green { color: var(--green); border-color: rgba(166,255,62,0.4); }
-.feature-icon.fi-blue { color: var(--blue); border-color: rgba(47,127,250,0.45); }
-.feature-item h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.15rem; }
-.feature-item p { font-size: 0.8rem; color: var(--fog); }
-
-/* Tarjeta de búsqueda flotante */
-.search-card-wrap { max-width: 1160px; margin: -3.25rem auto 0; padding: 0 2rem; position: relative; z-index: 5; }
-.search-card {
-    background: var(--paper);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    padding: 1.75rem 2rem;
-}
-.search-card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.search-card-head h2 { font-size: 1.3rem; font-weight: 800; }
-.search-card-head h2 span { color: var(--stone); font-weight: 500; }
-.type-tabs { display: flex; gap: 0.4rem; background: var(--mist); padding: 0.3rem; border-radius: 30px; }
-.type-tabs button {
-    border: none; background: transparent; padding: 0.4rem 0.9rem;
-    border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--stone);
-    cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
-}
-.type-tabs button.active { background: var(--ink); color: #fff; }
-
-.search-fields-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 0.9rem; align-items: end; }
-.search-field-v2 label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--stone-light); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.4rem; }
-.search-field-v2 .field-box { position: relative; }
-.search-field-v2 .field-box i { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--stone-light); font-size: 0.85rem; }
-.search-field-v2 input, .search-field-v2 select {
-    width: 100%; padding: 0.75rem 0.9rem 0.75rem 2.2rem;
-    border: 1px solid var(--line); border-radius: var(--radius-sm);
-    font-size: 0.9rem; font-family: inherit; outline: none; background: var(--mist);
-    transition: border-color 0.15s ease;
-}
-.search-field-v2 input:focus, .search-field-v2 select:focus { border-color: var(--blue); background: var(--paper); }
-.search-fields-row .btn { height: 46px; }
-
-/* ================= "¿Cómo funciona?" — mitad derecha del hero ================= */
+/* ¿Cómo funciona? */
 .hero-how-title { font-size: 1.9rem; }
 .hero-how-title span { color: var(--green); }
 .hero-how-sub { color: var(--fog); font-size: 0.95rem; margin-bottom: 2.2rem; }
 
-/* Fila de los 3 pasos, con guiones "—" como separadores entre círculos */
 .steps-timeline-v2 { display: flex; align-items: flex-start; gap: 0.5rem; }
 .step-v2 { flex: 1; text-align: center; position: relative; min-width: 0; }
-/* Guion separador entre pasos: se alinea con el centro del círculo de ícono */
-.step-sep { color: rgba(255,255,255,0.3); font-size: 1.1rem; margin-top: 28px; flex-shrink: 0; }
+.step-sep { color: rgba(255,255,255,0.3); font-size: 1.1rem; margin-top: 36px; flex-shrink: 0; }
 
-/* Círculo con el ícono del paso. El número queda "montado" abajo, superpuesto al borde. */
 .step-icon-circle {
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
-    width: 56px; height: 56px; border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.18);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem; margin: 0 auto 1.1rem;
+    /* Define el ancho del elemento. */
+    width: 76px;
+     height: 76px;
+     border-radius: 50%;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+     align-items: center;
+     justify-content: center;
+    /* Define el tamaño de la letra. */
+    font-size: 1.3rem;
+     margin: 0 auto 1rem;
 }
-/* Variantes de color del ícono/círculo. Cambiar acá si se quiere otra combinación. */
-.step-icon-circle.step-icon--green { color: var(--green); border-color: rgba(166,255,62,0.4); box-shadow: 0 0 30px -6px rgba(166,255,62,0.55); }
-.step-icon-circle.step-icon--blue { color: var(--blue); border-color: rgba(47,127,250,0.45); box-shadow: 0 0 30px -6px rgba(47,127,250,0.55); }
-.step-icon-circle.step-icon--mixed { border-color: rgba(47,127,250,0.45); box-shadow: 0 0 30px -6px rgba(47,127,250,0.5); }
-.step-icon-circle.step-icon--mixed i { background: linear-gradient(135deg, var(--blue), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.step-icon-circle svg { width: 100%; height: 100%; display: block; }
 
-/* Numerito azul superpuesto abajo del círculo (1, 2, 3) */
-.step-num-badge {
+.step-icon--withbubble { position: relative; overflow: visible; }
+
+/* Burbujitas con los tres porcentajes 50%, 80% y 96% alrededor del ícono */
+.step-match-bubble {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
-    bottom: -8px; left: 50%; transform: translateX(-50%);
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--blue); color: #fff; font-weight: 800; font-size: 0.75rem;
-    display: flex; align-items: center; justify-content: center;
-    border: 3px solid var(--ink);
+    /* Define el color del texto. */
+    color: var(--ink);
+    /* Define el tamaño de la letra. */
+    font-size: 0.7rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 3px 8px;
+    /* Redondea las esquinas. */
+    border-radius: 20px;
+    /* Define grosor, estilo y color del borde. */
+    border: 2px solid var(--ink);
+    /* Define la altura de cada línea de texto. */
+    line-height: 1;
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    /* Controla los saltos de línea y espacios del texto. */
+    white-space: nowrap;
+}
+.step-match-bubble.bubble-50 {
+    /* Define la distancia desde arriba respecto de su referencia. */
+    top: -10px;
+     left: -22px;
+    /* Define el fondo del elemento. */
+    background: linear-gradient(135deg, #2f7ffa, #17b8a6);
+}
+.step-match-bubble.bubble-80 {
+    /* Define la distancia desde abajo respecto de su referencia. */
+    bottom: -6px;
+     left: -18px;
+    /* Define el fondo del elemento. */
+    background: linear-gradient(135deg, #17b8a6, #3ef07a);
+}
+.step-match-bubble.bubble-96 {
+    /* Define la distancia desde arriba respecto de su referencia. */
+    top: -12px;
+     right: -22px;
+    /* Define el fondo del elemento. */
+    background: linear-gradient(135deg, #3ef07a, #a6ff3e);
 }
 
-.step-v2 h3 { font-size: 1rem; font-weight: 800; letter-spacing: 0.01em; margin-bottom: 0.35rem; }
+.step-v2 h3 { font-size: 1rem; font-weight: 800; letter-spacing: 0.01em; margin-bottom: 0.35rem; color:#fff; }
 .step-v2 p { color: var(--fog); font-size: 0.85rem; line-height: 1.5; }
 
-/* ================= Collage de historias ================= */
-.story-section { background: var(--mist); padding: 4.5rem 2rem; }
+/* Collage de historias */
+.story-section {
+    /* Define el fondo del elemento. */
+    background: rgba(13, 20, 36, 0.7);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 4.5rem 2rem;
+    /* Define la propiedad CSS «border-top». */
+    border-top: 1px solid var(--ink-line);
+    /* Define el borde inferior. */
+    border-bottom: 1px solid var(--ink-line);
+}
 .story-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 3rem; align-items: center; }
-.story-inner h2 { font-size: 2rem; margin-bottom: 1rem; }
-.story-inner h2 span { color: var(--green-text); }
+.story-inner h2 { font-size: 2rem; margin-bottom: 1rem; color:#fff; }
+.story-inner h2 span { color: var(--green); }
 .story-inner p { color: var(--stone); margin-bottom: 1.75rem; max-width: 420px; }
 .story-collage { display: flex; gap: -1rem; }
 .story-collage img {
-    width: 33.33%; height: 320px; object-fit: cover;
+    /* Define el ancho del elemento. */
+    width: 33.33%;
+     height: 320px;
+     object-fit: cover;
+    /* Redondea las esquinas. */
     border-radius: var(--radius-md);
+    /* Añade una sombra alrededor del elemento. */
     box-shadow: var(--shadow-lg);
-    border: 4px solid #fff;
+    /* Define grosor, estilo y color del borde. */
+    border: 3px solid rgba(255,255,255,0.15);
 }
 .story-collage img:nth-child(1) { transform: rotate(-4deg) translateX(10px); z-index: 1; }
 .story-collage img:nth-child(2) { transform: translateY(-10px); z-index: 2; }
 .story-collage img:nth-child(3) { transform: rotate(4deg) translateX(-10px); z-index: 1; }
 
-/* ---------- Container & Grids ---------- */
+/* Containers & Grids */
 .container { max-width: 1200px; margin: 0 auto; padding: 3.5rem 2rem; }
 
 .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; gap: 1rem; }
-.section-title h2 { font-size: 1.65rem; font-weight: 800; }
-.section-title h2 span { color: var(--green-text); }
+.section-title h2 { font-size: 1.65rem; font-weight: 800; color: #fff; }
+.section-title h2 span { color: var(--green); }
 .section-title p { color: var(--stone); font-size: 0.95rem; margin-top: 0.3rem; }
-.section-link { font-weight: 700; font-size: 0.9rem; color: var(--ink); display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
-.section-link:hover { color: var(--blue); }
+.section-link { font-weight: 700; font-size: 0.9rem; color: #fff; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.section-link:hover { color: var(--green); }
 
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.75rem; }
 
-/* ---------- Property Card ---------- */
+/* Property Card — Estilo Oscuro en sintonía con Inicio */
 .card {
-    background: var(--paper);
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Redondea las esquinas. */
     border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
+    /* Controla qué ocurre con contenido que sale de los límites. */
     overflow: hidden;
+    /* Añade una sombra alrededor del elemento. */
     box-shadow: var(--shadow);
-    border: 1px solid var(--line);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Define qué cambios de estilo se animan suavemente. */
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Define la dirección en la que se acomodan los elementos flex. */
     flex-direction: column;
 }
-.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(62, 240, 122, 0.4); }
 
 .card-img { height: 200px; position: relative; background-size: cover; background-position: center; }
 
 .match-badge {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
+    /* Define la distancia desde arriba respecto de su referencia. */
     top: 50%;
+    /* Define la distancia desde la izquierda respecto de su referencia. */
     left: 50%;
+    /* Mueve, gira o escala visualmente el elemento. */
     transform: translate(-50%, -50%);
+    /* Define el ancho del elemento. */
     width: 108px;
+    /* Define la altura del elemento. */
     height: 108px;
+    /* Redondea las esquinas. */
     border-radius: 50%;
-    background: rgba(28, 58, 99, 0.55);
-    backdrop-filter: blur(1px);
-    border: 1.5px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 8px 20px -6px rgba(11, 27, 52, 0.45);
+    /* Define el fondo del elemento. */
+    background: rgba(10, 15, 30, 0.75);
+    /* Aplica un efecto al contenido que está detrás del elemento. */
+    backdrop-filter: blur(4px);
+    /* Define grosor, estilo y color del borde. */
+    border: 1.5px solid var(--green);
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    /* Define el color del texto. */
     color: #fff;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Define la dirección en la que se acomodan los elementos flex. */
     flex-direction: column;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define la alineación horizontal del texto. */
     text-align: center;
+    /* Define la altura de cada línea de texto. */
     line-height: 1.15;
 }
-.match-badge .match-percent { font-size: 1.7rem; font-weight: 800; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.match-badge .match-percent { font-size: 1.7rem; font-weight: 800; color: var(--green); }
 .match-badge .match-text { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; opacity: 0.92; }
 
-@media (max-width: 640px) {
-    .match-badge { width: 92px; height: 92px; }
-    .match-badge .match-percent { font-size: 1.4rem; }
-}
-
 .fav-btn {
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
+    /* Define la distancia desde arriba respecto de su referencia. */
     top: 0.7rem;
+    /* Define la distancia desde la izquierda respecto de su referencia. */
     left: 0.7rem;
-    width: 34px; height: 34px;
+    /* Define el ancho del elemento. */
+    width: 34px;
+     height: 34px;
+    /* Redondea las esquinas. */
     border-radius: 50%;
+    /* Define grosor, estilo y color del borde. */
     border: none;
-    background: rgba(11, 27, 52, 0.55);
+    /* Define el fondo del elemento. */
+    background: rgba(10, 15, 30, 0.7);
+    /* Define el color del texto. */
     color: #fff;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
     cursor: pointer;
+    /* Aplica un efecto al contenido que está detrás del elemento. */
     backdrop-filter: blur(2px);
+    /* Define qué cambios de estilo se animan suavemente. */
     transition: background-color 0.15s ease, color 0.15s ease;
 }
-.fav-btn:hover { background: rgba(11, 27, 52, 0.8); }
+.fav-btn:hover { background: rgba(10, 15, 30, 0.9); }
 .fav-btn.is-fav { color: var(--coral); background: rgba(255,255,255,0.92); }
 
 .card-body { padding: 1.35rem 1.4rem; display: flex; flex-direction: column; flex: 1; }
-.card-price { font-size: 1.35rem; font-weight: 800; color: var(--ink); margin-bottom: 0.2rem; }
-.card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
+.card-price { font-size: 1.35rem; font-weight: 800; color: var(--green); margin-bottom: 0.2rem; }
+.card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; color: #ffffff; }
 .card-location { font-size: 0.87rem; color: var(--stone); margin-bottom: 1.1rem; }
 .card-location i { color: var(--blue); margin-right: 0.2rem; }
 
 .card-footer {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: space-between;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Define el espacio interior superior. */
     padding-top: 1rem;
-    border-top: 1px solid var(--line);
+    /* Define la propiedad CSS «border-top». */
+    border-top: 1px solid var(--ink-line);
+    /* Define el tamaño de la letra. */
     font-size: 0.83rem;
+    /* Define el color del texto. */
     color: var(--stone);
+    /* Define el espacio exterior superior. */
     margin-top: auto;
 }
 
 .empty-state {
+    /* Define qué columnas ocupa el elemento. */
     grid-column: 1 / -1;
+    /* Define la alineación horizontal del texto. */
     text-align: center;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 3.5rem 2rem;
-    background: var(--paper);
-    border: 1px dashed var(--line);
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px dashed var(--ink-line);
+    /* Redondea las esquinas. */
     border-radius: var(--radius-lg);
+    /* Define el color del texto. */
     color: var(--stone);
 }
-.empty-state h3 { color: var(--ink); margin-bottom: 0.5rem; font-size: 1.2rem; }
+.empty-state h3 { color: #fff; margin-bottom: 0.5rem; font-size: 1.2rem; }
 .empty-state i { font-size: 1.8rem; color: var(--stone-light); margin-bottom: 1rem; }
 
-/* ---------- Catalogo ---------- */
+/* Catálogo — Fondo y Filtros */
 .catalog-layout { display: grid; grid-template-columns: 270px 1fr; gap: 2.25rem; align-items: start; }
 
 .filters-panel {
-    background: var(--paper);
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 1.5rem;
+    /* Redondea las esquinas. */
     border-radius: var(--radius-md);
+    /* Añade una sombra alrededor del elemento. */
     box-shadow: var(--shadow);
-    border: 1px solid var(--line);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Define el sistema de posicionamiento del elemento. */
     position: sticky;
+    /* Define la distancia desde arriba respecto de su referencia. */
     top: 90px;
 }
-.filters-panel h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 1.3rem; display: flex; align-items: center; gap: 0.5rem; }
-.filters-panel h3 i { color: var(--blue); }
+.filters-panel h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 1.3rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+.filters-panel h3 i { color: var(--green); }
 
 .filter-group { margin-bottom: 1.3rem; }
-.filter-group label { display: block; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--ink); }
+.filter-group label { display: block; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--fog); }
 .filter-group select, .filter-group input {
+    /* Define el ancho del elemento. */
     width: 100%;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 0.6rem 0.7rem;
-    border: 1px solid var(--line);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Redondea las esquinas. */
     border-radius: var(--radius-sm);
+    /* Define el tamaño de la letra. */
     font-size: 0.88rem;
+    /* Define el contorno exterior, especialmente útil para foco. */
     outline: none;
+    /* Define la tipografía que usará el elemento. */
     font-family: inherit;
-    background: var(--paper);
+    /* Define el fondo del elemento. */
+    background: #080d1a;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define qué cambios de estilo se animan suavemente. */
     transition: border-color 0.15s ease;
 }
-.filter-group select:focus, .filter-group input:focus { border-color: var(--blue); }
+.filter-group select:focus, .filter-group input:focus { border-color: var(--green); }
 
-/* ---------- Funcionamiento (página propia, versión clara) ---------- */
+/* Funcionamiento */
 .steps-timeline {
+    /* Define cómo se muestra y se comporta el elemento. */
     display: grid;
+    /* Define las columnas de la cuadrícula y cuánto ocupa cada una. */
     grid-template-columns: repeat(3, 1fr);
+    /* Define el espacio entre los elementos hijos. */
     gap: 0;
+    /* Define el espacio exterior superior. */
     margin-top: 3rem;
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
 }
 .steps-timeline::before {
+    /* Define contenido generado por CSS en pseudo-elementos. */
     content: '';
+    /* Define el sistema de posicionamiento del elemento. */
     position: absolute;
+    /* Define la distancia desde arriba respecto de su referencia. */
     top: 22px;
+    /* Define la distancia desde la izquierda respecto de su referencia. */
     left: 8%;
+    /* Define la distancia desde la derecha respecto de su referencia. */
     right: 8%;
+    /* Define la altura del elemento. */
     height: 2px;
-    background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 14px);
+    /* Define el fondo del elemento. */
+    background: repeating-linear-gradient(90deg, var(--ink-line) 0 8px, transparent 8px 14px);
 }
 .step-card { text-align: left; padding: 0 1.5rem; position: relative; }
 .step-number {
-    width: 44px; height: 44px;
+    /* Define el ancho del elemento. */
+    width: 44px;
+     height: 44px;
+    /* Redondea las esquinas. */
     border-radius: 50%;
-    background: var(--ink);
-    color: #fff;
+    /* Define el fondo del elemento. */
+    background: var(--green);
+    /* Define el color del texto. */
+    color: #0a0f1e;
+    /* Define el grosor de la letra. */
     font-weight: 800;
+    /* Define cómo se muestra y se comporta el elemento. */
     display: flex;
+    /* Alinea los elementos en el eje transversal de flex. */
     align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
     justify-content: center;
+    /* Define el espacio exterior inferior. */
     margin-bottom: 1.3rem;
+    /* Define el sistema de posicionamiento del elemento. */
     position: relative;
+    /* Define qué elemento queda delante o detrás cuando hay superposición. */
     z-index: 1;
+    /* Define el tamaño de la letra. */
     font-size: 1.05rem;
 }
-.step-card:nth-child(2) .step-number { background: var(--blue); }
-.step-card:nth-child(3) .step-number { background: var(--green-text); }
-.step-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; }
+.step-card:nth-child(2) .step-number { background: var(--blue); color: #fff; }
+.step-card:nth-child(3) .step-number { background: var(--green); color: #0a0f1e; }
+.step-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; color:#fff; }
 .step-card p { color: var(--stone); font-size: 0.95rem; line-height: 1.6; }
 
-.page-hero { max-width: 720px; margin: 0 auto 0; text-align: center; padding-top: 3.5rem; }
-.page-hero h1 { font-size: 2.4rem; margin-bottom: 0.6rem; }
+.page-hero { max-width: 720px; margin: 0 auto; text-align: center; padding-top: 3.5rem; }
+.page-hero h1 { font-size: 2.4rem; margin-bottom: 0.6rem; color:#fff; }
 .page-hero p { color: var(--stone); font-size: 1.05rem; }
 
-/* ---------- Sellers ---------- */
+/* Sellers */
 .sellers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.75rem; margin-top: 2rem; }
 .seller-card {
-    background: var(--paper);
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Define el espacio interior entre el contenido y el borde. */
     padding: 2rem 1.75rem;
+    /* Redondea las esquinas. */
     border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
+    /* Añade una sombra alrededor del elemento. */
     box-shadow: var(--shadow);
-    border: 1px solid var(--line);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Define la alineación horizontal del texto. */
     text-align: center;
+    /* Define qué cambios de estilo se animan suavemente. */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.seller-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.seller-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem auto; border: 3px solid #eaf3ff; }
+.seller-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(62,240,122,0.4); }
+.seller-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem auto; border: 3px solid var(--blue); }
 
-/* ---------- Property Detail ---------- */
-.property-container { max-width: 1120px; margin: 0 auto; padding: 2.75rem 2rem 4rem; }
+.info-card { background: #121b30; padding: 2.25rem; border-radius: var(--radius-lg); box-shadow: var(--shadow); border: 1px solid var(--ink-line); }
 
-.eyebrow-badge {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    background: #eaf3ff; color: var(--blue-dark);
-    padding: 0.3rem 0.8rem; border-radius: 20px;
-    font-size: 0.75rem; font-weight: 700; margin-bottom: 0.8rem;
-}
-
-.property-hero-img {
-    width: 100%;
-    height: 420px;
-    border-radius: var(--radius-lg);
-    object-fit: cover;
-    box-shadow: var(--shadow-lg);
-    margin-bottom: 2.25rem;
-}
-
-.property-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 2rem; }
-
-.info-card { background: var(--paper); padding: 2.25rem; border-radius: var(--radius-lg); box-shadow: var(--shadow); border: 1px solid var(--line); }
-.info-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem; }
-.info-card .price-tag { font-size: 2rem; font-weight: 800; margin-bottom: 1.1rem; }
-
-.permuta-match-box { background: #eaf3ff; border: 1px solid #cfe2fb; padding: 1.5rem; border-radius: var(--radius-md); margin-top: 1.5rem; }
-.permuta-match-box h4 { color: var(--blue-dark); font-size: 1rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem; }
-.permuta-match-box p { color: #1c4d8f; font-size: 0.95rem; }
-
-.seller-box { text-align: center; }
-.seller-box img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem auto; border: 3px solid #eaf3ff; }
-.seller-box .seller-role { color: var(--stone); font-size: 0.88rem; margin: 0.5rem 0 1.5rem 0; }
-
-/* ---------- Forms (publicar) ---------- */
-.form-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 2.5rem; max-width: 780px; margin: 0 auto; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.form-field { margin-bottom: 1.25rem; }
-.form-field.full { grid-column: 1 / -1; }
-.form-field label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.45rem; color: var(--ink); }
-.form-field input, .form-field select, .form-field textarea {
-    width: 100%;
-    padding: 0.65rem 0.8rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    font-family: inherit;
-    outline: none;
-    background: #fbfcfd;
-    transition: border-color 0.15s ease;
-}
-.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--blue); background: var(--paper); }
-.form-hint { font-size: 0.78rem; color: var(--stone-light); margin-top: 0.35rem; }
-.checkbox-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.checkbox-chip { display: flex; align-items: center; gap: 0.4rem; border: 1px solid var(--line); border-radius: 20px; padding: 0.4rem 0.9rem 0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease; }
-.checkbox-chip:has(input:checked) { border-color: var(--blue); background: #eaf3ff; color: var(--blue-dark); font-weight: 600; }
-.form-success { display: none; background: #eaf9df; border: 1px solid #c9edad; color: var(--green-text); padding: 1rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem; }
-.form-success.show { display: block; }
-
-/* ---------- Responsive ---------- */
+/* RESPONSIVE */
 @media (max-width: 980px) {
-    /* Sección "inicio": todo pasa a una sola columna y se oculta la línea divisoria */
-    .hero-combined-inner { grid-template-columns: 1fr; }
-    .hero-divider { display: none; }
-    .swap-visual-v2 { min-height: 260px; order: -1; }
-    .feature-strip { grid-template-columns: repeat(2, 1fr); }
-    .search-fields-row { grid-template-columns: 1fr 1fr; }
-    .search-fields-row .btn { grid-column: 1 / -1; }
+    .hero-combined-inner { grid-template-columns: 1fr; padding: 2.75rem 1.5rem 3rem; gap: 2.25rem; }
+    .hero-divider { width: 100%; height: 1px; }
+    .swap-visual-v2 { min-height: 300px; order: -1; }
     .story-inner { grid-template-columns: 1fr; }
     .catalog-layout { grid-template-columns: 1fr; }
     .filters-panel { position: static; }
-    .property-grid { grid-template-columns: 1fr; }
-    .form-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {
     .nav-toggle { display: inline-flex; }
     .nav-menu {
+        /* Define cómo se muestra y se comporta el elemento. */
         display: none;
+        /* Define el sistema de posicionamiento del elemento. */
         position: absolute;
-        top: 100%; left: 0; right: 0;
-        background: var(--ink);
+        /* Define la distancia desde arriba respecto de su referencia. */
+        top: 100%;
+         left: 0;
+         right: 0;
+        /* Define el fondo del elemento. */
+        background: #0a0f1e;
+        /* Define el borde inferior. */
         border-bottom: 1px solid var(--ink-line);
+        /* Define la dirección en la que se acomodan los elementos flex. */
         flex-direction: column;
+        /* Alinea los elementos en el eje transversal de flex. */
         align-items: flex-start;
+        /* Define el espacio entre los elementos hijos. */
         gap: 0;
+        /* Define el espacio interior entre el contenido y el borde. */
         padding: 0.5rem 0;
+        /* Añade una sombra alrededor del elemento. */
         box-shadow: var(--shadow);
     }
     .nav-menu.nav-open { display: flex; }
@@ -746,20 +1069,954 @@ header {
 
 @media (max-width: 640px) {
     .hero-title { font-size: 2.3rem; }
-    .search-card-wrap { margin-top: -2rem; padding: 0 1.25rem; }
-    .search-card { padding: 1.25rem; }
-    .search-fields-row { grid-template-columns: 1fr; }
     .grid-cards { grid-template-columns: 1fr; }
     .section-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     .nav-container { padding: 0.9rem 1.25rem; }
     .container { padding: 2.5rem 1.25rem; }
-    .property-hero-img { height: 240px; }
-    .steps-timeline { grid-template-columns: 1fr; gap: 2rem; }
+
+    /* Cómo funciona: los 3 pasos quedan uno al lado del otro en celular. */
+    .steps-timeline-v2 {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.25rem;
+        width: 100%;
+    }
+
+    /* Ocultamos los separadores para aprovechar el ancho disponible. */
+    .step-sep {
+        display: none;
+    }
+
+    /* Cada paso ocupa aproximadamente un tercio del ancho. */
+    .step-v2 {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 0;
+        text-align: center;
+    }
+  
+
+    /* Reducimos los íconos para que los tres entren cómodamente. */
+    .step-icon-circle {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 0.7rem;
+    }
+
+    /* Títulos de los pasos. */
+    .step-v2 h3 {
+        font-size: 0.82rem;
+        margin-bottom: 0.3rem;
+    }
+
+    /* Descripciones de los pasos. */
+    .step-v2 p {
+        font-size: 0.68rem;
+        line-height: 1.35;
+    }
+
+    /* Porcentajes del tercer paso. */
+    .step-match-bubble {
+        font-size: 0.55rem;
+        padding: 2px 5px;
+    }
+}
+
+.filters-ia-hint { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px dashed var(--ink-line); }
+.filters-ia-hint p { font-size: 0.8rem; color: var(--stone); margin-bottom: 0.6rem; }
+
+/* =========================================================================
+   AGREGADO — Estilos que faltaban para las páginas internas
+   (catálogo, favoritos, propiedad, publicar, vendedores, funcionamiento).
+   El home ya funcionaba porque usa el logo y el hero nuevos; estas clases
+   son las que esas otras páginas venían usando sin tener CSS detrás.
+   ========================================================================= */
+
+/* ---------- Logo compacto del header (páginas internas) ---------- */
+.logo {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.6rem;
+    /* Define el tamaño de la letra. */
+    font-size: 1.35rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: -0.02em;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1;
+    /* Controla los saltos de línea y espacios del texto. */
+    white-space: nowrap;
+    /* Controla cuánto puede reducirse el elemento dentro de un contenedor flex. */
+    flex-shrink: 0;
+}
+
+.logo-mark {
+    /* Define el ancho del elemento. */
+    width: 38px;
+    /* Define la altura del elemento. */
+    height: 38px;
+    /* Redondea las esquinas. */
+    border-radius: 12px;
+    /* Define el fondo del elemento. */
+    background: linear-gradient(135deg, var(--green), var(--blue));
+    /* Define el color del texto. */
+    color: #0a0f1e;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
+    justify-content: center;
+    /* Define el tamaño de la letra. */
+    font-size: 1rem;
+    /* Controla cuánto puede reducirse el elemento dentro de un contenedor flex. */
+    flex-shrink: 0;
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: 0 6px 16px rgba(47, 127, 250, 0.35);
+}
+
+.logo-accent { color: var(--green); }
+.logo-suffix { color: #ffffff; font-weight: 700; opacity: 0.85; }
+
+/* ---------- Franja superior de las páginas internas ---------- */
+.page-band {
+    /* Define el fondo del elemento. */
+    background:
+        radial-gradient(ellipse 700px 320px at 80% 0%, rgba(47, 127, 250, 0.18), transparent 65%),
+        radial-gradient(ellipse 600px 320px at 10% 100%, rgba(62, 240, 122, 0.12), transparent 65%),
+        linear-gradient(180deg, #0a0f1e 0%, #0d1424 100%);
+    /* Define el borde inferior. */
+    border-bottom: 1px solid var(--ink-line);
+    /* Define el espacio interior superior. */
+    padding-top: 1rem;
+}
+.page-band .container { padding-top: 2.5rem; }
+.page-band .section-header { margin-bottom: 0; }
+.page-band h1 { color: #ffffff; }
+.page-band p { color: var(--stone); }
+
+/* El contenido que sube con margin-top negativo tiene que quedar por encima
+   de la franja, no debajo. */
+.catalog-layout,
+#favorites-grid,
+#sellers-grid { position: relative; z-index: 2; }
+
+/* ---------- Badge claro (ficha de propiedad y publicar) ---------- */
+.eyebrow-badge {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.5rem;
+    /* Define el fondo del elemento. */
+    background: rgba(62, 240, 122, 0.12);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid rgba(62, 240, 122, 0.35);
+    /* Define el color del texto. */
+    color: var(--green);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.35rem 0.9rem;
+    /* Redondea las esquinas. */
+    border-radius: 20px;
+    /* Define el tamaño de la letra. */
+    font-size: 0.68rem;
+    /* Define el grosor de la letra. */
+    font-weight: 700;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: 0.03em;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
+    text-transform: uppercase;
+}
+
+/* ---------- Ficha de propiedad ---------- */
+.property-container {
+    /* Limita el ancho máximo del elemento. */
+    max-width: 1200px;
+    /* Define el espacio exterior alrededor del elemento. */
+    margin: 0 auto;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 3rem 2rem 4rem;
+}
+
+.property-hero-img {
+    /* Define el ancho del elemento. */
+    width: 100%;
+    /* Define la altura del elemento. */
+    height: 420px;
+    /* Define cómo se adapta una imagen o video dentro de su caja. */
+    object-fit: cover;
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-lg);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: var(--shadow-lg);
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 2.5rem;
+}
+
+.property-grid {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: grid;
+    /* Define las columnas de la cuadrícula y cuánto ocupa cada una. */
+    grid-template-columns: 1.6fr 1fr;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 1.75rem;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: start;
+}
+
+.property-grid .info-card h3 {
+    /* Define el tamaño de la letra. */
+    font-size: 1.05rem;
+    /* Define el grosor de la letra. */
+    font-weight: 700;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 0.6rem;
+    /* Define el color del texto. */
+    color: #ffffff;
+}
+
+.price-tag {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-block;
+    /* Define el tamaño de la letra. */
+    font-size: 2rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Define el color del texto. */
+    color: var(--green);
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 1.5rem;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1;
+}
+
+.permuta-match-box {
+    /* Define el fondo del elemento. */
+    background: rgba(47, 127, 250, 0.10);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid rgba(47, 127, 250, 0.35);
+    /* Define el borde izquierdo. */
+    border-left: 3px solid var(--blue);
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-md);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 1.15rem 1.25rem;
+}
+.permuta-match-box h4 {
+    /* Define el tamaño de la letra. */
+    font-size: 0.82rem;
+    /* Define el grosor de la letra. */
+    font-weight: 800;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
+    text-transform: uppercase;
+    /* Define el espacio entre caracteres. */
+    letter-spacing: 0.04em;
+    /* Define el color del texto. */
+    color: var(--green);
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 0.45rem;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.5rem;
+}
+.permuta-match-box p { color: #ffffff; font-size: 0.95rem; line-height: 1.6; }
+
+.seller-box { text-align: center; position: sticky; top: 90px; }
+.seller-box img {
+    /* Define el ancho del elemento. */
+    width: 92px;
+    /* Define la altura del elemento. */
+    height: 92px;
+    /* Redondea las esquinas. */
+    border-radius: 50%;
+    /* Define cómo se adapta una imagen o video dentro de su caja. */
+    object-fit: cover;
+    /* Define el espacio exterior alrededor del elemento. */
+    margin: 0 auto 1rem;
+    /* Define grosor, estilo y color del borde. */
+    border: 3px solid var(--blue);
+}
+.seller-box h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+.seller-role {
+    /* Define el color del texto. */
+    color: var(--stone);
+    /* Define el tamaño de la letra. */
+    font-size: 0.85rem;
+    /* Define la altura de cada línea de texto. */
+    line-height: 1.5;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 1.5rem;
+}
+.seller-role i { color: var(--green); margin-right: 0.25rem; }
+
+/* ---------- Formulario de publicar ---------- */
+.form-card {
+    /* Define el fondo del elemento. */
+    background: #121b30;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-lg);
+    /* Añade una sombra alrededor del elemento. */
+    box-shadow: var(--shadow);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 2.25rem;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 3rem;
+}
+
+.form-grid {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: grid;
+    /* Define las columnas de la cuadrícula y cuánto ocupa cada una. */
+    grid-template-columns: repeat(2, 1fr);
+    /* Define el espacio entre los elementos hijos. */
+    gap: 1.25rem;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 1.5rem;
+}
+
+.form-field { display: flex; flex-direction: column; }
+.form-field.full { grid-column: 1 / -1; }
+
+.form-field label {
+    /* Define el grosor de la letra. */
+    font-weight: 600;
+    /* Define el tamaño de la letra. */
+    font-size: 0.85rem;
+    /* Define el color del texto. */
+    color: var(--fog);
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 0.45rem;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    /* Define el ancho del elemento. */
+    width: 100%;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.7rem 0.8rem;
+    /* Define el fondo del elemento. */
+    background: #080d1a;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-sm);
+    /* Define la tipografía que usará el elemento. */
+    font-family: inherit;
+    /* Define el tamaño de la letra. */
+    font-size: 0.92rem;
+    /* Define el contorno exterior, especialmente útil para foco. */
+    outline: none;
+    /* Define qué cambios de estilo se animan suavemente. */
+    transition: border-color 0.15s ease;
+}
+.form-field input::placeholder { color: var(--stone-light); }
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus { border-color: var(--green); }
+
+.form-hint { font-size: 0.75rem; color: var(--stone-light); margin-top: 0.35rem; }
+
+.checkbox-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.checkbox-chip {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: inline-flex;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.45rem;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.5rem 0.9rem;
+    /* Define el fondo del elemento. */
+    background: #080d1a;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Redondea las esquinas. */
+    border-radius: 30px;
+    /* Define el tamaño de la letra. */
+    font-size: 0.85rem;
+    /* Define el grosor de la letra. */
+    font-weight: 500;
+    /* Define el color del texto. */
+    color: #ffffff;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
+    cursor: pointer;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 0;
+    /* Define qué cambios de estilo se animan suavemente. */
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.checkbox-chip:hover { border-color: var(--green); }
+.checkbox-chip input { accent-color: var(--green); width: auto; cursor: pointer; }
+.checkbox-chip:has(input:checked) {
+    /* Define el color del borde. */
+    border-color: var(--green);
+    /* Define el fondo del elemento. */
+    background: rgba(62, 240, 122, 0.12);
+}
+
+.form-success {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: none;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.6rem;
+    /* Define el fondo del elemento. */
+    background: rgba(62, 240, 122, 0.12);
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--green);
+    /* Define el color del texto. */
+    color: var(--green);
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-md);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 1rem 1.25rem;
+    /* Define el grosor de la letra. */
+    font-weight: 700;
+    /* Define el espacio exterior inferior. */
+    margin-bottom: 1.5rem;
+}
+.form-success.show { display: flex; }
+
+/* ---------- Subida de fotos y videos (publicar.html) ---------- */
+.ip-upload-drop {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Define la dirección en la que se acomodan los elementos flex. */
+    flex-direction: column;
+    /* Alinea los elementos en el eje transversal de flex. */
+    align-items: center;
+    /* Alinea los elementos en el eje principal de flex. */
+    justify-content: center;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.5rem;
+    /* Define la alineación horizontal del texto. */
+    text-align: center;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
+    cursor: pointer;
+    /* Define grosor, estilo y color del borde. */
+    border: 2px dashed var(--ink-line);
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-md);
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 2rem 1rem;
+    /* Define el color del texto. */
+    color: var(--stone);
+    /* Define el tamaño de la letra. */
+    font-size: 0.9rem;
+    /* Define qué cambios de estilo se animan suavemente. */
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+.ip-upload-drop:hover { border-color: var(--green); color: var(--green); }
+.ip-upload-drop i { font-size: 1.6rem; }
+
+.ip-media-preview {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Define si los elementos flex pueden pasar a otra línea. */
+    flex-wrap: wrap;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.7rem;
+    /* Define el espacio exterior superior. */
+    margin-top: 1rem;
+}
+.ip-media-thumb {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: relative;
+    /* Define el ancho del elemento. */
+    width: 96px;
+    /* Define la altura del elemento. */
+    height: 96px;
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-sm, 8px);
+    /* Controla qué ocurre con contenido que sale de los límites. */
+    overflow: hidden;
+    /* Define grosor, estilo y color del borde. */
+    border: 1px solid var(--ink-line);
+    /* Define el fondo del elemento. */
+    background: #0c1424;
+}
+.ip-media-thumb img, .ip-media-thumb video {
+    /* Define el ancho del elemento. */
+    width: 100%;
+    /* Define la altura del elemento. */
+    height: 100%;
+    /* Define cómo se adapta una imagen o video dentro de su caja. */
+    object-fit: cover;
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: block;
+}
+.ip-media-thumb .ip-media-play {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+    /* Define el color del texto. */
+    color: #fff;
+     font-size: 1.2rem;
+     text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    /* Define si el elemento puede recibir eventos del puntero. */
+    pointer-events: none;
+}
+.ip-media-main {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: absolute;
+     bottom: 0;
+     left: 0;
+     right: 0;
+    /* Define el fondo del elemento. */
+    background: rgba(62,240,122,0.9);
+     color: #0a0f1e;
+    /* Define el tamaño de la letra. */
+    font-size: 0.6rem;
+     font-weight: 800;
+     text-align: center;
+    /* Transforma visualmente el texto, por ejemplo a mayúsculas. */
+    text-transform: uppercase;
+     letter-spacing: 0.03em;
+     padding: 0.15rem 0;
+}
+.ip-media-remove {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: absolute;
+     top: 3px;
+     right: 3px;
+    /* Define el ancho del elemento. */
+    width: 20px;
+     height: 20px;
+     border-radius: 50%;
+    /* Define el fondo del elemento. */
+    background: rgba(10,15,30,0.75);
+     color: #fff;
+     border: none;
+    /* Define el tamaño de la letra. */
+    font-size: 0.7rem;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
+    cursor: pointer;
+     padding: 0;
+}
+.ip-media-remove:hover { background: #ff5470; }
+
+/* ---------- Galería de fotos/videos (propiedad.html) ---------- */
+.property-gallery { margin-bottom: 2.5rem; }
+.property-gallery .property-hero-img { margin-bottom: 0.75rem; background: #0c1424; }
+.property-media-thumbs {
+    /* Define cómo se muestra y se comporta el elemento. */
+    display: flex;
+    /* Define el espacio entre los elementos hijos. */
+    gap: 0.6rem;
+    /* Controla el desbordamiento horizontal. */
+    overflow-x: auto;
+    /* Define el espacio interior inferior. */
+    padding-bottom: 0.2rem;
+}
+.property-media-thumb {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: relative;
+    /* Define cómo ocupa espacio el elemento dentro de un contenedor flex. */
+    flex: 0 0 auto;
+    /* Define el ancho del elemento. */
+    width: 88px;
+    /* Define la altura del elemento. */
+    height: 66px;
+    /* Redondea las esquinas. */
+    border-radius: var(--radius-sm, 8px);
+    /* Controla qué ocurre con contenido que sale de los límites. */
+    overflow: hidden;
+    /* Define grosor, estilo y color del borde. */
+    border: 2px solid transparent;
+    /* Define el fondo del elemento. */
+    background: #0c1424;
+    /* Define el tipo de cursor al pasar sobre el elemento. */
+    cursor: pointer;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0;
+}
+.property-media-thumb img, .property-media-thumb video {
+    /* Define el ancho del elemento. */
+    width: 100%;
+     height: 100%;
+     object-fit: cover;
+     display: block;
+}
+.property-media-thumb.active { border-color: var(--green); }
+.property-media-thumb .thumb-play {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+    /* Define el color del texto. */
+    color: #fff;
+     font-size: 1.1rem;
+     text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    /* Define si el elemento puede recibir eventos del puntero. */
+    pointer-events: none;
+}
+.card-video-badge {
+    /* Define el sistema de posicionamiento del elemento. */
+    position: absolute;
+     top: 0.7rem;
+     right: 0.7rem;
+     z-index: 2;
+    /* Define el fondo del elemento. */
+    background: rgba(10,15,30,0.75);
+     color: #fff;
+    /* Define el tamaño de la letra. */
+    font-size: 0.7rem;
+     font-weight: 700;
+     border-radius: 20px;
+    /* Define el espacio interior entre el contenido y el borde. */
+    padding: 0.25rem 0.6rem;
+     display: inline-flex;
+     align-items: center;
+     gap: 0.3rem;
+}
+
+/* ---------- Responsive de lo agregado ---------- */
+@media (max-width: 980px) {
+    .property-grid { grid-template-columns: 1fr; }
+    .seller-box { position: static; }
+    .property-hero-img { height: 300px; }
+}
+
+@media (max-width: 900px) {
+    .logo { font-size: 1.15rem; }
+    .logo-mark { width: 34px; height: 34px; border-radius: 10px; }
+}
+
+@media (max-width: 640px) {
+    .property-container { padding: 2rem 1.25rem 3rem; }
+    .property-hero-img { height: 220px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-card { padding: 1.5rem 1.25rem; }
+    .logo-suffix { display: none; }
+}
+
+/* =========================================================================
+   AJUSTES ADICIONALES DE RESPONSIVE MÓVIL
+   El sitio ya tenía buena base responsive; esto suma los remates que
+   faltaban para que se vea prolijo en celulares chicos (320–400px) y
+   evita comportamientos molestos como el zoom automático de iOS.
+   ========================================================================= */
+
+/* iOS agranda el input solo si su fuente mide menos de 16px al enfocarlo.
+   Subimos la fuente de todos los campos de formulario en mobile. */
+@media (max-width: 640px) {
+    .filter-group input,
+    .filter-group select,
+    .form-field input,
+    .form-field select,
+    .form-field textarea,
+    .ip-tabs button,
+    #a-nombre, #a-email, #a-pass { font-size: 16px; }
+    
+}
+
+/* =========================================================
+   HEADER MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+    .nav-container {
+        padding: 0.7rem 0.7rem;
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    /* LOGO INMOPERMUTAS.COM */
+    .logo-graphic {
+        width: 30px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .logo-title {
+        font-size: 0.92rem;
+        white-space: nowrap;
+        letter-spacing: -0.035em;
+    }
+
+    .logo-tagline {
+        display: none;
+    }
+
+
+    /* ELEMENTOS DE LA DERECHA */
+    .nav-actions {
+        gap: 0.3rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+    }
+
+
+    /* =====================================================
+       BOTÓN PUBLICAR → SOLO "+"
+       ===================================================== */
+
+    .nav-actions .btn-accent {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        padding: 0 !important;
+
+        border-radius: 50% !important;
+
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+
+        gap: 0 !important;
+        font-size: 0 !important;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    /* Ocultamos el contenido original del botón */
+    .nav-actions .btn-accent i,
+    .nav-actions .btn-accent svg,
+    .nav-actions .btn-accent span {
+        display: none !important;
+    }
+
+    /* Mostramos solamente el + */
+    .nav-actions .btn-accent::before {
+        content: "+" !important;
+        display: block !important;
+
+        font-size: 1.2rem !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+
+        color: #0a0f1e !important;
+    }
+
+
+    /* =====================================================
+       CORAZÓN / FAVORITOS
+       ===================================================== */
+
+    .icon-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       CUENTA
+       Deja el círculo con la inicial.
+       Oculta solamente "Alina Olmos".
+       ===================================================== */
+
+    .nav-actions .user-name,
+    .nav-actions .user-email,
+    .nav-actions .user-label {
+        display: none !important;
+    }
+
+
+    /* El avatar sigue visible */
+    .nav-actions .user-avatar,
+    .nav-actions .avatar {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+
+    /* Si el nombre está dentro de un contenedor de usuario,
+       mantenemos visible el avatar y ocultamos el texto */
+    .nav-actions .user-info {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .nav-actions .user-info > span:not(.user-avatar),
+    .nav-actions .user-info > span:not(.avatar) {
+        display: none !important;
+    }
+
+
+    /* =====================================================
+       BOTÓN SALIR
+       ===================================================== */
+
+    .nav-actions .logout,
+    .nav-actions .btn-logout {
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       CUENTA (chip real que arma backend.js)
+       Deja solo el círculo del logo/inicial.
+       Oculta el nombre y el botón de salir para que no
+       se corte contra el borde de la pantalla.
+       ===================================================== */
+
+    .nav-actions .ip-user-chip {
+        gap: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        max-width: none !important;
+        width: 30px;
+        height: 30px;
+    }
+
+    .nav-actions .ip-user-chip img,
+    .nav-actions .ip-user-chip .ip-user-ini {
+        width: 30px;
+        height: 30px;
+    }
+
+    .nav-actions .ip-user-chip .ip-user-name,
+    .nav-actions .ip-user-chip .ip-logout {
+        display: none !important;
+    }
+}
+
+
+/* =========================================================
+   CELULARES MUY CHICOS — 320/360/375 PX
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .nav-container {
+        padding: 0.6rem 0.55rem;
+        gap: 0.25rem;
+    }
+
+    /* Logo */
+    .logo-graphic {
+        width: 28px;
+        height: 30px;
+    }
+
+    .logo-title {
+        font-size: 0.86rem;
+        letter-spacing: -0.04em;
+    }
+
+    /* Acciones */
+    .nav-actions {
+        gap: 0.22rem;
+    }
+
+    /* + */
+    .nav-actions .btn-accent {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+    }
+
+    .nav-actions .btn-accent::before {
+        font-size: 1.1rem !important;
+    }
+
+    /* Corazón */
+    .icon-btn {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+
+    /* Avatar */
+    .nav-actions .user-avatar,
+    .nav-actions .avatar {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+
+    /* Cuenta (chip real) */
+    .nav-actions .ip-user-chip {
+        width: 28px;
+        height: 28px;
+    }
+
+    .nav-actions .ip-user-chip img,
+    .nav-actions .ip-user-chip .ip-user-ini {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* Hero: ajuste de la ilustración "swap" para celulares */
+@media (max-width: 480px) {
+
+    /* Más espacio vertical para que ningún elemento se superponga */
+    .swap-visual-v2 {min-height: 290px;} 
+    /* Tarjetas */
+    .swap-card-v2 { width: 140px;}
+    .swap-card-v2 img {height: 90px;}
+    .swap-card-v2 .swap-body {padding: 0.65rem 0.75rem 0.75rem;}
+    .swap-card-v2--a { transform: translate(-50px, -6px) rotate(-4deg);}
+    .swap-card-v2--b {transform: translate(51px, 18px) rotate(3deg);}
+    /* Círculo central más chico */
+    .swap-match-circle {width: 176px; height: 176px;}
+    /* MATCH y texto inferior */
+    .match-pill-wrap {bottom: -5px; z-index: 20;}
+    .match-pill { font-size: 0.85rem; padding: 0.2rem 1rem;}
+    .match-caption { position: relative; z-index: 21; margin-top: 0.35rem;font-size: 0.78rem; line-height: 1.25; max-width: 160px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
+    /* Título */
+    .hero-title {font-size: 1.95rem;}
+    /* Botones */
+    .hero-cta-row {flex-direction: column;align-items: stretch;}
+    .hero-cta-row .btn {width: 100%;}
+}
+
+/* "Cómo funciona": los 3 pasos con línea punteada se apilan en columna en
+   vez de ir achicándose hasta quedar ilegibles. */
+@media (max-width: 700px) {
+    .steps-timeline { grid-template-columns: 1fr; gap: 2.25rem; margin-top: 2.25rem; }
     .steps-timeline::before { display: none; }
-    /* Los 3 pasos de "cómo funciona" se apilan y se ocultan los guiones separadores */
-    .steps-timeline-v2 { flex-direction: column; gap: 1.75rem; }
-    .step-sep { display: none; }
-    .story-collage { flex-direction: column; }
-    .story-collage img { width: 100%; height: 200px; transform: none !important; }
-    .form-card { padding: 1.75rem; }
+    .step-card { padding: 0; text-align: center; }
+    .step-card .step-number { margin-left: auto; margin-right: auto; }
+}
+
+/* Collage de la sección "nuevas historias": tres fotos angostas y altas se
+   ven raras en columna angosta, así que bajamos su altura. */
+@media (max-width: 640px) {
+    .story-collage img { height: 170px; }
+    .story-section { padding: 3rem 1.25rem; }
+}
+
+/* Ficha de propiedad: miniaturas de la galería un poco más chicas para que
+   entren varias sin obligar a scrollear tanto. */
+@media (max-width: 480px) {
+    .property-media-thumb { width: 66px; height: 50px; }
+    .price-tag { font-size: 1.6rem; }
 }

@@ -12,7 +12,31 @@
 
     <header>
         <div class="nav-container">
-            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
             <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
@@ -27,14 +51,66 @@
         </div>
     </header>
 
-    <main class="container" style="max-width: 900px;">
-        <div class="page-hero" style="margin-bottom: 2.5rem;">
-            <span class="eyebrow-badge"><i class="fa-solid fa-house-circle-check"></i> Publicación de prueba</span>
-            <h1>Publicá tu propiedad</h1>
-            <p>Se guarda en este navegador y ya queda visible en el catálogo, con su propio % de match calculado.</p>
+    <main class="container" style="max-width: 900px; padding-top: 0;">
+        <section class="page-band" style="margin: 0 -2rem 2.5rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
+            <div class="page-hero" style="margin-bottom: 0; padding: 3rem 2rem 2.5rem;">
+                <span class="eyebrow-badge"><i class="fa-solid fa-house-circle-check"></i> Publicá tu permuta</span>
+                <h1>Publicá tu propiedad</h1>
+                <p id="publicar-sub">Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.</p>
+            </div>
+        </section>
+
+        <!-- 1) Mientras el backend arranca -->
+        <div id="estado-cargando" class="ip-auth-card">
+            <p style="color: var(--stone);"><i class="fa-solid fa-circle-notch fa-spin"></i> Conectando…</p>
         </div>
 
-        <div class="form-card">
+        <!-- 2) Si la base de datos no está configurada -->
+        <div id="estado-sin-backend" class="ip-auth-card" style="display:none;">
+            <h2>Falta conectar la base de datos</h2>
+            <p class="ip-auth-sub">Completá tus claves de Firebase en <strong>js/backend.js</strong> para poder crear cuentas y publicar.</p>
+            <a href="catalogo.html" class="btn btn-outline btn-block">Volver al catálogo</a>
+        </div>
+
+        <!-- 3) Sin sesión: crear cuenta o ingresar -->
+        <div id="estado-login" class="ip-auth-card" style="display:none;">
+            <h2 id="auth-titulo">Creá tu cuenta</h2>
+            <p class="ip-auth-sub">Es gratis y te permite publicar, editar y que te contacten.</p>
+
+            <button type="button" class="ip-google-btn" onclick="entrarConGoogle()">
+                <span id="google-logo"></span> Continuar con Google
+            </button>
+
+            <div class="ip-sep">o con tu email</div>
+
+            <div class="ip-tabs">
+                <button type="button" class="ip-tab active" id="tab-registro" onclick="cambiarTab('registro')">Crear cuenta</button>
+                <button type="button" class="ip-tab" id="tab-ingreso" onclick="cambiarTab('ingreso')">Ya tengo cuenta</button>
+            </div>
+
+            <div class="ip-auth-error" id="auth-error"></div>
+
+            <form id="auth-form">
+                <div class="form-field" id="campo-nombre">
+                    <label for="a-nombre">Tu nombre</label>
+                    <input type="text" id="a-nombre" placeholder="Nombre y apellido" autocomplete="name">
+                </div>
+                <div class="form-field">
+                    <label for="a-email">Email</label>
+                    <input type="email" id="a-email" placeholder="tumail@ejemplo.com" autocomplete="email" required>
+                </div>
+                <div class="form-field">
+                    <label for="a-pass">Contraseña</label>
+                    <input type="password" id="a-pass" placeholder="Mínimo 6 caracteres" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-accent btn-block" id="auth-submit" style="margin-top:0.5rem;">Crear cuenta</button>
+            </form>
+
+            <button type="button" class="ip-auth-link" onclick="olvidePassword()">Olvidé mi contraseña</button>
+        </div>
+
+        <!-- 4) Con sesión iniciada: el formulario de publicación -->
+        <div class="form-card" id="estado-form" style="display:none;">
             <div class="form-success" id="form-success"><i class="fa-solid fa-circle-check"></i> ¡Publicada! Te llevamos a tu nueva ficha…</div>
 
             <form id="publish-form">
@@ -79,9 +155,14 @@
                     </div>
 
                     <div class="form-field full">
-                        <label>URL de imagen</label>
-                        <input type="url" id="p-image" placeholder="https://...">
-                        <p class="form-hint">Si lo dejás vacío, usamos una imagen de referencia según el tipo de inmueble.</p>
+                        <label>Fotos y videos de la propiedad</label>
+                        <label class="ip-upload-drop" for="p-media">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Tocá para elegir fotos y videos desde tu PC o celular</span>
+                        </label>
+                        <input type="file" id="p-media" accept="image/*,video/*" multiple hidden>
+                        <p class="form-hint">La primera foto que subas se usa como imagen principal de la publicación. Podés sacar cualquier archivo antes de publicar.</p>
+                        <div class="ip-media-preview" id="p-media-preview"></div>
                     </div>
 
                     <div class="form-field full">
@@ -103,6 +184,22 @@
                     </div>
 
                     <div class="form-field">
+                        <label>Dormitorios mínimos que aceptás</label>
+                        <input type="number" id="p-wants-bedrooms" min="0" placeholder="Ej: 2">
+                        <p class="form-hint">Dejalo vacío o en 0 si no tenés preferencia.</p>
+                    </div>
+                    <div class="form-field">
+                        <label>Superficie mínima que aceptás (m²)</label>
+                        <input type="number" id="p-wants-area" min="0" placeholder="Ej: 70">
+                        <p class="form-hint">Dejalo vacío o en 0 si no tenés preferencia.</p>
+                    </div>
+                    <div class="form-field full">
+                        <label>Precio máximo que aceptarías recibir (US$)</label>
+                        <input type="number" id="p-wants-price" min="0" placeholder="Ej: 250000">
+                        <p class="form-hint">Dejalo vacío si evaluás cualquier valor cercano al de tu propiedad.</p>
+                    </div>
+
+                    <div class="form-field">
                         <label>Tu nombre</label>
                         <input type="text" id="p-seller-name" placeholder="Nombre y apellido" required>
                     </div>
@@ -113,13 +210,14 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-accent btn-block" style="margin-top: 0.5rem;"><i class="fa-solid fa-right-left"></i> Publicar propiedad</button>
+                <button type="submit" class="btn btn-accent btn-block" id="publish-submit" style="margin-top: 0.5rem;"><i class="fa-solid fa-right-left"></i> Publicar propiedad</button>
             </form>
         </div>
     </main>
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
     <script>
         const placeholderImages = {
             Casa: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=800&q=80",
@@ -130,7 +228,179 @@
             Garaje: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80"
         };
 
-        document.getElementById('publish-form').addEventListener('submit', (event) => {
+        let modoAuth = 'registro';
+
+        function mostrarPaso(id) {
+            ['estado-cargando', 'estado-sin-backend', 'estado-login', 'estado-form']
+                .forEach(k => document.getElementById(k).style.display = (k === id ? '' : 'none'));
+        }
+
+        function mostrarError(msg) {
+            const box = document.getElementById('auth-error');
+            box.innerText = msg;
+            box.classList.add('show');
+        }
+
+        function limpiarError() {
+            document.getElementById('auth-error').classList.remove('show');
+        }
+
+        function cambiarTab(modo) {
+            modoAuth = modo;
+            limpiarError();
+            const esRegistro = modo === 'registro';
+            document.getElementById('tab-registro').classList.toggle('active', esRegistro);
+            document.getElementById('tab-ingreso').classList.toggle('active', !esRegistro);
+            document.getElementById('campo-nombre').style.display = esRegistro ? '' : 'none';
+            document.getElementById('a-nombre').required = esRegistro;
+            document.getElementById('auth-submit').innerText = esRegistro ? 'Crear cuenta' : 'Ingresar';
+            document.getElementById('auth-titulo').innerText = esRegistro ? 'Creá tu cuenta' : 'Ingresá a tu cuenta';
+            document.getElementById('a-pass').autocomplete = esRegistro ? 'new-password' : 'current-password';
+        }
+
+        async function entrarConGoogle() {
+            limpiarError();
+            try {
+                await IP.loginGoogle();
+            } catch (e) {
+                mostrarError(IP.mensajeError(e));
+            }
+        }
+
+        async function olvidePassword() {
+            const email = document.getElementById('a-email').value.trim();
+            if (!email) return mostrarError('Escribí tu email arriba y volvé a tocar acá.');
+            try {
+                await IP.recuperarPassword(email);
+                mostrarError('Te mandamos un correo para restablecer la contraseña.');
+            } catch (e) {
+                mostrarError(IP.mensajeError(e));
+            }
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            limpiarError();
+            const btn = document.getElementById('auth-submit');
+            const nombre = document.getElementById('a-nombre').value.trim();
+            const email = document.getElementById('a-email').value.trim();
+            const pass = document.getElementById('a-pass').value;
+
+            btn.disabled = true;
+            try {
+                if (modoAuth === 'registro') {
+                    if (!nombre) throw { message: 'Escribí tu nombre.' };
+                    await IP.registrarMail(nombre, email, pass);
+                } else {
+                    await IP.loginMail(email, pass);
+                }
+            } catch (e) {
+                mostrarError(IP.mensajeError(e));
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Cada vez que cambia el estado de la sesión decidimos qué se muestra:
+        // el formulario de publicación solo si hay alguien logueado.
+        document.addEventListener('ip-auth', (event) => {
+            const user = event.detail;
+            if (IP.error) {
+                mostrarPaso('estado-sin-backend');
+                return;
+            }
+            if (!user) {
+                mostrarPaso('estado-login');
+                document.getElementById('publicar-sub').innerText =
+                    'Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.';
+                return;
+            }
+            mostrarPaso('estado-form');
+            document.getElementById('publicar-sub').innerText =
+                `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
+            // Precargamos el nombre del vendedor con el de la cuenta.
+            const campoNombre = document.getElementById('p-seller-name');
+            if (!campoNombre.value) campoNombre.value = IP.nombreUsuario();
+        });
+
+        // ---------------- Fotos y videos ----------------
+        // Lista de File elegidos, en el orden en que se muestran. La primera
+        // IMAGEN de la lista es la foto principal de la publicación.
+        let archivos = [];
+        const MAX_ARCHIVOS = 15;
+        const MAX_FOTO_MB = 25;  // se comprimen antes de subir
+        const MAX_VIDEO_MB = 50;
+
+        document.getElementById('p-media').addEventListener('change', (e) => {
+            const elegidos = Array.from(e.target.files);
+            const rechazados = [];
+
+            elegidos.forEach(f => {
+                const esFoto = f.type.startsWith('image/');
+                const esVideo = f.type.startsWith('video/');
+                if (!esFoto && !esVideo) return rechazados.push(`${f.name}: formato no soportado`);
+                if (esFoto && f.size > MAX_FOTO_MB * 1048576) return rechazados.push(`${f.name}: la foto supera ${MAX_FOTO_MB} MB`);
+                if (esVideo && f.size > MAX_VIDEO_MB * 1048576) return rechazados.push(`${f.name}: el video supera ${MAX_VIDEO_MB} MB`);
+                if (archivos.length >= MAX_ARCHIVOS) return rechazados.push(`${f.name}: máximo ${MAX_ARCHIVOS} archivos`);
+                archivos.push(f);
+            });
+
+            e.target.value = ''; // permite volver a elegir el mismo archivo
+            if (rechazados.length) alert('No se pudieron agregar:\n\n' + rechazados.join('\n'));
+            pintarPreview();
+        });
+
+        function quitarArchivo(i) {
+            archivos.splice(i, 1);
+            pintarPreview();
+        }
+
+        function pintarPreview() {
+            const cont = document.getElementById('p-media-preview');
+            // Liberamos las URLs temporales anteriores
+            cont.querySelectorAll('img, video').forEach(el => URL.revokeObjectURL(el.src));
+            cont.innerHTML = '';
+
+            const idxPrincipal = archivos.findIndex(f => f.type.startsWith('image/'));
+
+            archivos.forEach((f, i) => {
+                const url = URL.createObjectURL(f);
+                const esVideo = f.type.startsWith('video/');
+                const div = document.createElement('div');
+                div.className = 'ip-media-thumb';
+                div.innerHTML = (esVideo
+                    ? `<video src="${url}" muted preload="metadata"></video><i class="fa-solid fa-circle-play ip-media-play"></i>`
+                    : `<img src="${url}" alt="">`)
+                    + (i === idxPrincipal ? `<span class="ip-media-main">Principal</span>` : '')
+                    + `<button type="button" class="ip-media-remove" title="Quitar" aria-label="Quitar archivo"><i class="fa-solid fa-xmark"></i></button>`;
+                div.querySelector('.ip-media-remove').addEventListener('click', () => quitarArchivo(i));
+                cont.appendChild(div);
+            });
+        }
+
+        // Achica la foto (máx. 1600 px de lado, JPEG calidad 82%) antes de subirla.
+        // Una foto de celular de 5 MB queda en ~300 KB sin pérdida visible.
+        async function comprimirImagen(file) {
+            if (!file.type.startsWith('image/') || /gif|svg/.test(file.type)) return file;
+            try {
+                let bmp;
+                try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+                catch (_) { bmp = await createImageBitmap(file); }
+                const escala = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(bmp.width * escala);
+                canvas.height = Math.round(bmp.height * escala);
+                canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+                if (!blob || blob.size >= file.size) return file;
+                return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+            } catch (e) {
+                return file; // si algo falla, se sube el original
+            }
+        }
+
+        // ---------------- Publicar ----------------
+        document.getElementById('publish-form').addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const type = document.getElementById('p-type').value;
@@ -146,38 +416,77 @@
                 return;
             }
 
-            const props = getProperties();
-            const newId = props.length ? Math.max(...props.map(p => p.id)) + 1 : 1;
+            const btn = document.getElementById('publish-submit');
+            btn.disabled = true;
 
-            const newProperty = {
-                id: newId,
-                title: document.getElementById('p-title').value.trim(),
-                type: type,
-                location: document.getElementById('p-location').value.trim(),
-                city: document.getElementById('p-city').value.trim(),
-                price: Number(document.getElementById('p-price').value),
-                currency: "US$",
-                bedrooms: Number(document.getElementById('p-bedrooms').value),
-                area: Number(document.getElementById('p-area').value),
-                image: document.getElementById('p-image').value.trim() || placeholderImages[type],
-                seller: {
-                    name: document.getElementById('p-seller-name').value.trim(),
-                    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-                    phone: document.getElementById('p-seller-phone').value.trim().replace(/\D/g, '')
-                },
-                wants: { types: wantsTypes, locations: wantsLocations }
-            };
+            try {
+                // 1) Subimos fotos y videos (si hay). Mantienen el orden elegido.
+                let media = [];
+                if (archivos.length) {
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Optimizando fotos…';
+                    const listos = await Promise.all(archivos.map(comprimirImagen));
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo… 0%';
+                    media = await IP.subirArchivos(listos, pct => {
+                        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo… ${pct}%`;
+                    });
+                }
+                const primeraFoto = media.find(m => m.type === 'image');
 
-            props.push(newProperty);
-            saveProperties(props);
+                // 2) Armamos y guardamos la propiedad
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Publicando…';
 
-            document.getElementById('form-success').classList.add('show');
-            document.getElementById('publish-form').style.display = 'none';
+                const nuevaPropiedad = {
+                    title: document.getElementById('p-title').value.trim(),
+                    type: type,
+                    location: document.getElementById('p-location').value.trim(),
+                    city: document.getElementById('p-city').value.trim(),
+                    price: Number(document.getElementById('p-price').value),
+                    currency: "US$",
+                    bedrooms: Number(document.getElementById('p-bedrooms').value),
+                    area: Number(document.getElementById('p-area').value),
+                    image: primeraFoto ? primeraFoto.url : placeholderImages[type],
+                    media: media,
+                    seller: {
+                        name: document.getElementById('p-seller-name').value.trim(),
+                        avatar: (IP.user && IP.user.photoURL) || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                        phone: document.getElementById('p-seller-phone').value.trim().replace(/\D/g, '')
+                    },
+                    wants: {
+                        types: wantsTypes,
+                        locations: wantsLocations,
+                        minBedrooms: Number(document.getElementById('p-wants-bedrooms').value) || 0,
+                        minArea: Number(document.getElementById('p-wants-area').value) || 0,
+                        maxPrice: Number(document.getElementById('p-wants-price').value) || 0
+                    }
+                };
 
-            setTimeout(() => {
-                window.location.href = `propiedad.html?id=${newId}`;
-            }, 1100);
+                const nuevoId = await IP.publicarPropiedad(nuevaPropiedad);
+                document.getElementById('form-success').classList.add('show');
+                document.getElementById('publish-form').style.display = 'none';
+                setTimeout(() => {
+                    window.location.href = `propiedad.html?id=${encodeURIComponent(nuevoId)}`;
+                }, 1100);
+            } catch (e) {
+                console.error('[InmoPermutas] Error al publicar:', e);
+                let msg = IP.mensajeError(e);
+                if (e && (e.code === 'storage/unauthorized' || e.code === 'permission-denied')) {
+                    msg = 'Firebase rechazó el permiso (' + e.code + '). Revisá las reglas de Storage / Firestore.';
+                } else if (e && (e.code === 'storage/retry-limit-exceeded' || e.code === 'storage/bucket-not-found' || e.code === 'storage/project-not-found')) {
+                    msg = 'Firebase Storage no responde. Entrá a la consola de Firebase → Storage y verificá que esté activado (los proyectos nuevos requieren el plan Blaze).';
+                } else if (e && e.code === 'storage/unknown') {
+                    msg = 'No se pudo subir a Storage. Verificá que Storage esté activado en tu proyecto de Firebase.';
+                }
+                alert('No se pudo publicar: ' + msg);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Publicar propiedad';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('google-logo').innerHTML =
+                (typeof IP_GOOGLE_SVG !== 'undefined' ? IP_GOOGLE_SVG : '');
         });
     </script>
+    <script src="js/asistente.js"></script>
 </body>
 </html>

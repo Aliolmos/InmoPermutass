@@ -12,7 +12,31 @@
 
     <header>
         <div class="nav-container">
-            <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-right-left"></i></span>Inmo<span class="logo-accent">Permutas</span><span class="logo-suffix">.com</span></a>
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
             <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
             <nav class="nav-menu" id="nav-menu">
                 <a href="index.html">Inicio</a>
@@ -30,19 +54,24 @@
         </div>
     </header>
 
-    <main class="container">
-        <div class="section-header">
-            <div class="section-title">
-                <h1 style="font-size: 1.75rem; font-weight: 600;">Vendedores</h1>
-                <p>Personas que publican sus propiedades directamente para encontrar su permuta, sin inmobiliarias de por medio.</p>
+    <section class="page-band">
+        <div class="container" style="padding-bottom: 2.5rem;">
+            <div class="section-header">
+                <div class="section-title">
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Vendedores</h1>
+                    <p>Personas que publican sus propiedades directamente para encontrar su permuta, sin inmobiliarias de por medio.</p>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div id="sellers-grid" class="sellers-grid"></div>
+    <main class="container">
+        <div id="sellers-grid" class="sellers-grid" style="margin-top: -1rem;"></div>
     </main>
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
     <script>
         // Agrupa las propiedades por vendedor para mostrar un perfil por persona,
         // no por inmobiliaria: acá quien publica es siempre el propietario.
@@ -72,5 +101,6 @@
 
         document.addEventListener('DOMContentLoaded', renderSellers);
     </script>
+    <script src="js/asistente.js"></script>
 </body>
 </html>
