@@ -1039,7 +1039,7 @@ header {
 @media (max-width: 900px) {
     .nav-toggle {
         display: inline-flex;
-        order: 1;
+        order: -1;
         flex-shrink: 0;
     }
     .nav-actions {
