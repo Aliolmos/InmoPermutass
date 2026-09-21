@@ -2250,3 +2250,25 @@ header {
 }
 
 .seller-contact-open { margin: 0 1.25rem 1.25rem; }
+
+/* =========================================================================
+   Superficies y barrios (publicar.html / propiedad.html)
+   ========================================================================= */
+
+/* Pares mínima/máxima: son números cortos, así que en el celular se quedan
+   lado a lado en vez de apilarse como el resto de los pares de opciones. */
+.opt-pair--num { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+/* Superficie cubierta / del terreno en la ficha de la propiedad. */
+.property-surfaces {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    color: var(--stone);
+}
+.property-surfaces li { display: flex; align-items: center; gap: 0.5rem; }
+.property-surfaces i { color: var(--green); }
+.property-surfaces strong { color: #ffffff; font-weight: 700; }

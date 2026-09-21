@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis propiedades — InmoPermutas</title>
+    <meta name="description" content="Administrá las propiedades que publicaste en InmoPermutas: editalas o eliminalas.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-page="mis-propiedades">
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+                <a href="planes.html">Planes</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-band">
+        <div class="container" style="padding-bottom: 2.5rem;">
+            <div class="section-header">
+                <div class="section-title">
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Mis propiedades</h1>
+                    <p id="mis-subtitle">Las propiedades que publicaste. Desde acá podés editarlas o eliminarlas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container">
+        <div id="mis-plan" style="margin-top: -1rem;"></div>
+        <div id="mis-grid" class="grid-cards"></div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+        let authConocida = false;
+
+        // Los títulos los escribe cada usuario: se escapan antes de pintarlos.
+        function esc(t) {
+            return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function tarjetaMia(p) {
+            const idJs = String(p.id).replace(/'/g, "\\'");
+            const idUrl = encodeURIComponent(p.id);
+            const img = esc(String(p.image || '').replace(/'/g, '%27').replace(/"/g, '%22'));
+            return `
+                <div class="card" id="mia-${esc(p.id)}">
+                    <div class="card-img" style="background-image: url('${img}')" role="img" aria-label="${esc(p.title)}"></div>
+                    <div class="card-body">
+                        <div class="card-price">${esc(p.currency)} ${Number(p.price).toLocaleString()}</div>
+                        <h3 class="card-title">${esc(p.title)}</h3>
+                        <p class="card-location"><i class="fa-solid fa-location-dot"></i>${esc(p.location)}, ${esc(p.city)}</p>
+                        <div class="card-footer">
+                            <span><i class="fa-solid fa-bed"></i> ${esc(p.bedrooms)} dorm. · ${esc(p.area)} m²</span>
+                        </div>
+                    </div>
+                    <div class="ip-mis-actions">
+                        <a href="propiedad.html?id=${idUrl}" class="btn btn-outline btn-sm"><i class="fa-solid fa-eye"></i> Ver</a>
+                        <a href="publicar.html?editar=${idUrl}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen"></i> Editar</a>
+                        <button type="button" class="btn btn-sm btn-danger-outline" onclick="borrarPropiedad('${idJs}', this)"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                    </div>
+                </div>`;
+        }
+
+        function pintarPlan(cantidad) {
+            const cont = document.getElementById('mis-plan');
+            const plan = IP.planActivo && IP.planActivo();
+            if (!IP.user || !IP.planCargado) { cont.innerHTML = ''; return; }
+
+            if (plan) {
+                const tope = plan.max ? `${cantidad} de ${plan.max} propiedades` : `${cantidad} propiedad${cantidad === 1 ? '' : 'es'} (sin límite)`;
+                const lleno = plan.max && cantidad >= plan.max;
+                cont.innerHTML = `
+                    <div class="ip-plan-bar">
+                        <span><i class="fa-solid fa-circle-check"></i> Plan <strong>${esc(plan.nombre)}</strong> activo hasta el ${plan.vence.toLocaleDateString('es-AR')} · ${tope}</span>
+                        ${lleno
+                            ? `<a href="planes.html" class="btn btn-accent btn-sm">Pasate a Premium</a>`
+                            : `<a href="publicar.html" class="btn btn-accent btn-sm"><i class="fa-solid fa-circle-plus"></i> Publicar nueva</a>`}
+                    </div>`;
+            } else {
+                cont.innerHTML = `
+                    <div class="ip-plan-bar ip-plan-bar--off">
+                        <span><i class="fa-solid fa-lock"></i> No tenés un plan activo. Tus publicaciones siguen visibles, pero para publicar una nueva necesitás un plan.</span>
+                        <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
+                    </div>`;
+            }
+        }
+
+        // La llama utils.js → refrescarVista() cada vez que cambia la base.
+        function renderMisPropiedades() {
+            const grid = document.getElementById('mis-grid');
+            const sub = document.getElementById('mis-subtitle');
+
+            if (!authConocida) {
+                grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><h3>Cargando…</h3></div>`;
+                return;
+            }
+            if (IP.error) {
+                grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-plug-circle-xmark"></i><h3>No pudimos conectar con la base de datos</h3><p>Probá recargar la página en unos minutos.</p></div>`;
+                return;
+            }
+            if (!IP.user) {
+                document.getElementById('mis-plan').innerHTML = '';
+                sub.innerText = 'Ingresá a tu cuenta para ver y administrar tus publicaciones.';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-user-lock"></i>
+                        <h3>Ingresá para ver tus propiedades</h3>
+                        <p>Iniciá sesión con la cuenta con la que publicaste.</p>
+                        <a href="publicar.html" class="btn btn-primary" style="margin-top: 1.25rem;">Ingresar</a>
+                    </div>`;
+                return;
+            }
+
+            const mias = getProperties().filter(p => !p.esDemo && p.ownerUid === IP.user.uid);
+            pintarPlan(mias.length);
+
+            if (!IP.propsCargadas && mias.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><h3>Cargando tus propiedades…</h3></div>`;
+                return;
+            }
+
+            sub.innerText = mias.length
+                ? `Tenés ${mias.length} propiedad${mias.length === 1 ? '' : 'es'} publicada${mias.length === 1 ? '' : 's'}.`
+                : 'Todavía no publicaste ninguna propiedad.';
+
+            if (mias.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-house-circle-plus"></i>
+                        <h3>Todavía no publicaste nada</h3>
+                        <p>Cuando publiques una propiedad va a aparecer acá para que puedas editarla o eliminarla.</p>
+                        <a href="publicar.html" class="btn btn-primary" style="margin-top: 1.25rem;">Publicar mi primera propiedad</a>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = mias.map(tarjetaMia).join('');
+        }
+
+        async function borrarPropiedad(id, btn) {
+            if (!confirm('¿Eliminar esta propiedad?\n\nSe borra del catálogo junto con sus fotos y videos. No se puede deshacer.')) return;
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+            try {
+                await IP.eliminarPropiedad(id);
+                // La lista se repinta sola cuando la base avisa el cambio.
+            } catch (e) {
+                console.error('[InmoPermutas] Error al eliminar:', e);
+                alert('No se pudo eliminar: ' + IP.mensajeError(e));
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        IP.authListo.then(() => { authConocida = true; renderMisPropiedades(); });
+        document.addEventListener('ip-auth', renderMisPropiedades);
+        document.addEventListener('ip-plan', renderMisPropiedades);
+        document.addEventListener('DOMContentLoaded', renderMisPropiedades);
+    </script>
+    <script src="js/asistente.js"></script>
+</body>
+</html>

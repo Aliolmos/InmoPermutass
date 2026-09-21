@@ -57,7 +57,7 @@
         <div class="container" style="padding-bottom: 2.5rem;">
             <div class="section-header">
                 <div class="section-title">
-                    <h1 id="results-count" style="font-size: 1.75rem; font-weight: 600;">Catálogo de Permutas</h1>
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Catálogo de Permutas</h1>
                     <p>Explorá inmuebles listos para el intercambio inteligente.</p>
                 </div>
             </div>
@@ -142,7 +142,7 @@
             const props = getProperties();
             let filtered = props.filter(p => {
                 if (type && p.type !== type) return false;
-                if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !(p.departamento || '').toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
+                if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !(p.departamento || '').toLowerCase().includes(location) && !(p.barrio || '').toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
                 if (p.price > maxPrice) return false;
                 return true;
             });
@@ -152,7 +152,6 @@
             else if (sort === 'area-desc') filtered.sort((a, b) => b.area - a.area);
 
             const grid = document.getElementById('catalog-grid');
-            document.getElementById('results-count').innerText = `${filtered.length} propiedad${filtered.length === 1 ? '' : 'es'} encontrada${filtered.length === 1 ? '' : 's'}`;
 
             if (filtered.length === 0) {
                 grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><h3>No se encontraron permutas con esos criterios.</h3><p>Probá ampliar la zona o subir el precio máximo.</p></div>`;

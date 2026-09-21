@@ -27,6 +27,7 @@ function refrescarVista() {
     if (typeof applyCatalogFilters === 'function') applyCatalogFilters();
     if (typeof renderFavorites === 'function') renderFavorites();
     if (typeof renderDetalle === 'function') renderDetalle();
+    if (typeof renderMisPropiedades === 'function') renderMisPropiedades();
     renderFeaturedProperties();
     updateFavCount();
 }
@@ -40,6 +41,14 @@ function refrescarVista() {
 //   Dormitorios mínimos ....... 15 pts
 //   Superficie mínima ......... 15 pts
 //   Precio máximo ............. 25 pts
+//
+// Dentro de "Zona", si quien busca eligió un barrio, coincidir también en el
+// barrio pesa: mismo barrio 20, ciudad sin dato de barrio 17, otro barrio de la
+// misma ciudad 12, otra ciudad del departamento 10.
+// Dentro de "Superficie" (15 pts) se promedian los criterios que quien busca
+// haya cargado: superficie mínima (como siempre), superficie cubierta
+// mínima/máxima y superficie de terreno mínima/máxima. Los que dejó vacíos
+// no cuentan, así que las publicaciones existentes puntúan igual que antes.
 //
 // Cada apartado admite hasta 2 opciones (types con 2 tipos, zones con 2 zonas,
 // y minBedrooms2 / minArea2 / maxPrice2 como segunda opción). Se toma la que
@@ -75,18 +84,27 @@ function _puntosPrecio(precio, max) {
     return exceso <= 0.15 ? 15 : exceso <= 0.30 ? 8 : 0;
 }
 
-// Puntos (0 a 20) de zona. wants.zones = [{ dep, city? }, ...] (hasta 2).
+// Puntos (0 a 20) de zona. wants.zones = [{ dep, city?, barrio? }, ...] (hasta 2).
 //   - Coincide la ciudad, o pidió solo el departamento y coincide: 20.
+//   - Pidió un barrio dentro de esa ciudad: mismo barrio 20; la propiedad no
+//     tiene barrio cargado 17 (no sabemos, no se penaliza fuerte); otro barrio 12.
 //   - Pidió una ciudad y la propiedad está en otra del mismo departamento: 10.
 // Las publicaciones viejas no tienen departamento cargado: se comparan por nombre.
 function _puntosZona(wants, target) {
-    const dep = _norm(target.departamento), loc = _norm(target.localidad);
+    const dep = _norm(target.departamento), loc = _norm(target.localidad), barrio = _norm(target.barrio);
     const nombres = [target.location, target.city, target.departamento, target.localidad].map(_norm);
     let pts = 0;
 
     (wants.zones || []).forEach(z => {
         if (dep) {
-            if (_norm(z.dep) === dep) pts = Math.max(pts, (!z.city || _norm(z.city) === loc) ? 20 : 10);
+            if (_norm(z.dep) !== dep) return;
+            if (z.city && _norm(z.city) !== loc) { pts = Math.max(pts, 10); return; }
+            let p = 20;
+            if (z.city && z.barrio) {
+                if (!barrio) p = 17;
+                else if (_norm(z.barrio) !== barrio) p = 12;
+            }
+            pts = Math.max(pts, p);
         } else if (nombres.includes(_norm(z.city || z.dep))) {
             pts = 20;
         }
@@ -95,6 +113,37 @@ function _puntosZona(wants, target) {
     // Publicaciones viejas: zonas escritas a mano en wants.locations
     if (!(wants.zones || []).length && (wants.locations || []).some(l => nombres.includes(_norm(l)))) pts = 20;
     return pts;
+}
+
+// De 0 a 1: cuánto entra "valor" en el rango pedido [min, max]. Devuelve null
+// si no se cargó ni mínimo ni máximo (ese criterio no cuenta). Si la propiedad
+// no tiene el dato cargado vale 0.5: ni se premia ni se descarta del todo.
+function _fraccionRango(valor, min, max) {
+    min = Number(min) || 0;
+    max = Number(max) || 0;
+    if (!min && !max) return null;
+    valor = Number(valor) || 0;
+    if (valor <= 0) return 0.5;
+    if (min && valor < min) return valor / min;
+    if (max && valor > max) return max / valor;
+    return 1;
+}
+
+// Puntos (0 a 15) de superficie: promedio de los criterios que quien busca cargó.
+// Sin ninguno cargado se otorga completo, igual que antes.
+function _puntosSuperficie(wants, target) {
+    const partes = [];
+    if (_opciones(wants.minArea, wants.minArea2).length) {
+        partes.push(_cumpleMinimo(target.area, wants.minArea, wants.minArea2));
+    }
+    // Si la propiedad no cargó superficie cubierta, se usa su superficie general.
+    const cub = _fraccionRango(target.superficieCubierta || target.area, wants.minCubierta, wants.maxCubierta);
+    const ter = _fraccionRango(target.superficieTerreno, wants.minTerreno, wants.maxTerreno);
+    if (cub !== null) partes.push(cub);
+    if (ter !== null) partes.push(ter);
+
+    if (!partes.length) return 15;
+    return 15 * partes.reduce((a, b) => a + b, 0) / partes.length;
 }
 
 function matchUnidireccional(owner, target) {
@@ -107,9 +156,11 @@ function matchUnidireccional(owner, target) {
     // Zona deseada (20 pts)
     score += _puntosZona(wants, target);
 
-    // Dormitorios y superficie mínimos que acepta recibir (15 pts c/u)
+    // Dormitorios mínimos que acepta recibir (15 pts)
     score += 15 * _cumpleMinimo(target.bedrooms, wants.minBedrooms, wants.minBedrooms2);
-    score += 15 * _cumpleMinimo(target.area, wants.minArea, wants.minArea2);
+
+    // Superficie: mínima, cubierta y terreno (15 pts en total)
+    score += _puntosSuperficie(wants, target);
 
     // Precio máximo que está dispuesto a recibir (25 pts)
     const maximos = _opciones(wants.maxPrice, wants.maxPrice2);
@@ -142,7 +193,18 @@ function calcularCompatibilidad(a, b) {
 
 // Texto legible de lo que una propiedad acepta recibir a cambio.
 function nombreZona(z) {
+    if (z.city && z.barrio) return `Barrio ${z.barrio}, ${z.city} (${z.dep})`;
     return z.city ? `${z.city} (${z.dep})` : `Dpto. ${z.dep}`;
+}
+
+// "80–150 m² cubiertos", "desde 80 m² cubiertos", "hasta 150 m² cubiertos".
+function _textoRango(min, max, sufijo) {
+    min = Number(min) || 0;
+    max = Number(max) || 0;
+    if (!min && !max) return '';
+    const f = n => n.toLocaleString('es-AR');
+    if (min && max) return `${f(min)}–${f(max)} m² ${sufijo}`;
+    return min ? `desde ${f(min)} m² ${sufijo}` : `hasta ${f(max)} m² ${sufijo}`;
 }
 
 function describirWants(wants) {
@@ -157,6 +219,10 @@ function describirWants(wants) {
     const extras = [];
     if (dorm.length) extras.push(`${dorm.map(n => n + '+').join(' o ')} dormitorios`);
     if (area.length) extras.push(`${area.map(n => n + '+').join(' o ')} m²`);
+    const cubierta = _textoRango(wants.minCubierta, wants.maxCubierta, 'cubiertos');
+    const terreno = _textoRango(wants.minTerreno, wants.maxTerreno, 'de terreno');
+    if (cubierta) extras.push(cubierta);
+    if (terreno) extras.push(terreno);
     if (precio.length) extras.push(`hasta ${precio.map(n => 'US$ ' + n.toLocaleString()).join(' o ')}`);
     if (extras.length) texto += ` Condiciones: ${extras.join(', ')}.`;
 

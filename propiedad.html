@@ -61,8 +61,11 @@
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
     <script>
-        // Pasar a false cuando el usuario tenga un plan que habilite el contacto.
-        const CONTACTO_BLOQUEADO = true;
+        // El contacto se desbloquea cuando el usuario tiene un plan vigente
+        // (lo lee backend.js desde Firestore). Sin plan, queda difuminado.
+        function contactoBloqueado() {
+            return !(window.IP && IP.planActivo && IP.planActivo());
+        }
 
         // Galería de fotos y videos. Si la propiedad no tiene archivos subidos
         // (o es una publicación vieja), se muestra solo la imagen principal.
@@ -142,7 +145,7 @@
                 : `<div class="seller-avatar-fallback">${(v.name || '?').charAt(0).toUpperCase()}</div>`;
 
             // Bloqueado: el botón va difuminado y NO lleva el teléfono en el HTML.
-            const contactoHTML = CONTACTO_BLOQUEADO ? `
+            const contactoHTML = contactoBloqueado() ? `
                 <div class="seller-contact">
                     <div class="seller-contact-btnwrap">
                         <div class="seller-contact-blur" aria-hidden="true">
@@ -157,6 +160,16 @@
                     <a href="https://wa.me/${v.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
                 </div>`;
 
+            // Superficie cubierta y del terreno: opcionales. Si no se cargaron
+            // (0 o vacío) no se muestra la línea, para no dejar campos vacíos.
+            const cubierta = Number(property.superficieCubierta) || 0;
+            const terreno = Number(property.superficieTerreno) || 0;
+            const superficiesHTML = (cubierta || terreno) ? `
+                        <ul class="property-surfaces">
+                            ${cubierta ? `<li><i class="fa-solid fa-house"></i> Superficie cubierta: <strong>${cubierta.toLocaleString('es-AR')} m²</strong></li>` : ''}
+                            ${terreno ? `<li><i class="fa-solid fa-tree"></i> Superficie del terreno: <strong>${terreno.toLocaleString('es-AR')} m²</strong></li>` : ''}
+                        </ul>` : '';
+
             const fav = isFavorite(property.id);
             const idSeguro = String(property.id).replace(/'/g, "\\'");
 
@@ -165,7 +178,7 @@
                     <div>
                         <span class="eyebrow-badge"><i class="fa-solid fa-right-left"></i> Propiedad verificada para permuta</span>
                         <h1 style="font-size: 2.3rem; margin-top: 0.4rem;">${property.title}</h1>
-                        <p style="color: var(--stone); font-size: 1.05rem; margin-top:0.3rem;"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> ${property.location}, ${property.city}</p>
+                        <p style="color: var(--stone); font-size: 1.05rem; margin-top:0.3rem;"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> ${property.barrio ? 'Barrio ' + property.barrio + ' · ' : ''}${property.location}, ${property.city}</p>
                     </div>
                     <button class="icon-btn ${fav ? 'has-favs' : ''}" style="width:48px;height:48px;font-size:1.15rem;" onclick="handleFavoriteClick(event, '${idSeguro}')" aria-label="Guardar en favoritos">
                         <i class="fa-${fav ? 'solid' : 'regular'} fa-heart" style="color:${fav ? 'var(--coral)' : 'inherit'};"></i>
@@ -178,7 +191,8 @@
                     <div class="info-card">
                         <div class="price-tag">${property.currency} ${Number(property.price).toLocaleString()}</div>
                         <h3>Características principales</h3>
-                        <p style="color: var(--stone); margin-bottom: 1.5rem;"><i class="fa-solid fa-bed"></i> ${property.bedrooms} dormitorios &nbsp;&bull;&nbsp; <i class="fa-solid fa-ruler-combined"></i> ${property.area} m² cubiertos</p>
+                        <p style="color: var(--stone); margin-bottom: ${superficiesHTML ? '0.9rem' : '1.5rem'};"><i class="fa-solid fa-bed"></i> ${property.bedrooms} dormitorios &nbsp;&bull;&nbsp; <i class="fa-solid fa-ruler-combined"></i> ${property.area} m² totales</p>
+                        ${superficiesHTML}
 
                         <h3>Descripción de la oportunidad</h3>
                         <p style="color: var(--stone); line-height: 1.7; margin-bottom: 1.5rem;">Inmueble habilitado para intercambio directo. El propietario evalúa ofertas de menor o mayor valor con ajuste de diferencia en efectivo.</p>
@@ -218,6 +232,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', renderDetalle);
+        // Si el plan cambia (o termina de cargar), se vuelve a pintar el contacto.
+        document.addEventListener('ip-plan', renderDetalle);
     </script>
     <script src="js/asistente.js"></script>
 </body>

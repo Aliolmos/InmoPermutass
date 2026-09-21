@@ -43,17 +43,62 @@ function zonaLlenarCiudades(sel, dep) {
     sel.disabled = !dep;
 }
 
-// Conecta un par departamento + ciudad: al cambiar el departamento se recargan las ciudades.
-function zonaConectar(depId, ciudadId, textoDep) {
-    const dep = document.getElementById(depId), ciudad = document.getElementById(ciudadId);
-    zonaLlenarDepartamentos(dep, textoDep);
-    zonaLlenarCiudades(ciudad, '');
-    dep.addEventListener('change', () => zonaLlenarCiudades(ciudad, dep.value));
+// Barrios de una ciudad (vienen de barrios.js). Devuelve [] si no hay cargados.
+function zonaBarriosDe(ciudad) {
+    const lista = (typeof BARRIOS_CORDOBA !== 'undefined' && BARRIOS_CORDOBA[ciudad]) || [];
+    return [...lista].sort((a, b) => a.localeCompare(b, 'es'));
 }
 
-// Lee un par ya conectado. Devuelve { dep, city? } o null si no eligió departamento.
-function zonaLeer(depId, ciudadId) {
+// Llena el <select> de barrios con los de la ciudad elegida. Si la ciudad no
+// tiene barrios cargados (o no se eligió ciudad), el selector se oculta junto
+// con su contenedor (el elemento con data-zona-barrio, si existe).
+function zonaLlenarBarrios(sel, ciudad) {
+    const lista = zonaBarriosDe(ciudad);
+    const cont = sel.closest('[data-zona-barrio]') || sel;
+    sel.innerHTML = '<option value="">Todos los barrios</option>' +
+        lista.map(b => `<option>${b}</option>`).join('');
+    sel.value = '';
+    cont.style.display = lista.length ? '' : 'none';
+}
+
+// Conecta departamento + ciudad (+ barrio, opcional): al cambiar el departamento
+// se recargan las ciudades y al cambiar la ciudad se recargan los barrios.
+function zonaConectar(depId, ciudadId, textoDep, barrioId) {
+    const dep = document.getElementById(depId), ciudad = document.getElementById(ciudadId);
+    const barrio = barrioId ? document.getElementById(barrioId) : null;
+    zonaLlenarDepartamentos(dep, textoDep);
+    zonaLlenarCiudades(ciudad, '');
+    if (barrio) zonaLlenarBarrios(barrio, '');
+    dep.addEventListener('change', () => {
+        zonaLlenarCiudades(ciudad, dep.value);
+        if (barrio) zonaLlenarBarrios(barrio, '');
+    });
+    if (barrio) ciudad.addEventListener('change', () => zonaLlenarBarrios(barrio, ciudad.value));
+}
+
+// Lee un grupo ya conectado. Devuelve { dep, city?, barrio? } o null si no eligió departamento.
+// El barrio solo cuenta si hay una ciudad elegida.
+function zonaLeer(depId, ciudadId, barrioId) {
     const dep = document.getElementById(depId).value;
     const city = document.getElementById(ciudadId).value;
-    return dep ? (city ? { dep, city } : { dep }) : null;
+    const barrio = barrioId ? document.getElementById(barrioId).value : '';
+    if (!dep) return null;
+    const zona = { dep };
+    if (city) zona.city = city;
+    if (city && barrio) zona.barrio = barrio;
+    return zona;
+}
+
+// Carga una zona guardada en un grupo conectado (modo edición).
+function zonaEscribir(depId, ciudadId, zona, barrioId) {
+    if (!zona || !zona.dep) return;
+    document.getElementById(depId).value = zona.dep;
+    const ciudad = document.getElementById(ciudadId);
+    zonaLlenarCiudades(ciudad, zona.dep);
+    ciudad.value = zona.city || '';
+    if (barrioId) {
+        const barrio = document.getElementById(barrioId);
+        zonaLlenarBarrios(barrio, ciudad.value);
+        barrio.value = zona.barrio || '';
+    }
 }

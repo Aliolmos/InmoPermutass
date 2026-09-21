@@ -65,6 +65,7 @@
     </section>
 
     <main class="container" style="padding-bottom: 4rem;">
+        <div id="plan-status"></div>
         <div class="plans-grid">
 
             <div class="plan-card">
@@ -77,9 +78,10 @@
                     <li><i class="fa-solid fa-check"></i> Ver el catálogo completo</li>
                     <li><i class="fa-solid fa-check"></i> Guardar favoritos</li>
                     <li><i class="fa-solid fa-check"></i> Calculadora de % de match</li>
+                    <li class="plan-feature-off"><i class="fa-solid fa-xmark"></i> Publicar propiedades</li>
                     <li class="plan-feature-off"><i class="fa-solid fa-xmark"></i> Datos de contacto del propietario</li>
                 </ul>
-                <a href="publicar.html" class="btn btn-outline btn-block">Empezar gratis</a>
+                <a href="catalogo.html" class="btn btn-outline btn-block">Explorar gratis</a>
             </div>
 
             <div class="plan-card plan-card--featured">
@@ -92,10 +94,10 @@
                 <ul class="plan-features">
                     <li><i class="fa-solid fa-check"></i> Todo lo del plan Básico</li>
                     <li><i class="fa-solid fa-check"></i> Contacto directo por WhatsApp</li>
-                    <li><i class="fa-solid fa-check"></i> Hasta 5 propiedades activas</li>
+                    <li><i class="fa-solid fa-check"></i> Publicar hasta 5 propiedades activas</li>
                     <li><i class="fa-solid fa-check"></i> Destacado en el catálogo</li>
                 </ul>
-                <a href="publicar.html" class="btn btn-accent btn-block">Elegir Pro</a>
+                <button type="button" class="btn btn-accent btn-block" data-plan="pro" onclick="elegirPlan('pro')">Elegir Pro</button>
             </div>
 
             <div class="plan-card">
@@ -110,15 +112,75 @@
                     <li><i class="fa-solid fa-check"></i> Estadísticas de tus publicaciones</li>
                     <li><i class="fa-solid fa-check"></i> Soporte prioritario</li>
                 </ul>
-                <a href="publicar.html" class="btn btn-outline btn-block">Elegir Premium</a>
+                <button type="button" class="btn btn-outline btn-block" data-plan="premium" onclick="elegirPlan('premium')">Elegir Premium</button>
             </div>
 
         </div>
+        <p style="text-align:center; color: var(--stone); font-size: 0.85rem; margin-top: 1.75rem;">
+            <i class="fa-solid fa-lock"></i> Cada plan dura 30 días y se activa al instante.
+        </p>
     </main>
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
+    <script>
+        const NOMBRES_PLAN = { pro: 'Pro', premium: 'Premium' };
+
+        // Toca "Elegir": si no tiene cuenta la crea/ingresa en publicar.html y
+        // vuelve para activar el plan; si ya tiene sesión, se activa al instante.
+        async function elegirPlan(plan) {
+            const btn = document.querySelector(`[data-plan="${plan}"]`);
+            await IP.ready;
+            await IP.authListo;
+            if (IP.error) {
+                alert('El sistema no está disponible en este momento. Probá de nuevo más tarde.');
+                return;
+            }
+            if (!IP.user) {
+                sessionStorage.setItem('ip_plan_pendiente', plan);
+                window.location.href = 'publicar.html';
+                return;
+            }
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Activando plan…';
+            try {
+                const res = await IP.comprarPlan(plan);
+                if (res && res.prueba) {
+                    // Plan activado: volvemos el botón a la normalidad.
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                    pintarEstadoPlan();
+                }
+            } catch (e) {
+                console.error('[InmoPermutas] Error al activar el plan:', e);
+                alert('No se pudo activar el plan: ' + (e.message || 'probá de nuevo.'));
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        function pintarEstadoPlan() {
+            const cont = document.getElementById('plan-status');
+            const activo = IP.planActivo && IP.planActivo();
+            const fallo = new URLSearchParams(window.location.search).get('pago') === 'error';
+
+            document.querySelectorAll('[data-plan]').forEach(b => {
+                const esActual = activo && activo.plan === b.dataset.plan;
+                b.textContent = (esActual ? 'Renovar ' : 'Elegir ') + NOMBRES_PLAN[b.dataset.plan];
+            });
+
+            if (activo) {
+                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-circle-check"></i> Tenés el plan <strong>${activo.nombre}</strong> activo hasta el ${activo.vence.toLocaleDateString('es-AR')}.</span><a href="publicar.html" class="btn btn-accent btn-sm">Publicar propiedad</a></div>`;
+            } else if (fallo) {
+                cont.innerHTML = `<div class="ip-plan-bar ip-plan-bar--off"><span><i class="fa-solid fa-circle-exclamation"></i> No se pudo activar el plan. Podés intentarlo de nuevo cuando quieras.</span></div>`;
+            } else {
+                cont.innerHTML = '';
+            }
+        }
+        document.addEventListener('ip-plan', pintarEstadoPlan);
+    </script>
     <script src="js/asistente.js"></script>
 </body>
 </html>

@@ -38,7 +38,17 @@ const IP_CACHE_KEY = "ip_props_cache";
 
 const IP_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
 
-window.IP = { user: null, listo: false, error: null };
+// MODO SIMPLE (sin pago): al tocar "Elegir plan" el plan se activa al instante,
+// escribiendo directo en Firestore (suscripciones/{uid}). No hay Mercado Pago
+// ni Cloud Functions. Es solo para pruebas: antes de lanzar hay que volver a un
+// sistema con pago real y cerrar las reglas de Firestore.
+
+window.IP = { user: null, listo: false, error: null, propsCargadas: false };
+
+// Se resuelve cuando Firebase termina de averiguar si hay una sesión guardada
+// (o cuando el backend no está disponible). Evita confundir "todavía no sé si
+// está logueado" con "no está logueado".
+IP.authListo = new Promise(resolve => { IP._resolverAuth = resolve; });
 
 function ipCargarScript(src) {
     return new Promise((resolve, reject) => {
@@ -62,7 +72,8 @@ IP.ready = (async function ipInit() {
         await Promise.all([
             ipCargarScript(IP_SDK + "firebase-auth-compat.js"),
             ipCargarScript(IP_SDK + "firebase-firestore-compat.js"),
-            ipCargarScript(IP_SDK + "firebase-storage-compat.js")
+            ipCargarScript(IP_SDK + "firebase-storage-compat.js"),
+            ipCargarScript(IP_SDK + "firebase-functions-compat.js")
         ]);
 
         firebase.initializeApp(IP_FIREBASE_CONFIG);
@@ -79,8 +90,10 @@ IP.ready = (async function ipInit() {
 
         IP.auth.onAuthStateChanged(user => {
             IP.user = user;
+            ipEscucharPlan(user);
             ipPintarSesion();
             document.dispatchEvent(new CustomEvent("ip-auth", { detail: user }));
+            IP._resolverAuth();
         });
 
         ipEscucharPropiedades();
@@ -91,6 +104,7 @@ IP.ready = (async function ipInit() {
         console.warn("[InmoPermutas] Backend no disponible:", e.message);
         IP.error = e;
         document.dispatchEvent(new CustomEvent("ip-auth", { detail: null }));
+        IP._resolverAuth();
     }
     ipPintarSesion();
 })();
@@ -112,10 +126,14 @@ function ipEscucharPropiedades() {
                     city: d.city,
                     departamento: d.departamento || "",
                     localidad: d.localidad || "",
+                    barrio: d.barrio || "",
                     price: Number(d.price) || 0,
                     currency: d.currency || "US$",
                     bedrooms: Number(d.bedrooms) || 0,
                     area: Number(d.area) || 0,
+                    // Opcionales: 0 = no cargada (no se muestra en la ficha)
+                    superficieCubierta: Number(d.superficieCubierta) || 0,
+                    superficieTerreno: Number(d.superficieTerreno) || 0,
                     image: d.image,
                     // Fotos y videos subidos por el usuario: [{ type: 'image'|'video', url, name }]
                     media: Array.isArray(d.media) ? d.media : [],
@@ -124,6 +142,7 @@ function ipEscucharPropiedades() {
                     ownerUid: d.ownerUid
                 };
             });
+            IP.propsCargadas = true;
             try {
                 localStorage.setItem(IP_CACHE_KEY, JSON.stringify(props));
             } catch (e) { /* si no hay espacio, seguimos igual */ }
@@ -141,6 +160,118 @@ IP.publicarPropiedad = async function (datos) {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     return ref.id;
+};
+
+/* ------------------------ Plan del usuario -------------------------------- */
+
+// El plan vive en Firestore → suscripciones/{uid}. Por ahora lo escribe el
+// propio navegador al elegir un plan (modo simple, sin pago).
+//   IP.plan = { plan, nombre, max, vence: Date }  |  null si no tiene plan
+IP.plan = null;
+IP.planCargado = false;
+let ipDesuscribirPlan = null;
+
+function ipAvisarPlan() {
+    document.dispatchEvent(new CustomEvent("ip-plan"));
+}
+
+function ipEscucharPlan(user) {
+    if (ipDesuscribirPlan) { ipDesuscribirPlan(); ipDesuscribirPlan = null; }
+    IP.plan = null;
+    if (!user) {
+        IP.planCargado = true;
+        ipAvisarPlan();
+        return;
+    }
+    IP.planCargado = false;
+    ipDesuscribirPlan = IP.db.collection("suscripciones").doc(user.uid).onSnapshot(doc => {
+        const d = doc.exists ? doc.data() : null;
+        IP.plan = d && d.vence ? {
+            plan: d.plan,
+            nombre: d.nombrePlan || d.plan,
+            max: d.maxPropiedades || null,   // null = ilimitadas
+            vence: d.vence.toDate()
+        } : null;
+        IP.planCargado = true;
+        ipAvisarPlan();
+    }, err => {
+        console.warn("[InmoPermutas] Error leyendo el plan:", err);
+        IP.plan = null;
+        IP.planCargado = true;
+        ipAvisarPlan();
+    });
+}
+
+// Devuelve el plan si está vigente; si no tiene plan o ya venció, null.
+IP.planActivo = function () {
+    return IP.plan && IP.plan.vence > new Date() ? IP.plan : null;
+};
+
+// Activa el plan directo en Firestore (sin pago). El plan dura 30 días.
+// Lo escucha ipEscucharPlan(), así que el contacto y "Publicar" se desbloquean solos.
+IP.comprarPlan = async function (planId) {
+    await IP.ready;
+    await IP.authListo;
+    if (IP.error) throw new Error("El sistema no está disponible en este momento.");
+    if (!IP.user) throw new Error("Tenés que iniciar sesión para elegir un plan.");
+
+    const PLANES = {
+        pro:     { nombre: "Pro",     max: 5 },
+        premium: { nombre: "Premium", max: null }   // null = ilimitadas
+    };
+    const plan = PLANES[planId];
+    if (!plan) throw new Error("Plan inválido.");
+
+    const vence = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await IP.db.collection("suscripciones").doc(IP.user.uid).set({
+        plan: planId,
+        nombrePlan: plan.nombre,
+        maxPropiedades: plan.max,
+        vence: firebase.firestore.Timestamp.fromDate(vence),
+        prueba: true
+    });
+    return { prueba: true };
+};
+
+/* ------------------- Mis propiedades: leer, editar, borrar ---------------- */
+
+// Trae una publicación directamente de la base (sirve para el link de edición).
+IP.obtenerPropiedad = async function (id) {
+    const doc = await IP.db.collection(IP_COLECCION).doc(String(id)).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+};
+
+IP.actualizarPropiedad = async function (id, datos) {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión para editar.");
+    await IP.db.collection(IP_COLECCION).doc(String(id)).update({
+        ...datos,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+};
+
+// Borra archivos de Storage por su ruta. Si alguno ya no existe, se ignora.
+IP.borrarArchivos = async function (paths) {
+    await Promise.all((paths || []).filter(Boolean).map(ruta =>
+        IP.storage.ref().child(ruta).delete().catch(e => console.warn("[InmoPermutas] No se pudo borrar", ruta, e.code))
+    ));
+};
+
+IP.eliminarPropiedad = async function (id) {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
+    const ref = IP.db.collection(IP_COLECCION).doc(String(id));
+    const doc = await ref.get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    if (d.ownerUid !== IP.user.uid) throw new Error("Solo podés eliminar tus propias publicaciones.");
+    await ref.delete();
+    await IP.borrarArchivos((d.media || []).map(m => m.path));
+};
+
+// Cuántas propiedades tiene publicadas el usuario (para el tope de su plan).
+IP.contarMisPropiedades = async function () {
+    if (!IP.user) return 0;
+    const snap = await IP.db.collection(IP_COLECCION).where("ownerUid", "==", IP.user.uid).get();
+    return snap.size;
 };
 
 /* -------------------------- Fotos y videos -------------------------------- */
@@ -243,14 +374,23 @@ IP.mensajeError = function (e) {
 function ipPintarSesion() {
     document.querySelectorAll(".nav-actions").forEach(cont => {
         let chip = cont.querySelector(".ip-user-chip");
+        let mis = cont.querySelector(".ip-mis-link");
         if (!IP.user) {
             if (chip) chip.remove();
+            if (mis) mis.remove();
             return;
         }
         if (!chip) {
             chip = document.createElement("div");
             chip.className = "ip-user-chip";
             cont.appendChild(chip);
+        }
+        if (!mis) {
+            mis = document.createElement("a");
+            mis.className = "btn btn-outline btn-sm ip-mis-link";
+            mis.href = "mis-propiedades.html";
+            mis.innerHTML = '<i class="fa-solid fa-house-user"></i> Mis propiedades';
+            cont.insertBefore(mis, chip);
         }
         const foto = IP.user.photoURL
             ? `<img src="${IP.user.photoURL}" alt="">`
@@ -335,6 +475,61 @@ const IP_CSS = `
     font-size: 0.8rem; text-decoration: underline; cursor: pointer; margin-top: 1rem;
 }
 .ip-auth-link:hover { color: #3ef07a; }
+
+/* Publicar bloqueado hasta contratar un plan */
+.ip-lock-wrap { position: relative; }
+.ip-lock-wrap.locked .form-card { filter: blur(7px); opacity: 0.7; pointer-events: none; user-select: none; }
+.ip-lock-overlay { display: none; position: absolute; inset: 0; z-index: 5; padding: 1rem; }
+.ip-lock-wrap.locked .ip-lock-overlay { display: block; }
+.ip-lock-box {
+    position: sticky; top: 120px; max-width: 440px; margin: 3rem auto 0;
+    background: #121b30; border: 1px solid rgba(62,240,122,0.45);
+    border-radius: var(--radius-lg, 20px); padding: 2rem 1.75rem; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.ip-lock-icon {
+    width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    color: #3ef07a; background: rgba(62,240,122,0.12); border: 1px solid rgba(62,240,122,0.5);
+}
+.ip-lock-box h2 { font-size: 1.3rem; margin-bottom: 0.6rem; color: #fff; }
+.ip-lock-box p { color: var(--stone, #aab3c8); font-size: 0.92rem; line-height: 1.55; margin-bottom: 1.25rem; }
+
+/* Barra con el estado del plan */
+.ip-plan-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    background: rgba(62,240,122,0.08); border: 1px solid rgba(62,240,122,0.35);
+    border-radius: var(--radius-md, 14px); padding: 0.85rem 1.1rem; margin-bottom: 1.5rem;
+    font-size: 0.9rem; color: #fff;
+}
+.ip-plan-bar i { color: #3ef07a; margin-right: 0.4rem; }
+.ip-plan-bar--off { background: rgba(255,84,112,0.08); border-color: rgba(255,84,112,0.4); }
+.ip-plan-bar--off i { color: #ff5470; }
+
+/* Mis propiedades */
+.ip-mis-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0 1.25rem 1.25rem; }
+.ip-mis-actions .btn { flex: 1; justify-content: center; text-align: center; }
+.btn-danger-outline {
+    background: transparent; border: 1px solid rgba(255,84,112,0.55); color: #ff8fa3;
+    border-radius: var(--radius-sm, 8px); cursor: pointer; font-family: inherit; font-weight: 700;
+}
+.btn-danger-outline:hover { background: rgba(255,84,112,0.12); border-color: #ff5470; color: #ff5470; }
+.btn-danger-outline:disabled { opacity: 0.5; cursor: wait; }
+
+/* Ojo para mostrar/ocultar contraseñas */
+.ip-pass-wrap { position: relative; display: block; width: 100%; }
+.form-field .ip-pass-wrap input, .ip-pass-wrap input { padding-right: 2.9rem; }
+.ip-pass-toggle {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 2.9rem;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+    color: var(--stone, #aab3c8); font-size: 1rem; cursor: pointer;
+}
+.ip-pass-toggle:hover { color: #fff; }
+.ip-pass-toggle:focus-visible { outline: 2px solid #3ef07a; outline-offset: -2px; color: #3ef07a; }
+.ip-pass-toggle[aria-pressed="true"] { color: #3ef07a; }
+/* Edge/IE traen su propio ojo: lo ocultamos para que no aparezcan dos. */
+input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none; }
 `;
 
 (function ipInyectarCSS() {
@@ -342,6 +537,65 @@ const IP_CSS = `
     st.textContent = IP_CSS;
     document.head.appendChild(st);
 })();
+
+/* ------------------- Ojo en los campos de contraseña ---------------------- */
+
+// Envuelve cada <input type="password"> con un botón de ojo que alterna entre
+// oculto (password) y visible (text). Se aplica solo a TODOS los campos de
+// contraseña de la página (registro, ingreso y cualquier otro que se agregue),
+// y se puede volver a llamar con IP.activarOjoPassword(contenedor) si se crea
+// un formulario después de que cargó la página.
+// Íconos propios (SVG) para no depender de que cargue Font Awesome.
+const IP_OJO_ABIERTO = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const IP_OJO_TACHADO = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5.6 19 2 12 2 12a18.7 18.7 0 0 1 5.1-5.9M9.9 5.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a18.8 18.8 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>';
+
+IP.activarOjoPassword = function (raiz) {
+    (raiz || document).querySelectorAll('input[type="password"]:not([data-ip-ojo])').forEach(input => {
+        input.setAttribute("data-ip-ojo", "1");
+
+        const wrap = document.createElement("div");
+        wrap.className = "ip-pass-wrap";
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+
+        const btn = document.createElement("button");
+        btn.type = "button";               // que nunca envíe el formulario
+        btn.className = "ip-pass-toggle";
+        btn.setAttribute("aria-pressed", "false");
+        btn.setAttribute("aria-label", "Mostrar contraseña");
+        btn.title = "Mostrar contraseña";
+        btn.innerHTML = IP_OJO_ABIERTO;
+        wrap.appendChild(btn);
+
+        // Evita que el toque en el ojo le saque el foco al campo (y cierre el teclado en el celular).
+        btn.addEventListener("mousedown", e => e.preventDefault());
+        btn.addEventListener("click", () => {
+            const visible = input.type === "password";
+            const teniaFoco = document.activeElement === input;
+            const ini = input.selectionStart, fin = input.selectionEnd;
+            input.type = visible ? "text" : "password";
+            // Con la contraseña a la vista, el teclado no debe autocorregirla.
+            input.setAttribute("autocapitalize", "off");
+            input.setAttribute("autocorrect", "off");
+            input.setAttribute("spellcheck", "false");
+            btn.setAttribute("aria-pressed", String(visible));
+            const texto = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+            btn.setAttribute("aria-label", texto);
+            btn.title = texto;
+            btn.innerHTML = visible ? IP_OJO_TACHADO : IP_OJO_ABIERTO;
+            if (teniaFoco) {
+                input.focus();
+                try { input.setSelectionRange(ini, fin); } catch (e) { /* algunos navegadores no lo permiten */ }
+            }
+        });
+    });
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => IP.activarOjoPassword());
+} else {
+    IP.activarOjoPassword();
+}
 
 // Logo de Google, para el botón. Se usa desde publicar.html.
 const IP_GOOGLE_SVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

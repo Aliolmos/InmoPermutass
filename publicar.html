@@ -55,8 +55,8 @@
     <main class="container" style="max-width: 900px; padding-top: 0;">
         <section class="page-band" style="margin: 0 -2rem 2.5rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
             <div class="page-hero" style="margin-bottom: 0; padding: 3rem 2rem 2.5rem;">
-                <span class="eyebrow-badge"><i class="fa-solid fa-house-circle-check"></i> Publicá tu permuta</span>
-                <h1>Publicá tu propiedad</h1>
+                <span class="eyebrow-badge" id="publicar-badge"><i class="fa-solid fa-house-circle-check"></i> Publicá tu permuta</span>
+                <h1 id="publicar-titulo">Publicá tu propiedad</h1>
                 <p id="publicar-sub">Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.</p>
             </div>
         </section>
@@ -110,8 +110,12 @@
             <button type="button" class="ip-auth-link" onclick="olvidePassword()">Olvidé mi contraseña</button>
         </div>
 
-        <!-- 4) Con sesión iniciada: el formulario de publicación -->
-        <div class="form-card" id="estado-form" style="display:none;">
+        <!-- 4) Con sesión iniciada: el formulario de publicación.
+             Sin un plan vigente se ve difuminado y con el cartel de planes encima. -->
+        <div id="estado-form" style="display:none;">
+        <div id="plan-info"></div>
+        <div class="ip-lock-wrap" id="lock-wrap">
+        <div class="form-card" id="form-card">
             <div class="form-success" id="form-success"><i class="fa-solid fa-circle-check"></i> ¡Publicada! Te llevamos a tu nueva ficha…</div>
 
             <form id="publish-form">
@@ -145,14 +149,26 @@
                         <label>Ciudad <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
                         <select id="p-loc"></select>
                     </div>
+                    <div class="form-field full" data-zona-barrio style="display:none;">
+                        <label for="p-barrio">Barrio <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <select id="p-barrio"></select>
+                    </div>
 
                     <div class="form-field">
                         <label>Dormitorios</label>
                         <input type="number" id="p-bedrooms" min="0" value="2" required>
                     </div>
                     <div class="form-field">
-                        <label>Superficie (m²)</label>
+                        <label>Superficie total (m²)</label>
                         <input type="number" id="p-area" min="1" value="80" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="p-cubierta">Superficie cubierta (m²) <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <input type="number" id="p-cubierta" min="0" step="any" inputmode="decimal" placeholder="Ej: 120">
+                    </div>
+                    <div class="form-field">
+                        <label for="p-terreno">Superficie del terreno (m²) <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <input type="number" id="p-terreno" min="0" step="any" inputmode="decimal" placeholder="Ej: 450">
                     </div>
 
                     <div class="form-field full">
@@ -189,13 +205,15 @@
                             <div class="opt-col"><span class="opt-tag">Opción 1</span>
                                 <select id="w-dep-1" required></select>
                                 <select id="w-city-1"></select>
+                                <select id="w-barrio-1" aria-label="Barrio (opcional)"></select>
                             </div>
                             <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
                                 <select id="w-dep-2"></select>
                                 <select id="w-city-2"></select>
+                                <select id="w-barrio-2" aria-label="Barrio (opcional)"></select>
                             </div>
                         </div>
-                        <p class="form-hint">Elegí el departamento. La ciudad es opcional: si no la elegís, vale todo el departamento.</p>
+                        <p class="form-hint">Elegí el departamento. La ciudad es opcional: si no la elegís, vale todo el departamento. Si la ciudad tiene barrios cargados podés elegir uno; para buscar en más de un barrio, usá la opción 2.</p>
                     </div>
 
                     <div class="form-field full">
@@ -225,6 +243,32 @@
                     </div>
 
                     <div class="form-field full">
+                        <label>Superficie cubierta que buscás (m²) <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <div class="opt-pair opt-pair--num">
+                            <div class="opt-col"><span class="opt-tag">Mínima</span>
+                                <input type="number" id="p-wants-cub-min" min="0" step="any" inputmode="decimal" placeholder="Ej: 100" aria-label="Superficie cubierta mínima">
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Máxima</span>
+                                <input type="number" id="p-wants-cub-max" min="0" step="any" inputmode="decimal" placeholder="Ej: 200" aria-label="Superficie cubierta máxima">
+                            </div>
+                        </div>
+                        <p class="form-hint">Podés completar solo la mínima, solo la máxima o las dos.</p>
+                    </div>
+
+                    <div class="form-field full">
+                        <label>Superficie del terreno que buscás (m²) <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                        <div class="opt-pair opt-pair--num">
+                            <div class="opt-col"><span class="opt-tag">Mínima</span>
+                                <input type="number" id="p-wants-ter-min" min="0" step="any" inputmode="decimal" placeholder="Ej: 300" aria-label="Superficie del terreno mínima">
+                            </div>
+                            <div class="opt-col"><span class="opt-tag opt-tag--2">Máxima</span>
+                                <input type="number" id="p-wants-ter-max" min="0" step="any" inputmode="decimal" placeholder="Ej: 800" aria-label="Superficie del terreno máxima">
+                            </div>
+                        </div>
+                        <p class="form-hint">Sirve para casas, terrenos y galpones. Dejalo vacío si no te importa.</p>
+                    </div>
+
+                    <div class="form-field full">
                         <label>Precio máximo que aceptarías recibir (US$)</label>
                         <div class="opt-pair">
                             <div class="opt-col"><span class="opt-tag">Opción 1</span>
@@ -251,10 +295,14 @@
                 <button type="submit" class="btn btn-accent btn-block" id="publish-submit" style="margin-top: 0.5rem;"><i class="fa-solid fa-right-left"></i> Publicar propiedad</button>
             </form>
         </div>
+        <div class="ip-lock-overlay" id="lock-overlay"><div class="ip-lock-box" id="lock-box"></div></div>
+        </div>
+        </div>
     </main>
 
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/barrios.js"></script>
     <script src="js/zonas.js"></script>
     <script src="js/backend.js"></script>
     <script>
@@ -268,6 +316,15 @@
         };
 
         let modoAuth = 'registro';
+
+        const NOMBRES_PLAN = { pro: 'Pro', premium: 'Premium' };
+        const paramsURL = new URLSearchParams(window.location.search);
+        const EDITAR_ID = paramsURL.get('editar');       // ?editar=ID → editar una propiedad propia
+        const PAGO = paramsURL.get('pago');              // ok | pendiente (al volver de Mercado Pago)
+        let esperaLarga = false;
+        if (PAGO === 'ok' || PAGO === 'pendiente') {
+            setTimeout(() => { esperaLarga = true; actualizarBloqueo(); }, 45000);
+        }
 
         function mostrarPaso(id) {
             ['estado-cargando', 'estado-sin-backend', 'estado-login', 'estado-form']
@@ -341,7 +398,7 @@
         });
 
         // Cada vez que cambia el estado de la sesión decidimos qué se muestra:
-        // el formulario de publicación solo si hay alguien logueado.
+        // el formulario solo si hay alguien logueado (y, para publicar, con plan).
         document.addEventListener('ip-auth', (event) => {
             const user = event.detail;
             if (IP.error) {
@@ -350,17 +407,165 @@
             }
             if (!user) {
                 mostrarPaso('estado-login');
-                document.getElementById('publicar-sub').innerText =
-                    'Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.';
+                const pendiente = sessionStorage.getItem('ip_plan_pendiente');
+                document.getElementById('publicar-sub').innerText = NOMBRES_PLAN[pendiente]
+                    ? `Creá tu cuenta o ingresá para activar el plan ${NOMBRES_PLAN[pendiente]}.`
+                    : 'Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.';
                 return;
             }
             mostrarPaso('estado-form');
-            document.getElementById('publicar-sub').innerText =
-                `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
+            document.getElementById('publicar-sub').innerText = EDITAR_ID
+                ? 'Cambiá lo que necesites y guardá. Los cambios se ven al instante en el catálogo.'
+                : `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
             // Precargamos el nombre del vendedor con el de la cuenta.
             const campoNombre = document.getElementById('p-seller-name');
             if (!campoNombre.value) campoNombre.value = IP.nombreUsuario();
+
+            if (EDITAR_ID) cargarEdicion();
+            actualizarBloqueo();
         });
+
+        // ---------------- Plan: bloqueo del formulario ----------------
+        // Sin plan vigente el formulario se ve difuminado y no se puede tocar.
+        // (El bloqueo real lo hacen las reglas de Firestore: esto es solo la cara visible.)
+        function actualizarBloqueo() {
+            if (!IP.user) return;
+            const wrap = document.getElementById('lock-wrap');
+            const card = document.getElementById('form-card');
+            const box = document.getElementById('lock-box');
+            const info = document.getElementById('plan-info');
+
+            // Editar lo que ya publicaste no exige un plan vigente.
+            if (EDITAR_ID) {
+                wrap.classList.remove('locked');
+                card.inert = false;
+                info.innerHTML = '';
+                return;
+            }
+
+            const plan = IP.planActivo();
+            wrap.classList.toggle('locked', !plan);
+            card.inert = !plan;
+
+            if (plan) {
+                const tope = plan.max ? `Hasta ${plan.max} propiedades activas` : 'Propiedades ilimitadas';
+                info.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-circle-check"></i> Plan <strong>${plan.nombre}</strong> activo hasta el ${plan.vence.toLocaleDateString('es-AR')} · ${tope}</span><a href="mis-propiedades.html" class="btn btn-outline btn-sm">Mis propiedades</a></div>`;
+                return;
+            }
+            info.innerHTML = '';
+
+            if (!IP.planCargado) {
+                box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div><p>Verificando tu plan…</p>`;
+            } else if (PAGO === 'ok' || PAGO === 'pendiente') {
+                box.innerHTML = esperaLarga
+                    ? `<div class="ip-lock-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                       <h2>Todavía no vemos tu pago</h2>
+                       <p>Este formulario se desbloquea solo apenas se active tu plan.</p>
+                       <a href="planes.html" class="btn btn-outline btn-block">Volver a los planes</a>`
+                    : `<div class="ip-lock-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                       <h2>Confirmando tu pago…</h2>
+                       <p>${PAGO === 'pendiente' ? 'Tu pago está pendiente de acreditación. ' : ''}Puede tardar unos segundos. El formulario se desbloquea solo, no hace falta que recargues.</p>`;
+            } else {
+                box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    <h2>Consultá nuestros planes para publicar tu permuta</h2>
+                    <p>Para publicar tu propiedad necesitás un plan activo. Elegí el que más te convenga: el formulario se desbloquea al instante.</p>
+                    <a href="planes.html" class="btn btn-accent btn-block"><i class="fa-solid fa-tags"></i> Ver planes</a>`;
+            }
+        }
+
+        // Si la persona venía desde "Planes" sin cuenta, apenas ingresa la
+        // llevamos directo al pago del plan que había elegido.
+        let retomandoPago = false;
+        function retomarPagoPendiente() {
+            const pendiente = sessionStorage.getItem('ip_plan_pendiente');
+            if (!pendiente || retomandoPago || !IP.user || !IP.planCargado) return;
+            retomandoPago = true;
+            sessionStorage.removeItem('ip_plan_pendiente');
+            if (!NOMBRES_PLAN[pendiente]) return;
+            IP.comprarPlan(pendiente).catch(e => {
+                console.error('[InmoPermutas] Error al activar el plan pendiente:', e);
+                alert('No se pudo activar el plan: ' + (e.message || 'probá de nuevo desde la sección Planes.'));
+                retomandoPago = false;
+            });
+        }
+
+        document.addEventListener('ip-plan', () => {
+            actualizarBloqueo();
+            retomarPagoPendiente();
+        });
+
+        // ---------------- Editar una propiedad propia ----------------
+        let propiedadEditada = null;   // datos de la publicación que se está editando
+        let cargandoEdicion = false;
+        let mediaExistente = [];       // fotos/videos que la publicación ya tiene subidos
+        let pathsABorrar = [];         // los que la persona quitó: se borran de Storage al guardar
+
+        function setVal(id, v) {
+            document.getElementById(id).value = (v === undefined || v === null || v === 0) ? '' : v;
+        }
+
+        function setZona(depId, ciudadId, z, barrioId) {
+            zonaEscribir(depId, ciudadId, z, barrioId);   // definida en zonas.js
+        }
+
+        function rellenarFormulario(p) {
+            const w = p.wants || {};
+            const tipos = w.types || [];
+            const zonas = w.zones || [];
+            setVal('p-title', p.title);
+            document.getElementById('p-type').value = p.type;
+            setVal('p-price', p.price);
+            setZona('p-dep', 'p-loc', p.departamento ? { dep: p.departamento, city: p.localidad, barrio: p.barrio } : null, 'p-barrio');
+            document.getElementById('p-bedrooms').value = p.bedrooms || 0;
+            setVal('p-area', p.area);
+            setVal('p-cubierta', p.superficieCubierta);
+            setVal('p-terreno', p.superficieTerreno);
+
+            document.getElementById('w-type-1').value = tipos[0] || '';
+            document.getElementById('w-type-2').value = tipos[1] || '';
+            setZona('w-dep-1', 'w-city-1', zonas[0], 'w-barrio-1');
+            setZona('w-dep-2', 'w-city-2', zonas[1], 'w-barrio-2');
+            setVal('p-wants-bedrooms', w.minBedrooms);
+            setVal('p-wants-bedrooms2', w.minBedrooms2);
+            setVal('p-wants-area', w.minArea);
+            setVal('p-wants-area2', w.minArea2);
+            setVal('p-wants-cub-min', w.minCubierta);
+            setVal('p-wants-cub-max', w.maxCubierta);
+            setVal('p-wants-ter-min', w.minTerreno);
+            setVal('p-wants-ter-max', w.maxTerreno);
+            setVal('p-wants-price', w.maxPrice);
+            setVal('p-wants-price2', w.maxPrice2);
+
+            const v = p.seller || {};
+            document.getElementById('p-seller-name').value = v.name || '';
+            document.getElementById('p-seller-phone').value = v.phone || '';
+
+            mediaExistente = Array.isArray(p.media) ? p.media.filter(m => m && m.url) : [];
+            pintarPreview();
+        }
+
+        async function cargarEdicion() {
+            document.getElementById('publicar-titulo').innerText = 'Editá tu propiedad';
+            document.getElementById('publicar-badge').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar publicación';
+            document.getElementById('publish-submit').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios';
+            if (propiedadEditada || cargandoEdicion) return;
+            cargandoEdicion = true;
+            try {
+                const p = await IP.obtenerPropiedad(EDITAR_ID);
+                if (!p || p.ownerUid !== IP.user.uid) {
+                    alert('No encontramos esa publicación entre las tuyas.');
+                    window.location.href = 'mis-propiedades.html';
+                    return;
+                }
+                propiedadEditada = p;
+                rellenarFormulario(p);
+            } catch (e) {
+                console.error('[InmoPermutas] Error al cargar la publicación:', e);
+                alert('No se pudo cargar la publicación: ' + IP.mensajeError(e));
+            } finally {
+                cargandoEdicion = false;
+            }
+        }
 
         // ---------------- Fotos y videos ----------------
         // Lista de File elegidos, en el orden en que se muestran. La primera
@@ -380,7 +585,7 @@
                 if (!esFoto && !esVideo) return rechazados.push(`${f.name}: formato no soportado`);
                 if (esFoto && f.size > MAX_FOTO_MB * 1048576) return rechazados.push(`${f.name}: la foto supera ${MAX_FOTO_MB} MB`);
                 if (esVideo && f.size > MAX_VIDEO_MB * 1048576) return rechazados.push(`${f.name}: el video supera ${MAX_VIDEO_MB} MB`);
-                if (archivos.length >= MAX_ARCHIVOS) return rechazados.push(`${f.name}: máximo ${MAX_ARCHIVOS} archivos`);
+                if (mediaExistente.length + archivos.length >= MAX_ARCHIVOS) return rechazados.push(`${f.name}: máximo ${MAX_ARCHIVOS} archivos`);
                 archivos.push(f);
             });
 
@@ -389,8 +594,15 @@
             pintarPreview();
         });
 
+        // Los índices recorren primero los archivos que la publicación ya tenía
+        // (solo al editar) y después los recién elegidos.
         function quitarArchivo(i) {
-            archivos.splice(i, 1);
+            if (i < mediaExistente.length) {
+                const [quitado] = mediaExistente.splice(i, 1);
+                if (quitado && quitado.path) pathsABorrar.push(quitado.path);
+            } else {
+                archivos.splice(i - mediaExistente.length, 1);
+            }
             pintarPreview();
         }
 
@@ -400,16 +612,18 @@
             cont.querySelectorAll('img, video').forEach(el => URL.revokeObjectURL(el.src));
             cont.innerHTML = '';
 
-            const idxPrincipal = archivos.findIndex(f => f.type.startsWith('image/'));
+            const items = [
+                ...mediaExistente.map(m => ({ url: m.url, esVideo: m.type === 'video' })),
+                ...archivos.map(f => ({ url: URL.createObjectURL(f), esVideo: f.type.startsWith('video/') }))
+            ];
+            const idxPrincipal = items.findIndex(it => !it.esVideo);
 
-            archivos.forEach((f, i) => {
-                const url = URL.createObjectURL(f);
-                const esVideo = f.type.startsWith('video/');
+            items.forEach((it, i) => {
                 const div = document.createElement('div');
                 div.className = 'ip-media-thumb';
-                div.innerHTML = (esVideo
-                    ? `<video src="${url}" muted preload="metadata"></video><i class="fa-solid fa-circle-play ip-media-play"></i>`
-                    : `<img src="${url}" alt="">`)
+                div.innerHTML = (it.esVideo
+                    ? `<video src="${it.url}" muted preload="metadata"></video><i class="fa-solid fa-circle-play ip-media-play"></i>`
+                    : `<img src="${it.url}" alt="">`)
                     + (i === idxPrincipal ? `<span class="ip-media-main">Principal</span>` : '')
                     + `<button type="button" class="ip-media-remove" title="Quitar" aria-label="Quitar archivo"><i class="fa-solid fa-xmark"></i></button>`;
                 div.querySelector('.ip-media-remove').addEventListener('click', () => quitarArchivo(i));
@@ -441,14 +655,17 @@
         // ---------------- Publicar ----------------
         document.getElementById('publish-form').addEventListener('submit', async (event) => {
             event.preventDefault();
+            if (EDITAR_ID && !propiedadEditada) return;   // todavía cargando la publicación
 
             const type = document.getElementById('p-type').value;
             // Hasta 2 opciones por apartado; si repite la misma, cuenta una sola vez.
             const sinRepetir = lista => lista.filter((x, i) => lista.findIndex(y => JSON.stringify(y) === JSON.stringify(x)) === i);
             const wantsTypes = sinRepetir([document.getElementById('w-type-1').value, document.getElementById('w-type-2').value].filter(Boolean));
-            const wantsZones = sinRepetir([zonaLeer('w-dep-1', 'w-city-1'), zonaLeer('w-dep-2', 'w-city-2')].filter(Boolean));
+            const wantsZones = sinRepetir([zonaLeer('w-dep-1', 'w-city-1', 'w-barrio-1'), zonaLeer('w-dep-2', 'w-city-2', 'w-barrio-2')].filter(Boolean));
             const dep = document.getElementById('p-dep').value;
             const localidad = document.getElementById('p-loc').value;
+            // El barrio solo vale si hay ciudad elegida (el selector se oculta si no).
+            const barrio = localidad ? document.getElementById('p-barrio').value : '';
             const nombreZonaPropia = localidad || dep;
             const num = id => Number(document.getElementById(id).value) || 0;
 
@@ -460,31 +677,66 @@
                 alert('Elegí al menos una zona donde te interesaría recibir la propiedad.');
                 return;
             }
+            // Si cargó mínima y máxima, la mínima no puede superar a la máxima.
+            const rangos = [
+                ['superficie cubierta', 'p-wants-cub-min', 'p-wants-cub-max'],
+                ['superficie del terreno', 'p-wants-ter-min', 'p-wants-ter-max']
+            ];
+            for (const [nombre, idMin, idMax] of rangos) {
+                const min = num(idMin), max = num(idMax);
+                if (min && max && min > max) {
+                    alert(`En ${nombre} que buscás, la mínima (${min} m²) no puede ser mayor que la máxima (${max} m²).`);
+                    document.getElementById(idMin).focus();
+                    return;
+                }
+            }
 
             const btn = document.getElementById('publish-submit');
             btn.disabled = true;
 
             try {
-                // 1) Subimos fotos y videos (si hay). Mantienen el orden elegido.
-                let media = [];
+                // 0) Para publicar una propiedad nueva hace falta un plan vigente
+                //    y no haber llegado al tope de propiedades de ese plan.
+                if (!EDITAR_ID) {
+                    const plan = IP.planActivo();
+                    if (!plan) {
+                        actualizarBloqueo();
+                        throw new Error('Necesitás un plan activo para publicar. Elegí uno en la sección Planes.');
+                    }
+                    if (plan.max) {
+                        const cantidad = await IP.contarMisPropiedades();
+                        if (cantidad >= plan.max) {
+                            throw new Error(`Tu plan ${plan.nombre} permite hasta ${plan.max} propiedades activas y ya llegaste al máximo. Eliminá alguna desde "Mis propiedades" o pasate a Premium.`);
+                        }
+                    }
+                }
+
+                // 1) Subimos fotos y videos nuevos (si hay). Mantienen el orden elegido.
+                let subidos = [];
                 if (archivos.length) {
                     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Optimizando fotos…';
                     const listos = await Promise.all(archivos.map(comprimirImagen));
                     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo… 0%';
-                    media = await IP.subirArchivos(listos, pct => {
+                    subidos = await IP.subirArchivos(listos, pct => {
                         btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo… ${pct}%`;
                     });
                 }
+                // Al editar, primero van los archivos que ya tenía (menos los que quitó).
+                const media = [...mediaExistente, ...subidos];
                 const primeraFoto = media.find(m => m.type === 'image');
 
                 // 2) Armamos y guardamos la propiedad
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Publicando…';
+                btn.innerHTML = EDITAR_ID
+                    ? '<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando…'
+                    : '<i class="fa-solid fa-circle-notch fa-spin"></i> Publicando…';
+                const avatarPrevio = propiedadEditada && propiedadEditada.seller && propiedadEditada.seller.avatar;
 
                 const nuevaPropiedad = {
                     title: document.getElementById('p-title').value.trim(),
                     type: type,
                     departamento: dep,
                     localidad: localidad,
+                    barrio: barrio,
                     // location / city son lo que se muestra en tarjetas y fichas
                     location: nombreZonaPropia,
                     city: nombreZonaPropia === 'Córdoba' ? 'Capital' : 'Córdoba',
@@ -492,11 +744,14 @@
                     currency: "US$",
                     bedrooms: Number(document.getElementById('p-bedrooms').value),
                     area: Number(document.getElementById('p-area').value),
+                    // Opcionales: 0 = no cargada (no se muestra en la ficha)
+                    superficieCubierta: num('p-cubierta'),
+                    superficieTerreno: num('p-terreno'),
                     image: primeraFoto ? primeraFoto.url : placeholderImages[type],
                     media: media,
                     seller: {
                         name: document.getElementById('p-seller-name').value.trim(),
-                        avatar: (IP.user && IP.user.photoURL) || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                        avatar: avatarPrevio || (IP.user && IP.user.photoURL) || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
                         phone: document.getElementById('p-seller-phone').value.trim().replace(/\D/g, '')
                     },
                     wants: {
@@ -507,40 +762,61 @@
                         minBedrooms2: num('p-wants-bedrooms2'),
                         minArea: num('p-wants-area'),
                         minArea2: num('p-wants-area2'),
+                        minCubierta: num('p-wants-cub-min'),
+                        maxCubierta: num('p-wants-cub-max'),
+                        minTerreno: num('p-wants-ter-min'),
+                        maxTerreno: num('p-wants-ter-max'),
                         maxPrice: num('p-wants-price'),
                         maxPrice2: num('p-wants-price2')
                     }
                 };
 
-                const nuevoId = await IP.publicarPropiedad(nuevaPropiedad);
-                document.getElementById('form-success').classList.add('show');
-                document.getElementById('publish-form').style.display = 'none';
-                setTimeout(() => {
-                    window.location.href = `propiedad.html?id=${encodeURIComponent(nuevoId)}`;
-                }, 1100);
+                if (EDITAR_ID) {
+                    await IP.actualizarPropiedad(EDITAR_ID, nuevaPropiedad);
+                    // Recién ahora, con los cambios guardados, borramos de Storage lo que quitó.
+                    await IP.borrarArchivos(pathsABorrar);
+                    document.getElementById('form-success').innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Cambios guardados! Volvemos a tus propiedades…';
+                    document.getElementById('form-success').classList.add('show');
+                    document.getElementById('publish-form').style.display = 'none';
+                    setTimeout(() => { window.location.href = 'mis-propiedades.html'; }, 1100);
+                } else {
+                    const nuevoId = await IP.publicarPropiedad(nuevaPropiedad);
+                    document.getElementById('form-success').classList.add('show');
+                    document.getElementById('publish-form').style.display = 'none';
+                    setTimeout(() => {
+                        window.location.href = `propiedad.html?id=${encodeURIComponent(nuevoId)}`;
+                    }, 1100);
+                }
             } catch (e) {
                 console.error('[InmoPermutas] Error al publicar:', e);
                 let msg = IP.mensajeError(e);
-                if (e && (e.code === 'storage/unauthorized' || e.code === 'permission-denied')) {
+                if (e && e.code === 'permission-denied' && !EDITAR_ID) {
+                    msg = 'No tenés un plan activo (o ya venció). Consultá los planes para publicar.';
+                } else if (e && (e.code === 'storage/unauthorized' || e.code === 'permission-denied')) {
                     msg = 'Firebase rechazó el permiso (' + e.code + '). Revisá las reglas de Storage / Firestore.';
                 } else if (e && (e.code === 'storage/retry-limit-exceeded' || e.code === 'storage/bucket-not-found' || e.code === 'storage/project-not-found')) {
                     msg = 'Firebase Storage no responde. Entrá a la consola de Firebase → Storage y verificá que esté activado (los proyectos nuevos requieren el plan Blaze).';
                 } else if (e && e.code === 'storage/unknown') {
                     msg = 'No se pudo subir a Storage. Verificá que Storage esté activado en tu proyecto de Firebase.';
                 }
-                alert('No se pudo publicar: ' + msg);
+                alert((EDITAR_ID ? 'No se pudo guardar: ' : 'No se pudo publicar: ') + msg);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Publicar propiedad';
+                btn.innerHTML = EDITAR_ID
+                    ? '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios'
+                    : '<i class="fa-solid fa-right-left"></i> Publicar propiedad';
             }
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            zonaConectar('p-dep', 'p-loc', 'Elegí el departamento');
-            zonaConectar('w-dep-1', 'w-city-1', 'Departamento');
-            zonaConectar('w-dep-2', 'w-city-2', 'Departamento (opcional)');
+        // Se ejecuta ya (el script está después del formulario) y no en
+        // DOMContentLoaded, para que las listas de zonas existan antes de que
+        // el modo edición intente rellenarlas.
+        (function iniciarFormulario() {
+            zonaConectar('p-dep', 'p-loc', 'Elegí el departamento', 'p-barrio');
+            zonaConectar('w-dep-1', 'w-city-1', 'Departamento', 'w-barrio-1');
+            zonaConectar('w-dep-2', 'w-city-2', 'Departamento (opcional)', 'w-barrio-2');
             document.getElementById('google-logo').innerHTML =
                 (typeof IP_GOOGLE_SVG !== 'undefined' ? IP_GOOGLE_SVG : '');
-        });
+        })();
     </script>
     <script src="js/asistente.js"></script>
 </body>
