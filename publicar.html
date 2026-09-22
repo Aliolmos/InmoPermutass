@@ -137,7 +137,7 @@
                         </select>
                     </div>
                     <div class="form-field">
-                        <label>Precio (US$)</label>
+                        <label>Precio (U$S)</label>
                         <input type="number" id="p-price" placeholder="Ej: 220000" min="1" required>
                     </div>
 
@@ -230,19 +230,6 @@
                     </div>
 
                     <div class="form-field full">
-                        <label>Superficie mínima que aceptás (m²)</label>
-                        <div class="opt-pair">
-                            <div class="opt-col"><span class="opt-tag">Opción 1</span>
-                                <input type="number" id="p-wants-area" min="0" placeholder="Ej: 100">
-                            </div>
-                            <div class="opt-col"><span class="opt-tag opt-tag--2">Opción 2 · opcional</span>
-                                <input type="number" id="p-wants-area2" min="0" placeholder="Ej: 70">
-                            </div>
-                        </div>
-                        <p class="form-hint">Dejalo vacío o en 0 si no tenés preferencia.</p>
-                    </div>
-
-                    <div class="form-field full">
                         <label>Superficie cubierta que buscás (m²) <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
                         <div class="opt-pair opt-pair--num">
                             <div class="opt-col"><span class="opt-tag">Mínima</span>
@@ -269,7 +256,7 @@
                     </div>
 
                     <div class="form-field full">
-                        <label>Precio máximo que aceptarías recibir (US$)</label>
+                        <label>Precio máximo que aceptarías recibir (U$S)</label>
                         <div class="opt-pair">
                             <div class="opt-col"><span class="opt-tag">Opción 1</span>
                                 <input type="number" id="p-wants-price" min="0" placeholder="Ej: 250000">
@@ -527,8 +514,6 @@
             setZona('w-dep-2', 'w-city-2', zonas[1], 'w-barrio-2');
             setVal('p-wants-bedrooms', w.minBedrooms);
             setVal('p-wants-bedrooms2', w.minBedrooms2);
-            setVal('p-wants-area', w.minArea);
-            setVal('p-wants-area2', w.minArea2);
             setVal('p-wants-cub-min', w.minCubierta);
             setVal('p-wants-cub-max', w.maxCubierta);
             setVal('p-wants-ter-min', w.minTerreno);
@@ -741,7 +726,7 @@
                     location: nombreZonaPropia,
                     city: nombreZonaPropia === 'Córdoba' ? 'Capital' : 'Córdoba',
                     price: Number(document.getElementById('p-price').value),
-                    currency: "US$",
+                    currency: "U$S",
                     bedrooms: Number(document.getElementById('p-bedrooms').value),
                     area: Number(document.getElementById('p-area').value),
                     // Opcionales: 0 = no cargada (no se muestra en la ficha)
@@ -760,8 +745,6 @@
                         locations: wantsZones.map(z => z.city || z.dep),
                         minBedrooms: num('p-wants-bedrooms'),
                         minBedrooms2: num('p-wants-bedrooms2'),
-                        minArea: num('p-wants-area'),
-                        minArea2: num('p-wants-area2'),
                         minCubierta: num('p-wants-cub-min'),
                         maxCubierta: num('p-wants-cub-max'),
                         minTerreno: num('p-wants-ter-min'),

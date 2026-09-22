@@ -223,7 +223,7 @@ function describirWants(wants) {
     const terreno = _textoRango(wants.minTerreno, wants.maxTerreno, 'de terreno');
     if (cubierta) extras.push(cubierta);
     if (terreno) extras.push(terreno);
-    if (precio.length) extras.push(`hasta ${precio.map(n => 'US$ ' + n.toLocaleString()).join(' o ')}`);
+    if (precio.length) extras.push(`hasta ${precio.map(n => 'U$S ' + n.toLocaleString()).join(' o ')}`);
     if (extras.length) texto += ` Condiciones: ${extras.join(', ')}.`;
 
     return texto;
@@ -321,7 +321,7 @@ function renderPropertyCard(p, matchPercent) {
                 <p class="card-location"><i class="fa-solid fa-location-dot"></i>${p.location}, ${p.city}</p>
                 <div class="card-footer">
                     <span><i class="fa-solid fa-bed"></i> ${p.bedrooms} dorm. · ${p.area} m²</span>
-                    <a href="propiedad.html?id=${encodeURIComponent(p.id)}" class="btn btn-primary btn-sm">Ver detalle</a>
+                    <a href="propiedad.html?id=${encodeURIComponent(p.id)}" class="btn btn-primary btn-sm"><i class="fa-solid fa-right-left"></i> Hacer match</a>
                 </div>
             </div>
         </div>

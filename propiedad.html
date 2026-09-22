@@ -178,6 +178,7 @@
                     <div>
                         <span class="eyebrow-badge"><i class="fa-solid fa-right-left"></i> Propiedad verificada para permuta</span>
                         <h1 style="font-size: 2.3rem; margin-top: 0.4rem;">${property.title}</h1>
+                        <div id="detail-match-badge" class="detail-match-badge"></div>
                         <p style="color: var(--stone); font-size: 1.05rem; margin-top:0.3rem;"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> ${property.barrio ? 'Barrio ' + property.barrio + ' · ' : ''}${property.location}, ${property.city}</p>
                     </div>
                     <button class="icon-btn ${fav ? 'has-favs' : ''}" style="width:48px;height:48px;font-size:1.15rem;" onclick="handleFavoriteClick(event, '${idSeguro}')" aria-label="Guardar en favoritos">
@@ -228,7 +229,42 @@
                 </div>
             `;
 
+            pintarMatchPropio(property);
             updateFavCount();
+        }
+
+        // Muestra, junto al título, el % de match entre ESTA propiedad y la
+        // propiedad propia de quien está mirando (si tiene una publicada).
+        // Usa el mismo algoritmo de calcularCompatibilidad() de utils.js.
+        function pintarMatchPropio(property) {
+            const cont = document.getElementById('detail-match-badge');
+            if (!cont) return;
+
+            if (!window.IP || IP.error) { cont.innerHTML = ''; return; }
+
+            if (!IP.user) {
+                cont.innerHTML = `<a href="publicar.html" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Ingresá y publicá tu propiedad para ver tu % de match</a>`;
+                return;
+            }
+            if (property.ownerUid === IP.user.uid) {
+                cont.innerHTML = ''; // es tu propia publicación, no hay match que calcular
+                return;
+            }
+
+            const misPropiedades = getProperties().filter(p => !p.esDemo && p.ownerUid === IP.user.uid);
+            if (!misPropiedades.length) {
+                cont.innerHTML = `<a href="publicar.html" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Publicá tu propiedad para ver tu % de match</a>`;
+                return;
+            }
+
+            // Si tiene más de una propiedad publicada, se muestra la que mejor matchea.
+            let mejor = null;
+            misPropiedades.forEach(mia => {
+                const pct = calcularCompatibilidad(property, mia);
+                if (!mejor || pct > mejor.pct) mejor = { pct, titulo: mia.title };
+            });
+
+            cont.innerHTML = `<span class="detail-match-pct"><i class="fa-solid fa-arrows-rotate"></i> ${mejor.pct}% de match con tu propiedad "${mejor.titulo}"</span>`;
         }
 
         document.addEventListener('DOMContentLoaded', renderDetalle);

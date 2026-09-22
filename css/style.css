@@ -812,6 +812,24 @@ header {
 .match-badge .match-percent { font-size: 1.7rem; font-weight: 800; color: var(--green); }
 .match-badge .match-text { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; opacity: 0.92; }
 
+/* % de match propio en el título de la ficha de detalle */
+.detail-match-badge:empty { display: none; }
+.detail-match-badge { margin: 0.6rem 0 0.2rem; }
+.detail-match-cta {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(62,240,122,0.1); border: 1px solid rgba(62,240,122,0.4);
+    color: var(--green); font-weight: 700; font-size: 0.85rem;
+    padding: 0.45rem 0.9rem; border-radius: 30px; text-decoration: none;
+}
+.detail-match-cta:hover { background: rgba(62,240,122,0.18); }
+.detail-match-pct {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(62,240,122,0.12); border: 1px solid var(--green);
+    color: #fff; font-weight: 700; font-size: 0.9rem;
+    padding: 0.5rem 1rem; border-radius: 30px;
+}
+.detail-match-pct i { color: var(--green); }
+
 .fav-btn {
     /* Define el sistema de posicionamiento del elemento. */
     position: absolute;

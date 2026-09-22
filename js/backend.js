@@ -128,7 +128,7 @@ function ipEscucharPropiedades() {
                     localidad: d.localidad || "",
                     barrio: d.barrio || "",
                     price: Number(d.price) || 0,
-                    currency: d.currency || "US$",
+                    currency: d.currency || "U$S",
                     bedrooms: Number(d.bedrooms) || 0,
                     area: Number(d.area) || 0,
                     // Opcionales: 0 = no cargada (no se muestra en la ficha)
