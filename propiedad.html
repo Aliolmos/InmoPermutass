@@ -133,8 +133,10 @@
 
             // calcularCompatibilidad vive en utils.js (usa el campo "wants" de
             // cada propiedad para calcular el match en las dos direcciones).
+            // Se excluyen las propias: no tiene sentido sugerirte matchear con vos mismo.
             const similarMatches = props
                 .filter(p => String(p.id) !== String(property.id))
+                .filter(p => !window.IP || !IP.user || p.ownerUid !== IP.user.uid)
                 .map(p => ({ ...p, matchPercent: calcularCompatibilidad(property, p) }))
                 .sort((a, b) => b.matchPercent - a.matchPercent)
                 .slice(0, 3);

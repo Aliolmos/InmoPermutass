@@ -191,6 +191,33 @@ function calcularCompatibilidad(a, b) {
     return Math.max(5, Math.min(Math.round(final), 98));
 }
 
+// Propiedades para mostrar en vitrinas públicas (destacadas, catálogo,
+// favoritos): si hay una sesión iniciada se excluyen las propias, porque no
+// tiene sentido ofrecerle a alguien matchear con su propia publicación. Esas
+// solo se ven en "Mis propiedades". Sin sesión, se listan todas.
+function getPropertiesPublicas() {
+    const props = getProperties();
+    if (window.IP && IP.user) {
+        return props.filter(p => p.ownerUid !== IP.user.uid);
+    }
+    return props;
+}
+
+// Mejor % de match entre una propiedad y alguna de las propias del usuario
+// que está mirando. Devuelve undefined si no corresponde mostrarlo: sin
+// sesión, sin propiedades propias publicadas, o si la propiedad es propia.
+function mejorMatchPropio(p) {
+    if (!window.IP || !IP.user || p.ownerUid === IP.user.uid) return undefined;
+    const misPropiedades = getProperties().filter(x => !x.esDemo && x.ownerUid === IP.user.uid);
+    if (!misPropiedades.length) return undefined;
+    let mejor = 0;
+    misPropiedades.forEach(mia => {
+        const pct = calcularCompatibilidad(p, mia);
+        if (pct > mejor) mejor = pct;
+    });
+    return mejor;
+}
+
 // Texto legible de lo que una propiedad acepta recibir a cambio.
 function nombreZona(z) {
     if (z.city && z.barrio) return `Barrio ${z.barrio}, ${z.city} (${z.dep})`;
@@ -331,9 +358,9 @@ function renderPropertyCard(p, matchPercent) {
 function renderFeaturedProperties() {
     const container = document.getElementById('featured-grid');
     if (!container) return;
-    const props = getProperties();
+    const props = getPropertiesPublicas();
     const featured = props.slice(0, 6);
-    container.innerHTML = featured.map(p => renderPropertyCard(p)).join('');
+    container.innerHTML = featured.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
 
     const countText = document.getElementById('active-count-text');
     if (countText) {
@@ -374,3 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFavCount();
     initFooterContactForm();
 });
+
+// Cuando cambia la sesión (login/logout) hay que repintar las tarjetas: el
+// % de match propio depende de quién está mirando, no solo de qué propiedades
+// hay en la base (eso ya lo cubre refrescarVista() vía backend.js).
+document.addEventListener('ip-auth', refrescarVista);
+document.addEventListener('ip-plan', refrescarVista);

@@ -139,7 +139,7 @@
             const maxPrice = Number(document.getElementById('filter-price').value) || Infinity;
             const sort = document.getElementById('filter-sort').value;
 
-            const props = getProperties();
+            const props = getPropertiesPublicas();
             let filtered = props.filter(p => {
                 if (type && p.type !== type) return false;
                 if (location && !p.location.toLowerCase().includes(location) && !p.city.toLowerCase().includes(location) && !(p.departamento || '').toLowerCase().includes(location) && !(p.barrio || '').toLowerCase().includes(location) && !p.title.toLowerCase().includes(location)) return false;
@@ -158,7 +158,7 @@
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => renderPropertyCard(p)).join('');
+            grid.innerHTML = filtered.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
         }
 
         function resetFilters() {

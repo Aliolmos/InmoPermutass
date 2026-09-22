@@ -74,7 +74,7 @@
     <script>
         function renderFavorites() {
             const favIds = getFavorites();
-            const props = getProperties();
+            const props = getPropertiesPublicas();
             const favProps = props.filter(p => favIds.includes(p.id));
             const grid = document.getElementById('favorites-grid');
             const subtitle = document.getElementById('fav-subtitle');
@@ -95,7 +95,7 @@
                 return;
             }
 
-            grid.innerHTML = favProps.map(p => renderPropertyCard(p)).join('');
+            grid.innerHTML = favProps.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
         }
 
         document.addEventListener('DOMContentLoaded', renderFavorites);
