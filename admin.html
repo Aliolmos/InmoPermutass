@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — InmoPermutas</title>
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot"></span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+                <a href="planes.html">Planes</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-band">
+        <div class="container" style="padding-bottom: 2.5rem;">
+            <div class="section-header">
+                <div class="section-title">
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Panel de administración</h1>
+                    <p>Usuarios, planes y pagos. Revisá el pago en Mercado Pago y activá el plan desde acá.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container" style="padding-bottom: 4rem;">
+        <div id="adm-msg" class="adm-msg"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando…</div>
+
+        <div id="adm-panel" hidden>
+            <div class="adm-stats" id="adm-stats"></div>
+
+            <div class="adm-tools">
+                <div class="adm-filtros" id="adm-filtros"></div>
+                <input type="search" id="adm-buscar" class="adm-buscar" placeholder="Buscar por nombre o email…">
+                <button type="button" class="btn btn-outline btn-sm" onclick="cargar()"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+            </div>
+
+            <div class="adm-tabla-wrap">
+                <table class="adm-tabla">
+                    <thead>
+                        <tr><th>Usuario</th><th>Estado</th><th>Plan</th><th>Vence</th><th>Props.</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="adm-filas"></tbody>
+                </table>
+            </div>
+            <p class="adm-nota"><i class="fa-solid fa-circle-info"></i> "Activar" suma 30 días (si ya estaba activo, se suman al vencimiento actual). Chequeá en Mercado Pago que el pago esté acreditado antes de activar: el email de Mercado Pago puede no ser el mismo que el de la cuenta del sitio.</p>
+        </div>
+    </main>
+
+    <style>
+        .adm-msg { text-align: center; color: var(--stone); padding: 3rem 1rem; }
+        .adm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+        .adm-stat { background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--radius-md); padding: 1rem 1.1rem; }
+        .adm-stat b { display: block; font-size: 1.6rem; color: #fff; }
+        .adm-stat span { color: var(--stone); font-size: 0.82rem; }
+        .adm-stat--debe b { color: #ffb547; }
+        .adm-stat--activo b { color: var(--green); }
+        .adm-tools { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .adm-filtros { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .adm-filtro { background: transparent; border: 1px solid var(--ink-line); color: var(--stone); border-radius: 30px; padding: 0.4rem 0.9rem; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+        .adm-filtro.active { background: rgba(62,240,122,0.12); border-color: var(--green); color: var(--green); }
+        .adm-buscar { flex: 1; min-width: 200px; background: var(--ink-soft); border: 1px solid var(--ink-line); color: #fff; border-radius: var(--radius-sm); padding: 0.55rem 0.8rem; font: inherit; font-size: 0.88rem; }
+        .adm-tabla-wrap { overflow-x: auto; background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--radius-md); }
+        .adm-tabla { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .adm-tabla th { text-align: left; color: var(--stone-light); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.8rem 1rem; border-bottom: 1px solid var(--ink-line); white-space: nowrap; }
+        .adm-tabla td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--ink-line); vertical-align: middle; color: #fff; }
+        .adm-tabla tr:last-child td { border-bottom: none; }
+        .adm-user { display: flex; align-items: center; gap: 0.65rem; min-width: 200px; }
+        .adm-user img, .adm-ini { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3ef07a, #2f7ffa); color: #0a0f1e; font-weight: 800; }
+        .adm-user small { display: block; color: var(--stone); font-size: 0.78rem; }
+        .adm-tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+        .adm-tag--activo { background: rgba(62,240,122,0.12); color: var(--green); }
+        .adm-tag--debe { background: rgba(255,181,71,0.14); color: #ffb547; }
+        .adm-tag--inactivo { background: rgba(255,255,255,0.06); color: var(--stone); }
+        .adm-tag--premium { background: rgba(47,127,250,0.16); color: #7fb0ff; }
+        .adm-tag--pro { background: rgba(62,240,122,0.1); color: var(--green); }
+        .adm-sub { display: block; color: var(--stone); font-size: 0.75rem; margin-top: 0.25rem; white-space: nowrap; }
+        .adm-sub--alerta { color: #ffb547; }
+        .adm-acciones { display: flex; gap: 0.35rem; flex-wrap: wrap; min-width: 230px; }
+        .adm-acciones .btn { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
+        .adm-btn-premium { background: var(--blue); color: #fff; border: none; }
+        .adm-btn-premium:hover { background: var(--blue-dark); }
+        .adm-acciones button:disabled { opacity: 0.5; cursor: wait; }
+        .adm-vacio { text-align: center; color: var(--stone); padding: 2rem !important; }
+        .adm-nota { color: var(--stone); font-size: 0.8rem; margin-top: 1rem; line-height: 1.5; }
+    </style>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+        const FILTROS = { todos: 'Todos', debe: 'Deben pagar', activo: 'Activos', inactivo: 'Inactivos' };
+        const ORDEN = { debe: 0, activo: 1, inactivo: 2 };
+        let filas = [];
+        let filtro = 'todos';
+
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fecha = d => d ? d.toLocaleDateString('es-AR') : '—';
+        const nombrePlan = p => ({ pro: 'Pro', premium: 'Premium' }[p] || '');
+
+        function mensaje(html) {
+            $('adm-msg').innerHTML = html;
+            $('adm-msg').hidden = false;
+            $('adm-panel').hidden = true;
+        }
+
+        async function cargar() {
+            try {
+                filas = await IP.admin.listar();
+                filas.sort((a, b) => ORDEN[a.estado] - ORDEN[b.estado]
+                    || (b.pedidoAt || 0) - (a.pedidoAt || 0)
+                    || (a.vence || Infinity) - (b.vence || Infinity));
+                $('adm-msg').hidden = true;
+                $('adm-panel').hidden = false;
+                pintar();
+            } catch (e) {
+                console.error(e);
+                mensaje(`<i class="fa-solid fa-triangle-exclamation"></i> No se pudieron cargar los usuarios: ${esc(e.message)}<br><small>¿Publicaste las reglas de firestore.rules?</small>`);
+            }
+        }
+
+        function pintar() {
+            const cuenta = { todos: filas.length, debe: 0, activo: 0, inactivo: 0 };
+            filas.forEach(f => cuenta[f.estado]++);
+            const premium = filas.filter(f => f.estado === 'activo' && f.plan === 'premium').length;
+
+            $('adm-stats').innerHTML = `
+                <div class="adm-stat"><b>${cuenta.todos}</b><span>Usuarios</span></div>
+                <div class="adm-stat adm-stat--activo"><b>${cuenta.activo}</b><span>Activos (${premium} Premium)</span></div>
+                <div class="adm-stat adm-stat--debe"><b>${cuenta.debe}</b><span>Deben pagar</span></div>
+                <div class="adm-stat"><b>${cuenta.inactivo}</b><span>Inactivos</span></div>`;
+
+            $('adm-filtros').innerHTML = Object.entries(FILTROS).map(([k, t]) =>
+                `<button type="button" class="adm-filtro ${k === filtro ? 'active' : ''}" onclick="filtro='${k}'; pintar()">${t} (${cuenta[k]})</button>`).join('');
+
+            const q = $('adm-buscar').value.trim().toLowerCase();
+            const lista = filas.filter(f => (filtro === 'todos' || f.estado === filtro)
+                && (!q || (f.nombre + ' ' + f.email).toLowerCase().includes(q)));
+
+            $('adm-filas').innerHTML = lista.length
+                ? lista.map(fila).join('')
+                : `<tr><td colspan="6" class="adm-vacio">No hay usuarios en esta lista.</td></tr>`;
+        }
+
+        function fila(f) {
+            const foto = f.foto ? `<img src="${esc(f.foto)}" alt="">` : `<span class="adm-ini">${esc((f.nombre || f.email || '?').charAt(0).toUpperCase())}</span>`;
+
+            const estado = {
+                activo: `<span class="adm-tag adm-tag--activo">Activo</span>`,
+                debe: `<span class="adm-tag adm-tag--debe">Debe pagar</span>`,
+                inactivo: `<span class="adm-tag adm-tag--inactivo">Inactivo</span>`
+            }[f.estado];
+
+            let detalle = '';
+            if (f.pedido) detalle = `<span class="adm-sub adm-sub--alerta"><i class="fa-solid fa-bell"></i> Pidió ${nombrePlan(f.pedido)} el ${fecha(f.pedidoAt)}</span>`;
+            else if (f.estado === 'debe') detalle = `<span class="adm-sub">Venció hace ${Math.abs(f.dias)} día${Math.abs(f.dias) === 1 ? '' : 's'}</span>`;
+            else if (f.estado === 'activo' && f.dias <= 5) detalle = `<span class="adm-sub adm-sub--alerta">Vence en ${f.dias} día${f.dias === 1 ? '' : 's'}</span>`;
+
+            const plan = f.plan ? `<span class="adm-tag adm-tag--${f.plan}">${nombrePlan(f.plan)}</span>` : '<span class="adm-sub">—</span>';
+
+            // El botón destacado es el del plan que pidió (o el que ya tiene, para renovar).
+            const objetivo = f.pedido || f.plan;
+            const btnPlan = p => {
+                const verbo = f.estado === 'activo' && f.plan === p ? 'Renovar' : 'Activar';
+                const clase = p === objetivo ? (p === 'premium' ? 'btn adm-btn-premium' : 'btn btn-accent') : 'btn btn-outline';
+                const icono = p === 'premium' ? '<i class="fa-solid fa-crown"></i> ' : '';
+                return `<button type="button" class="${clase}" onclick="accion(this, 'activar', '${f.uid}', '${p}')">${icono}${verbo} ${nombrePlan(p)}</button>`;
+            };
+            const acciones = [
+                objetivo === 'pro' ? btnPlan('pro') + btnPlan('premium') : btnPlan('premium') + btnPlan('pro'),
+                f.estado === 'activo' ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'desactivar', '${f.uid}')">Desactivar</button>` : '',
+                f.pedido && f.estado !== 'activo' ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'descartarPedido', '${f.uid}')" title="No pagó: sacar el aviso">Descartar</button>` : ''
+            ].join('');
+
+            return `<tr>
+                <td><div class="adm-user">${foto}<div>${esc(f.nombre || 'Sin nombre')}<small>${esc(f.email || f.uid)}</small></div></div></td>
+                <td>${estado}${detalle}</td>
+                <td>${plan}</td>
+                <td>${fecha(f.vence)}</td>
+                <td>${f.props}</td>
+                <td><div class="adm-acciones">${acciones}</div></td>
+            </tr>`;
+        }
+
+        async function accion(btn, tipo, uid, plan) {
+            const f = filas.find(x => x.uid === uid);
+            const quien = f.nombre || f.email;
+            const textos = {
+                activar: `¿Activar ${nombrePlan(plan)} por 30 días a ${quien}?`,
+                desactivar: `¿Desactivar el plan de ${quien}? Va a quedar como "Debe pagar".`,
+                descartarPedido: `¿Descartar el pedido de ${quien}?`
+            };
+            if (!confirm(textos[tipo])) return;
+            btn.disabled = true;
+            try {
+                await IP.admin[tipo](uid, plan);
+                await cargar();
+            } catch (e) {
+                console.error(e);
+                alert('No se pudo: ' + e.message);
+                btn.disabled = false;
+            }
+        }
+
+        $('adm-buscar').addEventListener('input', pintar);
+
+        (async () => {
+            await IP.ready;
+            await IP.authListo;
+            if (IP.error) return mensaje('El sistema no está disponible en este momento.');
+            if (!IP.user) return mensaje('<i class="fa-solid fa-lock"></i> Iniciá sesión con tu cuenta de administrador. <br><br><a href="publicar.html" class="btn btn-accent btn-sm">Ingresar</a>');
+            if (!IP.esAdmin()) return mensaje('<i class="fa-solid fa-lock"></i> Esta sección es solo para administradores.');
+            cargar();
+        })();
+    </script>
+</body>
+</html>

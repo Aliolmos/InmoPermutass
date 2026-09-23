@@ -443,6 +443,11 @@
 
             if (!IP.planCargado) {
                 box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div><p>Verificando tu plan…</p>`;
+            } else if (IP.pedido) {
+                box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <h2>Estamos verificando tu pago</h2>
+                    <p>Recibimos tu pedido del plan <strong>${IP.pedido.nombre}</strong>. Apenas se acredite en Mercado Pago lo activamos y este formulario se desbloquea solo.</p>
+                    <a href="${IP.linkPago(IP.pedido.plan)}" class="btn btn-outline btn-block">¿Todavía no pagaste? Ir a pagar</a>`;
             } else if (PAGO === 'ok' || PAGO === 'pendiente') {
                 box.innerHTML = esperaLarga
                     ? `<div class="ip-lock-icon"><i class="fa-solid fa-hourglass-half"></i></div>
@@ -455,7 +460,7 @@
             } else {
                 box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-lock"></i></div>
                     <h2>Consultá nuestros planes para publicar tu permuta</h2>
-                    <p>Para publicar tu propiedad necesitás un plan activo. Elegí el que más te convenga: el formulario se desbloquea al instante.</p>
+                    <p>Para publicar tu propiedad necesitás un plan activo. Elegí el que más te convenga y pagalo con Mercado Pago.</p>
                     <a href="planes.html" class="btn btn-accent btn-block"><i class="fa-solid fa-tags"></i> Ver planes</a>`;
             }
         }
@@ -470,8 +475,8 @@
             sessionStorage.removeItem('ip_plan_pendiente');
             if (!NOMBRES_PLAN[pendiente]) return;
             IP.comprarPlan(pendiente).catch(e => {
-                console.error('[InmoPermutas] Error al activar el plan pendiente:', e);
-                alert('No se pudo activar el plan: ' + (e.message || 'probá de nuevo desde la sección Planes.'));
+                console.error('[InmoPermutas] Error al iniciar el pago pendiente:', e);
+                alert('No se pudo iniciar el pago: ' + (e.message || 'probá de nuevo desde la sección Planes.'));
                 retomandoPago = false;
             });
         }

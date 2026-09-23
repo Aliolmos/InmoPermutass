@@ -38,10 +38,27 @@ const IP_CACHE_KEY = "ip_props_cache";
 
 const IP_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
 
-// MODO SIMPLE (sin pago): al tocar "Elegir plan" el plan se activa al instante,
-// escribiendo directo en Firestore (suscripciones/{uid}). No hay Mercado Pago
-// ni Cloud Functions. Es solo para pruebas: antes de lanzar hay que volver a un
-// sistema con pago real y cerrar las reglas de Firestore.
+// PAGOS (modo simple con links de Mercado Pago):
+//   1) El usuario toca "Elegir plan" → se guarda el pedido en suscripciones/{uid}
+//      (campo "pedido") y se lo manda al link de suscripción de Mercado Pago.
+//   2) Vos ves el pago en Mercado Pago y activás el plan desde admin.html.
+// El usuario NO puede activarse el plan solo: lo impiden las reglas de Firestore
+// (archivo firestore.rules).
+
+// Links de suscripción de cada plan (Mercado Pago → Suscripciones → Planes → Compartir link).
+const IP_LINKS_MP = {
+    pro:     "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=fbe0b9d9838841599ee83e33b71e9f59",
+    premium: "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=aea36678569b4082bc192f5ca4761c04"
+};
+
+const IP_PLANES = {
+    pro:     { nombre: "Pro",     max: 5 },
+    premium: { nombre: "Premium", max: null }   // null = ilimitadas
+};
+
+// UIDs de Firebase que pueden entrar a admin.html (Authentication → Users → User UID).
+// Si agregás uno, agregalo también en firestore.rules.
+const IP_ADMINS = ["aU9gRjuTvWcDQ5NKu0yFnVg5vwe2"];
 
 window.IP = { user: null, listo: false, error: null, propsCargadas: false };
 
@@ -90,6 +107,7 @@ IP.ready = (async function ipInit() {
 
         IP.auth.onAuthStateChanged(user => {
             IP.user = user;
+            ipRegistrarUsuario(user);
             ipEscucharPlan(user);
             ipPintarSesion();
             document.dispatchEvent(new CustomEvent("ip-auth", { detail: user }));
@@ -164,12 +182,28 @@ IP.publicarPropiedad = async function (datos) {
 
 /* ------------------------ Plan del usuario -------------------------------- */
 
-// El plan vive en Firestore → suscripciones/{uid}. Por ahora lo escribe el
-// propio navegador al elegir un plan (modo simple, sin pago).
-//   IP.plan = { plan, nombre, max, vence: Date }  |  null si no tiene plan
+// El plan vive en Firestore → suscripciones/{uid}. Lo activa el admin.
+//   IP.plan   = { plan, nombre, max, vence: Date }  |  null si no tiene plan
+//   IP.pedido = { plan, nombre, fecha }            |  null si no pidió nada
 IP.plan = null;
+IP.pedido = null;
 IP.planCargado = false;
 let ipDesuscribirPlan = null;
+
+IP.esAdmin = () => !!(IP.user && IP_ADMINS.includes(IP.user.uid));
+
+// Deja registrado a cada usuario en "usuarios/{uid}" para que aparezca en el panel admin.
+function ipRegistrarUsuario(user) {
+    if (!user) return;
+    const alta = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
+    IP.db.collection("usuarios").doc(user.uid).set({
+        email: user.email || "",
+        nombre: user.displayName || (user.email || "").split("@")[0],
+        foto: user.photoURL || "",
+        alta: firebase.firestore.Timestamp.fromDate(alta),
+        ultimoIngreso: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(e => console.warn("[InmoPermutas] No se pudo registrar el usuario:", e.code));
+}
 
 function ipAvisarPlan() {
     document.dispatchEvent(new CustomEvent("ip-plan"));
@@ -178,6 +212,7 @@ function ipAvisarPlan() {
 function ipEscucharPlan(user) {
     if (ipDesuscribirPlan) { ipDesuscribirPlan(); ipDesuscribirPlan = null; }
     IP.plan = null;
+    IP.pedido = null;
     if (!user) {
         IP.planCargado = true;
         ipAvisarPlan();
@@ -191,6 +226,11 @@ function ipEscucharPlan(user) {
             nombre: d.nombrePlan || d.plan,
             max: d.maxPropiedades || null,   // null = ilimitadas
             vence: d.vence.toDate()
+        } : null;
+        IP.pedido = d && d.pedido && IP_PLANES[d.pedido] ? {
+            plan: d.pedido,
+            nombre: IP_PLANES[d.pedido].nombre,
+            fecha: d.pedidoAt ? d.pedidoAt.toDate() : new Date()
         } : null;
         IP.planCargado = true;
         ipAvisarPlan();
@@ -207,30 +247,116 @@ IP.planActivo = function () {
     return IP.plan && IP.plan.vence > new Date() ? IP.plan : null;
 };
 
-// Activa el plan directo en Firestore (sin pago). El plan dura 30 días.
-// Lo escucha ipEscucharPlan(), así que el contacto y "Publicar" se desbloquean solos.
+// Guarda el pedido del plan y manda al usuario a pagar a Mercado Pago.
+// El plan se activa cuando el admin confirma el pago desde admin.html.
 IP.comprarPlan = async function (planId) {
     await IP.ready;
     await IP.authListo;
     if (IP.error) throw new Error("El sistema no está disponible en este momento.");
     if (!IP.user) throw new Error("Tenés que iniciar sesión para elegir un plan.");
+    if (!IP_PLANES[planId] || !IP_LINKS_MP[planId]) throw new Error("Plan inválido.");
 
-    const PLANES = {
-        pro:     { nombre: "Pro",     max: 5 },
-        premium: { nombre: "Premium", max: null }   // null = ilimitadas
-    };
-    const plan = PLANES[planId];
-    if (!plan) throw new Error("Plan inválido.");
-
-    const vence = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await IP.db.collection("suscripciones").doc(IP.user.uid).set({
-        plan: planId,
-        nombrePlan: plan.nombre,
-        maxPropiedades: plan.max,
-        vence: firebase.firestore.Timestamp.fromDate(vence),
-        prueba: true
-    });
-    return { prueba: true };
+        pedido: planId,
+        pedidoAt: firebase.firestore.FieldValue.serverTimestamp(),
+        email: IP.user.email || "",
+        nombre: IP.nombreUsuario()
+    }, { merge: true });
+    window.location.href = IP_LINKS_MP[planId];
+    return { redirigiendo: true };
+};
+
+IP.linkPago = planId => IP_LINKS_MP[planId];
+
+/* ---------------------------- Panel admin --------------------------------- */
+
+const IP_DIA = 24 * 60 * 60 * 1000;
+
+IP.admin = {
+    // Junta usuarios, suscripciones y cantidad de propiedades en una sola lista.
+    async listar() {
+        if (!IP.esAdmin()) throw new Error("No sos administrador.");
+        const [us, subs, props] = await Promise.all([
+            IP.db.collection("usuarios").get(),
+            IP.db.collection("suscripciones").get(),
+            IP.db.collection(IP_COLECCION).get()
+        ]);
+        const mapa = {};
+        const fila = uid => mapa[uid] || (mapa[uid] = { uid, email: "", nombre: "", props: 0 });
+
+        us.forEach(d => {
+            const u = d.data(), f = fila(d.id);
+            f.email = u.email || f.email;
+            f.nombre = u.nombre || f.nombre;
+            f.foto = u.foto || "";
+            f.alta = u.alta ? u.alta.toDate() : null;
+            f.ultimoIngreso = u.ultimoIngreso ? u.ultimoIngreso.toDate() : null;
+        });
+        subs.forEach(d => {
+            const s = d.data(), f = fila(d.id);
+            f.plan = s.plan || null;
+            f.vence = s.vence ? s.vence.toDate() : null;
+            f.pedido = s.pedido || null;
+            f.pedidoAt = s.pedidoAt ? s.pedidoAt.toDate() : null;
+            f.email = f.email || s.email || "";
+            f.nombre = f.nombre || s.nombre || "";
+        });
+        props.forEach(d => {
+            const p = d.data();
+            if (!p.ownerUid) return;
+            const f = fila(p.ownerUid);
+            f.props++;
+            f.email = f.email || p.ownerEmail || "";
+            f.nombre = f.nombre || (p.seller && p.seller.name) || "";
+        });
+
+        const ahora = new Date();
+        return Object.values(mapa).map(f => {
+            if (f.vence && f.vence > ahora) f.estado = "activo";
+            else if (f.pedido || f.vence) f.estado = "debe";   // pidió y no está activo, o se le venció
+            else f.estado = "inactivo";
+            f.dias = f.vence ? Math.ceil((f.vence - ahora) / IP_DIA) : null;
+            return f;
+        });
+    },
+
+    // Activa (o renueva) un plan por X días. Si ya estaba activo, suma a partir del vencimiento.
+    async activar(uid, planId, dias = 30) {
+        const plan = IP_PLANES[planId];
+        if (!plan) throw new Error("Plan inválido.");
+        const ref = IP.db.collection("suscripciones").doc(uid);
+        const doc = await ref.get();
+        const actual = doc.exists && doc.data().vence ? doc.data().vence.toDate() : null;
+        const desde = actual && actual > new Date() ? actual : new Date();
+        await ref.set({
+            plan: planId,
+            nombrePlan: plan.nombre,
+            maxPropiedades: plan.max,
+            vence: firebase.firestore.Timestamp.fromDate(new Date(desde.getTime() + dias * IP_DIA)),
+            pedido: firebase.firestore.FieldValue.delete(),
+            pedidoAt: firebase.firestore.FieldValue.delete(),
+            prueba: firebase.firestore.FieldValue.delete(),
+            activadoAt: firebase.firestore.FieldValue.serverTimestamp(),
+            activadoPor: IP.user.email || IP.user.uid
+        }, { merge: true });
+    },
+
+    // Corta el plan ahora mismo (queda como "debe pagar").
+    async desactivar(uid) {
+        await IP.db.collection("suscripciones").doc(uid).set({
+            vence: firebase.firestore.Timestamp.now(),
+            pedido: firebase.firestore.FieldValue.delete(),
+            pedidoAt: firebase.firestore.FieldValue.delete()
+        }, { merge: true });
+    },
+
+    // Descarta un pedido (por ejemplo, si nunca pagó).
+    async descartarPedido(uid) {
+        await IP.db.collection("suscripciones").doc(uid).set({
+            pedido: firebase.firestore.FieldValue.delete(),
+            pedidoAt: firebase.firestore.FieldValue.delete()
+        }, { merge: true });
+    }
 };
 
 /* ------------------- Mis propiedades: leer, editar, borrar ---------------- */
@@ -375,10 +501,19 @@ function ipPintarSesion() {
     document.querySelectorAll(".nav-actions").forEach(cont => {
         let chip = cont.querySelector(".ip-user-chip");
         let mis = cont.querySelector(".ip-mis-link");
+        let adm = cont.querySelector(".ip-admin-link");
         if (!IP.user) {
             if (chip) chip.remove();
             if (mis) mis.remove();
+            if (adm) adm.remove();
             return;
+        }
+        if (IP.esAdmin() && !adm) {
+            adm = document.createElement("a");
+            adm.className = "btn btn-outline btn-sm ip-admin-link";
+            adm.href = "admin.html";
+            adm.innerHTML = '<i class="fa-solid fa-user-shield"></i> Admin';
+            cont.insertBefore(adm, cont.firstChild);
         }
         if (!chip) {
             chip = document.createElement("div");

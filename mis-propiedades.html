@@ -118,6 +118,12 @@
                             ? `<a href="planes.html" class="btn btn-accent btn-sm">Pasate a Premium</a>`
                             : `<a href="publicar.html" class="btn btn-accent btn-sm"><i class="fa-solid fa-circle-plus"></i> Publicar nueva</a>`}
                     </div>`;
+            } else if (IP.pedido) {
+                cont.innerHTML = `
+                    <div class="ip-plan-bar">
+                        <span><i class="fa-solid fa-hourglass-half"></i> Estamos verificando tu pago del plan <strong>${esc(IP.pedido.nombre)}</strong>. Lo activamos apenas se acredite.</span>
+                        <a href="${IP.linkPago(IP.pedido.plan)}" class="btn btn-outline btn-sm">Ir a pagar</a>
+                    </div>`;
             } else {
                 cont.innerHTML = `
                     <div class="ip-plan-bar ip-plan-bar--off">

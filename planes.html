@@ -117,7 +117,7 @@
 
         </div>
         <p style="text-align:center; color: var(--stone); font-size: 0.85rem; margin-top: 1.75rem;">
-            <i class="fa-solid fa-lock"></i> Cada plan dura 30 días y se activa al instante.
+            <i class="fa-solid fa-lock"></i> Pagás de forma segura con Mercado Pago. Cada plan dura 30 días y lo activamos apenas se acredita el pago.
         </p>
     </main>
 
@@ -128,7 +128,7 @@
         const NOMBRES_PLAN = { pro: 'Pro', premium: 'Premium' };
 
         // Toca "Elegir": si no tiene cuenta la crea/ingresa en publicar.html y
-        // vuelve para activar el plan; si ya tiene sesión, se activa al instante.
+        // de ahí sigue al pago; si ya tiene sesión, va directo a Mercado Pago.
         async function elegirPlan(plan) {
             const btn = document.querySelector(`[data-plan="${plan}"]`);
             await IP.ready;
@@ -144,18 +144,12 @@
             }
             const original = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Activando plan…';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Yendo a Mercado Pago…';
             try {
-                const res = await IP.comprarPlan(plan);
-                if (res && res.prueba) {
-                    // Plan activado: volvemos el botón a la normalidad.
-                    btn.disabled = false;
-                    btn.innerHTML = original;
-                    pintarEstadoPlan();
-                }
+                await IP.comprarPlan(plan);
             } catch (e) {
-                console.error('[InmoPermutas] Error al activar el plan:', e);
-                alert('No se pudo activar el plan: ' + (e.message || 'probá de nuevo.'));
+                console.error('[InmoPermutas] Error al elegir el plan:', e);
+                alert('No se pudo iniciar el pago: ' + (e.message || 'probá de nuevo.'));
                 btn.disabled = false;
                 btn.innerHTML = original;
             }
@@ -171,7 +165,10 @@
                 b.textContent = (esActual ? 'Renovar ' : 'Elegir ') + NOMBRES_PLAN[b.dataset.plan];
             });
 
-            if (activo) {
+            const pedido = IP.pedido;
+            if (pedido && !(activo && activo.plan === pedido.plan)) {
+                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-hourglass-half"></i> Estamos verificando tu pago del plan <strong>${pedido.nombre}</strong>. Lo activamos apenas se acredite en Mercado Pago.</span><a href="${IP.linkPago(pedido.plan)}" class="btn btn-outline btn-sm">¿No pagaste? Ir a pagar</a></div>`;
+            } else if (activo) {
                 cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-circle-check"></i> Tenés el plan <strong>${activo.nombre}</strong> activo hasta el ${activo.vence.toLocaleDateString('es-AR')}.</span><a href="publicar.html" class="btn btn-accent btn-sm">Publicar propiedad</a></div>`;
             } else if (fallo) {
                 cont.innerHTML = `<div class="ip-plan-bar ip-plan-bar--off"><span><i class="fa-solid fa-circle-exclamation"></i> No se pudo activar el plan. Podés intentarlo de nuevo cuando quieras.</span></div>`;
