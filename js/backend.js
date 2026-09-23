@@ -56,6 +56,13 @@ const IP_PLANES = {
     premium: { nombre: "Premium", max: null }   // null = ilimitadas
 };
 
+// Mail donde te llegan los avisos (alguien pidió o canceló un plan).
+// Se mandan con FormSubmit (gratis, sin cuenta). La PRIMERA vez te llega un mail
+// de FormSubmit para confirmar: tocás "Activate Form" y listo.
+// Después podés reemplazar el mail por el código que te dan (ej: "a1b2c3d4...")
+// para que tu dirección no quede visible en el código de la página.
+const IP_MAIL_AVISOS = "aliolmos19@gmail.com";
+
 // UIDs de Firebase que pueden entrar a admin.html (Authentication → Users → User UID).
 // Si agregás uno, agregalo también en firestore.rules.
 const IP_ADMINS = ["aU9gRjuTvWcDQ5NKu0yFnVg5vwe2"];
@@ -105,9 +112,17 @@ IP.ready = (async function ipInit() {
         // La sesión sobrevive a cerrar la pestaña y el navegador.
         await IP.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        IP.auth.onAuthStateChanged(user => {
+        IP.auth.onAuthStateChanged(async user => {
+            // Cuenta eliminada por el admin: se cierra la sesión (esto vuelve a
+            // disparar onAuthStateChanged con user = null).
+            if (user && await ipEstaBloqueado(user)) {
+                await IP.auth.signOut();
+                alert("Tu cuenta fue dada de baja por incumplir las normas de InmoPermutas. Si creés que es un error, escribinos.");
+                return;
+            }
             IP.user = user;
             ipRegistrarUsuario(user);
+            IP.perfilListo = ipCargarPerfilMatch(user);
             ipEscucharPlan(user);
             ipPintarSesion();
             document.dispatchEvent(new CustomEvent("ip-auth", { detail: user }));
@@ -146,7 +161,7 @@ function ipEscucharPropiedades() {
                     localidad: d.localidad || "",
                     barrio: d.barrio || "",
                     price: Number(d.price) || 0,
-                    currency: d.currency || "U$S",
+                    currency: /^(us\$|usd|u\$d|u\$s)$/i.test(String(d.currency || "").trim()) || !d.currency ? "U$S" : d.currency,
                     bedrooms: Number(d.bedrooms) || 0,
                     area: Number(d.area) || 0,
                     // Opcionales: 0 = no cargada (no se muestra en la ficha)
@@ -185,12 +200,58 @@ IP.publicarPropiedad = async function (datos) {
 // El plan vive en Firestore → suscripciones/{uid}. Lo activa el admin.
 //   IP.plan   = { plan, nombre, max, vence: Date }  |  null si no tiene plan
 //   IP.pedido = { plan, nombre, fecha }            |  null si no pidió nada
+//   IP.cancelado = Date (cuándo canceló)          |  null si no canceló
 IP.plan = null;
 IP.pedido = null;
+IP.cancelado = null;
 IP.planCargado = false;
 let ipDesuscribirPlan = null;
 
 IP.esAdmin = () => !!(IP.user && IP_ADMINS.includes(IP.user.uid));
+
+async function ipEstaBloqueado(user) {
+    try {
+        return (await IP.db.collection("bloqueados").doc(user.uid).get()).exists;
+    } catch (e) {
+        return false;
+    }
+}
+
+/* ------------- Perfil de match (propiedad privada, sin publicar) ---------- */
+// Cualquier usuario (incluso sin plan) puede cargar su propiedad y qué busca
+// para ver su % de match en el catálogo. Se guarda en usuarios/{uid}.perfilMatch:
+// no se publica ni la ve nadie más.
+IP.perfilMatch = null;
+IP.perfilListo = Promise.resolve();
+
+async function ipCargarPerfilMatch(user) {
+    IP.perfilMatch = null;
+    if (!user) return;
+    try {
+        const doc = await IP.db.collection("usuarios").doc(user.uid).get();
+        const d = doc.exists && doc.data().perfilMatch;
+        IP.perfilMatch = d ? { ...d, id: "perfil-match", ownerUid: user.uid } : null;
+    } catch (e) {
+        console.warn("[InmoPermutas] No se pudo leer el perfil de match:", e.code);
+    }
+    if (typeof refrescarVista === "function") refrescarVista();
+}
+
+IP.guardarPerfilMatch = async function (datos) {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
+    await IP.db.collection("usuarios").doc(IP.user.uid).set({
+        perfilMatch: { ...datos, actualizado: firebase.firestore.FieldValue.serverTimestamp() }
+    }, { merge: true });
+    IP.perfilMatch = { ...datos, id: "perfil-match", ownerUid: IP.user.uid };
+};
+
+IP.borrarPerfilMatch = async function () {
+    if (!IP.user) return;
+    await IP.db.collection("usuarios").doc(IP.user.uid).set({
+        perfilMatch: firebase.firestore.FieldValue.delete()
+    }, { merge: true });
+    IP.perfilMatch = null;
+};
 
 // Deja registrado a cada usuario en "usuarios/{uid}" para que aparezca en el panel admin.
 function ipRegistrarUsuario(user) {
@@ -213,6 +274,7 @@ function ipEscucharPlan(user) {
     if (ipDesuscribirPlan) { ipDesuscribirPlan(); ipDesuscribirPlan = null; }
     IP.plan = null;
     IP.pedido = null;
+    IP.cancelado = null;
     if (!user) {
         IP.planCargado = true;
         ipAvisarPlan();
@@ -232,6 +294,7 @@ function ipEscucharPlan(user) {
             nombre: IP_PLANES[d.pedido].nombre,
             fecha: d.pedidoAt ? d.pedidoAt.toDate() : new Date()
         } : null;
+        IP.cancelado = d && d.cancelado ? (d.canceladoAt ? d.canceladoAt.toDate() : new Date()) : null;
         IP.planCargado = true;
         ipAvisarPlan();
     }, err => {
@@ -249,6 +312,24 @@ IP.planActivo = function () {
 
 // Guarda el pedido del plan y manda al usuario a pagar a Mercado Pago.
 // El plan se activa cuando el admin confirma el pago desde admin.html.
+// Te manda un mail de aviso. Nunca frena al usuario: si falla, sigue igual.
+async function ipAvisarAdmin(asunto, datos) {
+    if (!IP_MAIL_AVISOS) return;
+    const envio = fetch("https://formsubmit.co/ajax/" + IP_MAIL_AVISOS, {
+        method: "POST",
+        keepalive: true,   // que llegue aunque la página se vaya a Mercado Pago
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+            _subject: asunto,
+            _template: "table",
+            ...datos,
+            "Panel admin": location.origin + location.pathname.replace(/[^/]*$/, "") + "admin.html"
+        })
+    }).catch(e => console.warn("[InmoPermutas] No se pudo mandar el aviso:", e));
+    // Esperamos como mucho 2,5 s para no demorar al usuario.
+    await Promise.race([envio, new Promise(r => setTimeout(r, 2500))]);
+}
+
 IP.comprarPlan = async function (planId) {
     await IP.ready;
     await IP.authListo;
@@ -260,13 +341,49 @@ IP.comprarPlan = async function (planId) {
         pedido: planId,
         pedidoAt: firebase.firestore.FieldValue.serverTimestamp(),
         email: IP.user.email || "",
-        nombre: IP.nombreUsuario()
+        nombre: IP.nombreUsuario(),
+        cancelado: firebase.firestore.FieldValue.delete(),
+        canceladoAt: firebase.firestore.FieldValue.delete()
     }, { merge: true });
+    const actual = IP.planActivo();
+    await ipAvisarAdmin(`Nuevo pedido: plan ${IP_PLANES[planId].nombre} — ${IP.nombreUsuario()}`, {
+        "Aviso": actual && actual.plan === planId ? "Quiere RENOVAR su plan" : "Pidió un plan nuevo",
+        "Plan": IP_PLANES[planId].nombre,
+        "Nombre": IP.nombreUsuario(),
+        "Email": IP.user.email || "",
+        "Fecha": new Date().toLocaleString("es-AR"),
+        "Qué hacer": "Revisá en Mercado Pago que el pago esté acreditado y activalo desde el panel admin."
+    });
     window.location.href = IP_LINKS_MP[planId];
     return { redirigiendo: true };
 };
 
 IP.linkPago = planId => IP_LINKS_MP[planId];
+
+// Página de Mercado Pago donde el usuario ve y da de baja sus suscripciones.
+IP.LINK_SUSCRIPCIONES_MP = "https://www.mercadopago.com.ar/subscriptions";
+
+// El usuario cancela su plan: sigue activo hasta que vence (ya lo pagó) y
+// en el panel admin aparece como "Cancelado". También descarta un pedido sin pagar.
+IP.cancelarPlan = async function () {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
+    const plan = IP.planActivo();
+    const pedido = IP.pedido;
+    await IP.db.collection("suscripciones").doc(IP.user.uid).set({
+        cancelado: true,
+        canceladoAt: firebase.firestore.FieldValue.serverTimestamp(),
+        pedido: firebase.firestore.FieldValue.delete(),
+        pedidoAt: firebase.firestore.FieldValue.delete()
+    }, { merge: true });
+    await ipAvisarAdmin(`Canceló su plan — ${IP.nombreUsuario()}`, {
+        "Aviso": plan ? `Canceló el plan ${plan.nombre}` : `Canceló el pedido del plan ${pedido ? pedido.nombre : ""}`,
+        "Nombre": IP.nombreUsuario(),
+        "Email": IP.user.email || "",
+        "Puede usarlo hasta": plan ? plan.vence.toLocaleDateString("es-AR") : "—",
+        "Fecha": new Date().toLocaleString("es-AR"),
+        "Qué hacer": "Fijate que la suscripción también quede cancelada en Mercado Pago para que no le sigan cobrando."
+    });
+};
 
 /* ---------------------------- Panel admin --------------------------------- */
 
@@ -276,10 +393,11 @@ IP.admin = {
     // Junta usuarios, suscripciones y cantidad de propiedades en una sola lista.
     async listar() {
         if (!IP.esAdmin()) throw new Error("No sos administrador.");
-        const [us, subs, props] = await Promise.all([
+        const [us, subs, props, bloq] = await Promise.all([
             IP.db.collection("usuarios").get(),
             IP.db.collection("suscripciones").get(),
-            IP.db.collection(IP_COLECCION).get()
+            IP.db.collection(IP_COLECCION).get(),
+            IP.db.collection("bloqueados").get()
         ]);
         const mapa = {};
         const fila = uid => mapa[uid] || (mapa[uid] = { uid, email: "", nombre: "", props: 0 });
@@ -298,6 +416,7 @@ IP.admin = {
             f.vence = s.vence ? s.vence.toDate() : null;
             f.pedido = s.pedido || null;
             f.pedidoAt = s.pedidoAt ? s.pedidoAt.toDate() : null;
+            f.cancelado = s.cancelado ? (s.canceladoAt ? s.canceladoAt.toDate() : new Date()) : null;
             f.email = f.email || s.email || "";
             f.nombre = f.nombre || s.nombre || "";
         });
@@ -309,13 +428,26 @@ IP.admin = {
             f.email = f.email || p.ownerEmail || "";
             f.nombre = f.nombre || (p.seller && p.seller.name) || "";
         });
+        bloq.forEach(d => {
+            const b = d.data(), f = fila(d.id);
+            f.bloqueado = b.fecha ? b.fecha.toDate() : new Date();
+            f.motivo = b.motivo || "";
+            f.email = f.email || b.email || "";
+            f.nombre = f.nombre || b.nombre || "";
+        });
 
         const ahora = new Date();
         return Object.values(mapa).map(f => {
-            if (f.vence && f.vence > ahora) f.estado = "activo";
+            if (f.bloqueado) f.estado = "bloqueado";
+            else if (f.cancelado) f.estado = "cancelado";            // puede seguir activo hasta que vence
+            else if (f.vence && f.vence > ahora) f.estado = "activo";
             else if (f.pedido || f.vence) f.estado = "debe";   // pidió y no está activo, o se le venció
             else f.estado = "inactivo";
+            f.vigente = !!(f.vence && f.vence > ahora);
             f.dias = f.vence ? Math.ceil((f.vence - ahora) / IP_DIA) : null;
+            // Tiene más propiedades de las que le permite su plan (ej: Pro con más de 5).
+            f.max = f.vigente && IP_PLANES[f.plan] ? IP_PLANES[f.plan].max : null;
+            f.excede = !f.bloqueado && !!f.max && f.props > f.max;
             return f;
         });
     },
@@ -336,6 +468,8 @@ IP.admin = {
             pedido: firebase.firestore.FieldValue.delete(),
             pedidoAt: firebase.firestore.FieldValue.delete(),
             prueba: firebase.firestore.FieldValue.delete(),
+            cancelado: firebase.firestore.FieldValue.delete(),
+            canceladoAt: firebase.firestore.FieldValue.delete(),
             activadoAt: firebase.firestore.FieldValue.serverTimestamp(),
             activadoPor: IP.user.email || IP.user.uid
         }, { merge: true });
@@ -348,6 +482,38 @@ IP.admin = {
             pedido: firebase.firestore.FieldValue.delete(),
             pedidoAt: firebase.firestore.FieldValue.delete()
         }, { merge: true });
+    },
+
+    // Da de baja a un usuario: borra sus propiedades (con fotos y videos), su plan
+    // y sus datos, y lo deja bloqueado para que no pueda volver a entrar con esa cuenta.
+    async eliminarUsuario(uid, motivo) {
+        if (uid === IP.user.uid) throw new Error("No te podés eliminar a vos mismo.");
+        const u = await IP.db.collection("usuarios").doc(uid).get();
+        const datos = u.exists ? u.data() : {};
+
+        await IP.db.collection("bloqueados").doc(uid).set({
+            email: datos.email || "",
+            nombre: datos.nombre || "",
+            motivo: motivo || "",
+            fecha: firebase.firestore.FieldValue.serverTimestamp(),
+            por: IP.user.email || IP.user.uid
+        });
+
+        const props = await IP.db.collection(IP_COLECCION).where("ownerUid", "==", uid).get();
+        const archivos = [];
+        props.forEach(d => (d.data().media || []).forEach(m => archivos.push(m.path)));
+        const lote = IP.db.batch();
+        props.forEach(d => lote.delete(d.ref));
+        lote.delete(IP.db.collection("suscripciones").doc(uid));
+        lote.delete(IP.db.collection("usuarios").doc(uid));
+        await lote.commit();
+        await IP.borrarArchivos(archivos);
+        return props.size;
+    },
+
+    // Levanta el bloqueo (puede volver a entrar, pero sin plan ni propiedades).
+    async desbloquear(uid) {
+        await IP.db.collection("bloqueados").doc(uid).delete();
     },
 
     // Descarta un pedido (por ejemplo, si nunca pagó).

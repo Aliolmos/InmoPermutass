@@ -206,9 +206,18 @@ function getPropertiesPublicas() {
 // Mejor % de match entre una propiedad y alguna de las propias del usuario
 // que está mirando. Devuelve undefined si no corresponde mostrarlo: sin
 // sesión, sin propiedades propias publicadas, o si la propiedad es propia.
+// Propiedades del usuario contra las que se calcula el match: las que tiene
+// publicadas o, si no publicó ninguna, la que cargó en "Calculá tu match".
+function misPropiedadesParaMatch() {
+    if (!window.IP || !IP.user) return [];
+    const publicadas = getProperties().filter(x => !x.esDemo && x.ownerUid === IP.user.uid);
+    if (publicadas.length) return publicadas;
+    return IP.perfilMatch ? [IP.perfilMatch] : [];
+}
+
 function mejorMatchPropio(p) {
     if (!window.IP || !IP.user || p.ownerUid === IP.user.uid) return undefined;
-    const misPropiedades = getProperties().filter(x => !x.esDemo && x.ownerUid === IP.user.uid);
+    const misPropiedades = misPropiedadesParaMatch();
     if (!misPropiedades.length) return undefined;
     let mejor = 0;
     misPropiedades.forEach(mia => {

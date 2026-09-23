@@ -245,7 +245,7 @@
             if (!window.IP || IP.error) { cont.innerHTML = ''; return; }
 
             if (!IP.user) {
-                cont.innerHTML = `<a href="publicar.html" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Ingresá y publicá tu propiedad para ver tu % de match</a>`;
+                cont.innerHTML = `<a href="publicar.html?modo=match" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Calculá gratis tu % de match con esta propiedad</a>`;
                 return;
             }
             if (property.ownerUid === IP.user.uid) {
@@ -253,9 +253,9 @@
                 return;
             }
 
-            const misPropiedades = getProperties().filter(p => !p.esDemo && p.ownerUid === IP.user.uid);
+            const misPropiedades = misPropiedadesParaMatch();
             if (!misPropiedades.length) {
-                cont.innerHTML = `<a href="publicar.html" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Publicá tu propiedad para ver tu % de match</a>`;
+                cont.innerHTML = `<a href="publicar.html?modo=match" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Calculá gratis tu % de match con esta propiedad</a>`;
                 return;
             }
 
@@ -266,7 +266,7 @@
                 if (!mejor || pct > mejor.pct) mejor = { pct, titulo: mia.title };
             });
 
-            cont.innerHTML = `<span class="detail-match-pct"><i class="fa-solid fa-arrows-rotate"></i> ${mejor.pct}% de match con tu propiedad "${mejor.titulo}"</span>`;
+            cont.innerHTML = `<span class="detail-match-pct"><i class="fa-solid fa-arrows-rotate"></i> ${mejor.pct}% de match con tu propiedad "${String(mejor.titulo || 'Mi propiedad').replace(/[<>"&]/g, '')}"</span>`;
         }
 
         document.addEventListener('DOMContentLoaded', renderDetalle);

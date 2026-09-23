@@ -128,7 +128,10 @@
                 cont.innerHTML = `
                     <div class="ip-plan-bar ip-plan-bar--off">
                         <span><i class="fa-solid fa-lock"></i> No tenés un plan activo. Tus publicaciones siguen visibles, pero para publicar una nueva necesitás un plan.</span>
-                        <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
+                        <span style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <a href="publicar.html?modo=match" class="btn btn-outline btn-sm">Calcular mi match gratis</a>
+                            <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
+                        </span>
                     </div>`;
             }
         }

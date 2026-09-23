@@ -99,7 +99,7 @@ function iaDetectarPrecio(texto) {
         const mult = /millon|millones|palos/.test(m[2]) ? 1000000 : 1000;
         return Math.round(base * mult);
     }
-    // 2) Número largo suelto: 200000, 200.000, US$ 200,000
+    // 2) Número largo suelto: 200000, 200.000, U$S 200,000
     const nums = t.match(/\d[\d.,]{4,}/g);
     if (nums) {
         const limpio = Number(nums[0].replace(/[.,]/g, ""));
@@ -236,7 +236,7 @@ function iaResumenCriterios(c) {
     if (c.dormitorios) partes.push(c.dormitorios + " dorm.");
     if (c.superficie) partes.push("desde " + c.superficie + " m²");
     if (c.zonas.length) partes.push("en " + c.zonas.join(" o "));
-    if (c.precio) partes.push("hasta US$ " + c.precio.toLocaleString("es-AR"));
+    if (c.precio) partes.push("hasta U$S " + c.precio.toLocaleString("es-AR"));
     return partes.join(", ");
 }
 

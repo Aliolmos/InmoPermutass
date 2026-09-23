@@ -90,7 +90,8 @@
                     <h3>Pro</h3>
                     <p class="plan-desc">Para quienes están permutando activamente.</p>
                 </div>
-                <div class="plan-price"><span class="plan-amount">U$S 9</span><span class="plan-period">/mes</span></div>
+                <div class="plan-price"><span class="plan-amount">$ 10.000</span><span class="plan-period">/mes</span></div>
+                <p class="plan-trial"><i class="fa-solid fa-gift"></i> Primeros 30 días gratis</p>
                 <ul class="plan-features">
                     <li><i class="fa-solid fa-check"></i> Todo lo del plan Básico</li>
                     <li><i class="fa-solid fa-check"></i> Contacto directo por WhatsApp</li>
@@ -105,7 +106,8 @@
                     <h3>Premium</h3>
                     <p class="plan-desc">Para inmobiliarias y publicadores frecuentes.</p>
                 </div>
-                <div class="plan-price"><span class="plan-amount">U$S 19</span><span class="plan-period">/mes</span></div>
+                <div class="plan-price"><span class="plan-amount">$ 20.000</span><span class="plan-period">/mes</span></div>
+                <p class="plan-trial"><i class="fa-solid fa-gift"></i> Primeros 30 días gratis</p>
                 <ul class="plan-features">
                     <li><i class="fa-solid fa-check"></i> Todo lo del plan Pro</li>
                     <li><i class="fa-solid fa-check"></i> Permutas activas ilimitadas</li>
@@ -116,11 +118,26 @@
             </div>
 
         </div>
+        <div class="plan-aviso plan-aviso--alerta">
+            <i class="fa-solid fa-credit-card"></i>
+            <p><strong>No se aceptan tarjetas prepagas</strong> (como la tarjeta de Mercado Pago). Usá una tarjeta de crédito o débito de un banco.</p>
+        </div>
         <p style="text-align:center; color: var(--stone); font-size: 0.85rem; margin-top: 1.75rem;">
-            <i class="fa-solid fa-lock"></i> Pagás de forma segura con Mercado Pago. Cada plan dura 30 días y lo activamos apenas se acredita el pago.
+            <i class="fa-solid fa-lock"></i> Pagás de forma segura con Mercado Pago. Tu plan se activa apenas confirmamos la suscripción.
         </p>
     </main>
 
+    <style>
+        .plan-aviso { max-width: 640px; margin: 2rem auto 0; display: flex; gap: 0.85rem; align-items: flex-start; background: rgba(62,240,122,0.08); border: 1px solid rgba(62,240,122,0.35); border-radius: var(--radius-md); padding: 1rem 1.15rem; }
+        .plan-aviso i { color: var(--green); font-size: 1.15rem; margin-top: 0.15rem; }
+        .plan-aviso p { margin: 0; color: var(--stone); font-size: 0.9rem; line-height: 1.5; }
+        .plan-aviso strong { color: #fff; }
+        .plan-aviso--alerta { background: rgba(255,181,71,0.08); border-color: rgba(255,181,71,0.4); }
+        .plan-aviso--alerta i { color: #ffb547; }
+        .plan-trial { color: var(--green); font-size: 0.85rem; font-weight: 700; margin: -0.4rem 0 1rem; }
+        .ip-plan-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .ip-plan-bar a:not(.btn) { color: #3ef07a; }
+    </style>
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
@@ -166,10 +183,14 @@
             });
 
             const pedido = IP.pedido;
+            const btnCancelar = `<button type="button" class="btn btn-sm btn-danger-outline" onclick="cancelarPlan(this)">Cancelar plan</button>`;
+            const hasta = activo ? activo.vence.toLocaleDateString('es-AR') : '';
             if (pedido && !(activo && activo.plan === pedido.plan)) {
-                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-hourglass-half"></i> Estamos verificando tu pago del plan <strong>${pedido.nombre}</strong>. Lo activamos apenas se acredite en Mercado Pago.</span><a href="${IP.linkPago(pedido.plan)}" class="btn btn-outline btn-sm">¿No pagaste? Ir a pagar</a></div>`;
+                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-hourglass-half"></i> Estamos verificando tu pago del plan <strong>${pedido.nombre}</strong>. Lo activamos apenas se acredite en Mercado Pago.</span><span class="ip-plan-btns"><a href="${IP.linkPago(pedido.plan)}" class="btn btn-outline btn-sm">¿No pagaste? Ir a pagar</a>${btnCancelar}</span></div>`;
+            } else if (activo && IP.cancelado) {
+                cont.innerHTML = `<div class="ip-plan-bar ip-plan-bar--off"><span><i class="fa-solid fa-ban"></i> Cancelaste tu plan <strong>${activo.nombre}</strong>. Lo podés seguir usando hasta el ${hasta} y después no se renueva. Acordate de darlo de baja también en <a href="${IP.LINK_SUSCRIPCIONES_MP}" target="_blank" rel="noopener">Mercado Pago → Suscripciones</a> para que no te lo vuelvan a cobrar.</span></div>`;
             } else if (activo) {
-                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-circle-check"></i> Tenés el plan <strong>${activo.nombre}</strong> activo hasta el ${activo.vence.toLocaleDateString('es-AR')}.</span><a href="publicar.html" class="btn btn-accent btn-sm">Publicar propiedad</a></div>`;
+                cont.innerHTML = `<div class="ip-plan-bar"><span><i class="fa-solid fa-circle-check"></i> Tenés el plan <strong>${activo.nombre}</strong> activo hasta el ${hasta}.</span><span class="ip-plan-btns"><a href="publicar.html" class="btn btn-accent btn-sm">Publicar propiedad</a>${btnCancelar}</span></div>`;
             } else if (fallo) {
                 cont.innerHTML = `<div class="ip-plan-bar ip-plan-bar--off"><span><i class="fa-solid fa-circle-exclamation"></i> No se pudo activar el plan. Podés intentarlo de nuevo cuando quieras.</span></div>`;
             } else {
@@ -177,6 +198,22 @@
             }
         }
         document.addEventListener('ip-plan', pintarEstadoPlan);
+
+        async function cancelarPlan(btn) {
+            const activo = IP.planActivo();
+            const texto = activo
+                ? `¿Seguro que querés cancelar tu plan ${activo.nombre}? Lo vas a poder seguir usando hasta el ${activo.vence.toLocaleDateString('es-AR')} y después no se renueva.`
+                : '¿Cancelar tu pedido de plan?';
+            if (!confirm(texto)) return;
+            btn.disabled = true;
+            try {
+                await IP.cancelarPlan();
+            } catch (e) {
+                console.error('[InmoPermutas] Error al cancelar el plan:', e);
+                alert('No se pudo cancelar el plan: ' + (e.message || 'probá de nuevo.'));
+                btn.disabled = false;
+            }
+        }
     </script>
     <script src="js/asistente.js"></script>
 </body>

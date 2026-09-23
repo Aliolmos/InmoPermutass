@@ -84,7 +84,7 @@
                     <tbody id="adm-filas"></tbody>
                 </table>
             </div>
-            <p class="adm-nota"><i class="fa-solid fa-circle-info"></i> "Activar" suma 30 días (si ya estaba activo, se suman al vencimiento actual). Chequeá en Mercado Pago que el pago esté acreditado antes de activar: el email de Mercado Pago puede no ser el mismo que el de la cuenta del sitio.</p>
+            <p class="adm-nota"><i class="fa-solid fa-circle-info"></i> "Activar" suma 30 días (si ya estaba activo, se suman al vencimiento actual). Si alguien cancela, revisá que la suscripción también quede cancelada en Mercado Pago para no seguir cobrándole. Chequeá en Mercado Pago que el pago esté acreditado antes de activar: el email de Mercado Pago puede no ser el mismo que el de la cuenta del sitio.</p>
         </div>
     </main>
 
@@ -112,6 +112,15 @@
         .adm-tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
         .adm-tag--activo { background: rgba(62,240,122,0.12); color: var(--green); }
         .adm-tag--debe { background: rgba(255,181,71,0.14); color: #ffb547; }
+        .adm-tag--cancelado { background: rgba(255,84,112,0.14); color: #ff8fa3; }
+        .adm-stat--cancelado b { color: #ff8fa3; }
+        .adm-sub--rojo { color: #ff8fa3; }
+        .adm-tag--excede { background: rgba(255,84,112,0.18); color: #ff5470; }
+        .adm-tag--bloqueado { background: rgba(255,84,112,0.1); color: #ff8fa3; }
+        .adm-stat--excede b { color: #ff5470; }
+        .adm-fila-excede td { background: rgba(255,84,112,0.07); }
+        .adm-fila-excede td:first-child { box-shadow: inset 3px 0 0 #ff5470; }
+        .adm-fila-bloq td { opacity: 0.6; }
         .adm-tag--inactivo { background: rgba(255,255,255,0.06); color: var(--stone); }
         .adm-tag--premium { background: rgba(47,127,250,0.16); color: #7fb0ff; }
         .adm-tag--pro { background: rgba(62,240,122,0.1); color: var(--green); }
@@ -130,8 +139,8 @@
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
     <script>
-        const FILTROS = { todos: 'Todos', debe: 'Deben pagar', activo: 'Activos', inactivo: 'Inactivos' };
-        const ORDEN = { debe: 0, activo: 1, inactivo: 2 };
+        const FILTROS = { todos: 'Todos', excede: 'Exceden el límite', debe: 'Deben pagar', activo: 'Activos', cancelado: 'Cancelados', inactivo: 'Inactivos', bloqueado: 'Eliminados' };
+        const ORDEN = { debe: 0, cancelado: 1, activo: 2, inactivo: 3, bloqueado: 4 };
         let filas = [];
         let filtro = 'todos';
 
@@ -149,7 +158,7 @@
         async function cargar() {
             try {
                 filas = await IP.admin.listar();
-                filas.sort((a, b) => ORDEN[a.estado] - ORDEN[b.estado]
+                filas.sort((a, b) => b.excede - a.excede || ORDEN[a.estado] - ORDEN[b.estado]
                     || (b.pedidoAt || 0) - (a.pedidoAt || 0)
                     || (a.vence || Infinity) - (b.vence || Infinity));
                 $('adm-msg').hidden = true;
@@ -162,21 +171,23 @@
         }
 
         function pintar() {
-            const cuenta = { todos: filas.length, debe: 0, activo: 0, inactivo: 0 };
-            filas.forEach(f => cuenta[f.estado]++);
+            const cuenta = { todos: filas.length, excede: 0, debe: 0, activo: 0, cancelado: 0, inactivo: 0, bloqueado: 0 };
+            filas.forEach(f => { cuenta[f.estado]++; if (f.excede) cuenta.excede++; });
             const premium = filas.filter(f => f.estado === 'activo' && f.plan === 'premium').length;
 
             $('adm-stats').innerHTML = `
                 <div class="adm-stat"><b>${cuenta.todos}</b><span>Usuarios</span></div>
                 <div class="adm-stat adm-stat--activo"><b>${cuenta.activo}</b><span>Activos (${premium} Premium)</span></div>
                 <div class="adm-stat adm-stat--debe"><b>${cuenta.debe}</b><span>Deben pagar</span></div>
+                <div class="adm-stat adm-stat--excede"><b>${cuenta.excede}</b><span>Exceden el límite</span></div>
+                <div class="adm-stat adm-stat--cancelado"><b>${cuenta.cancelado}</b><span>Cancelados</span></div>
                 <div class="adm-stat"><b>${cuenta.inactivo}</b><span>Inactivos</span></div>`;
 
-            $('adm-filtros').innerHTML = Object.entries(FILTROS).map(([k, t]) =>
+            $('adm-filtros').innerHTML = Object.entries(FILTROS).filter(([k]) => k === 'todos' || cuenta[k] || k === filtro).map(([k, t]) =>
                 `<button type="button" class="adm-filtro ${k === filtro ? 'active' : ''}" onclick="filtro='${k}'; pintar()">${t} (${cuenta[k]})</button>`).join('');
 
             const q = $('adm-buscar').value.trim().toLowerCase();
-            const lista = filas.filter(f => (filtro === 'todos' || f.estado === filtro)
+            const lista = filas.filter(f => (filtro === 'todos' || f.estado === filtro || (filtro === 'excede' && f.excede))
                 && (!q || (f.nombre + ' ' + f.email).toLowerCase().includes(q)));
 
             $('adm-filas').innerHTML = lista.length
@@ -190,11 +201,15 @@
             const estado = {
                 activo: `<span class="adm-tag adm-tag--activo">Activo</span>`,
                 debe: `<span class="adm-tag adm-tag--debe">Debe pagar</span>`,
+                cancelado: `<span class="adm-tag adm-tag--cancelado">Cancelado</span>`,
+                bloqueado: `<span class="adm-tag adm-tag--bloqueado"><i class="fa-solid fa-user-slash"></i> Eliminado</span>`,
                 inactivo: `<span class="adm-tag adm-tag--inactivo">Inactivo</span>`
             }[f.estado];
 
             let detalle = '';
-            if (f.pedido) detalle = `<span class="adm-sub adm-sub--alerta"><i class="fa-solid fa-bell"></i> Pidió ${nombrePlan(f.pedido)} el ${fecha(f.pedidoAt)}</span>`;
+            if (f.estado === 'bloqueado') detalle = `<span class="adm-sub">El ${fecha(f.bloqueado)}${f.motivo ? ' · ' + esc(f.motivo) : ''}</span>`;
+            else if (f.estado === 'cancelado') detalle = `<span class="adm-sub adm-sub--rojo">Canceló el ${fecha(f.cancelado)}</span><span class="adm-sub">${f.vigente ? `Puede usarlo hasta el ${fecha(f.vence)}` : 'Sin plan vigente'}</span>`;
+            else if (f.pedido) detalle = `<span class="adm-sub adm-sub--alerta"><i class="fa-solid fa-bell"></i> Pidió ${nombrePlan(f.pedido)} el ${fecha(f.pedidoAt)}</span>`;
             else if (f.estado === 'debe') detalle = `<span class="adm-sub">Venció hace ${Math.abs(f.dias)} día${Math.abs(f.dias) === 1 ? '' : 's'}</span>`;
             else if (f.estado === 'activo' && f.dias <= 5) detalle = `<span class="adm-sub adm-sub--alerta">Vence en ${f.dias} día${f.dias === 1 ? '' : 's'}</span>`;
 
@@ -203,23 +218,31 @@
             // El botón destacado es el del plan que pidió (o el que ya tiene, para renovar).
             const objetivo = f.pedido || f.plan;
             const btnPlan = p => {
-                const verbo = f.estado === 'activo' && f.plan === p ? 'Renovar' : 'Activar';
+                const verbo = f.vigente && f.plan === p ? 'Renovar' : 'Activar';
                 const clase = p === objetivo ? (p === 'premium' ? 'btn adm-btn-premium' : 'btn btn-accent') : 'btn btn-outline';
                 const icono = p === 'premium' ? '<i class="fa-solid fa-crown"></i> ' : '';
                 return `<button type="button" class="${clase}" onclick="accion(this, 'activar', '${f.uid}', '${p}')">${icono}${verbo} ${nombrePlan(p)}</button>`;
             };
-            const acciones = [
+            const btnEliminar = `<button type="button" class="btn btn-danger-outline" onclick="eliminar(this, '${f.uid}')" title="Eliminar usuario"><i class="fa-solid fa-user-slash"></i> Eliminar</button>`;
+            const acciones = f.estado === 'bloqueado'
+                ? `<button type="button" class="btn btn-outline" onclick="accion(this, 'desbloquear', '${f.uid}')">Desbloquear</button>`
+                : [
                 objetivo === 'pro' ? btnPlan('pro') + btnPlan('premium') : btnPlan('premium') + btnPlan('pro'),
-                f.estado === 'activo' ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'desactivar', '${f.uid}')">Desactivar</button>` : '',
-                f.pedido && f.estado !== 'activo' ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'descartarPedido', '${f.uid}')" title="No pagó: sacar el aviso">Descartar</button>` : ''
+                f.vigente ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'desactivar', '${f.uid}')">Desactivar</button>` : '',
+                f.pedido && f.estado !== 'activo' ? `<button type="button" class="btn btn-danger-outline" onclick="accion(this, 'descartarPedido', '${f.uid}')" title="No pagó: sacar el aviso">Descartar</button>` : '',
+                f.uid === IP.user.uid ? '' : btnEliminar
             ].join('');
 
-            return `<tr>
+            const props = f.excede
+                ? `<span class="adm-tag adm-tag--excede" title="Su plan ${nombrePlan(f.plan)} permite ${f.max}"><i class="fa-solid fa-triangle-exclamation"></i> ${f.props} / ${f.max}</span>`
+                : f.props;
+
+            return `<tr class="${f.excede ? 'adm-fila-excede' : ''} ${f.estado === 'bloqueado' ? 'adm-fila-bloq' : ''}">
                 <td><div class="adm-user">${foto}<div>${esc(f.nombre || 'Sin nombre')}<small>${esc(f.email || f.uid)}</small></div></div></td>
                 <td>${estado}${detalle}</td>
                 <td>${plan}</td>
                 <td>${fecha(f.vence)}</td>
-                <td>${f.props}</td>
+                <td>${props}</td>
                 <td><div class="adm-acciones">${acciones}</div></td>
             </tr>`;
         }
@@ -229,8 +252,9 @@
             const quien = f.nombre || f.email;
             const textos = {
                 activar: `¿Activar ${nombrePlan(plan)} por 30 días a ${quien}?`,
-                desactivar: `¿Desactivar el plan de ${quien}? Va a quedar como "Debe pagar".`,
-                descartarPedido: `¿Descartar el pedido de ${quien}?`
+                desactivar: `¿Desactivar el plan de ${quien} ahora mismo?`,
+                descartarPedido: `¿Descartar el pedido de ${quien}?`,
+                desbloquear: `¿Desbloquear a ${quien}? Va a poder volver a entrar, pero sin plan ni propiedades.`
             };
             if (!confirm(textos[tipo])) return;
             btn.disabled = true;
@@ -240,6 +264,23 @@
             } catch (e) {
                 console.error(e);
                 alert('No se pudo: ' + e.message);
+                btn.disabled = false;
+            }
+        }
+
+        async function eliminar(btn, uid) {
+            const f = filas.find(x => x.uid === uid);
+            const quien = f.nombre || f.email;
+            const motivo = prompt(`Vas a ELIMINAR a ${quien}.\n\nSe borran sus ${f.props} propiedades (con fotos y videos), su plan y sus datos, y no va a poder volver a entrar con esa cuenta. No se puede deshacer.\n\nEscribí el motivo (ej: publicó datos falsos):`);
+            if (motivo === null) return;
+            btn.disabled = true;
+            try {
+                const borradas = await IP.admin.eliminarUsuario(uid, motivo.trim());
+                await cargar();
+                alert(`${quien} fue eliminado. Se borraron ${borradas} propiedad${borradas === 1 ? '' : 'es'}.`);
+            } catch (e) {
+                console.error(e);
+                alert('No se pudo eliminar: ' + e.message);
                 btn.disabled = false;
             }
         }
