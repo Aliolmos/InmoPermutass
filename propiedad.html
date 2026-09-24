@@ -119,6 +119,8 @@
             }
 
             const property = props.find(p => String(p.id) === String(id));
+            // Estadísticas (Premium): una visita por día y por navegador.
+            if (property && !property.esDemo && window.IP && IP.sumarEstadistica) IP.sumarEstadistica(property.id, 'visitas', property);
 
             if (!property) {
                 container.innerHTML = `
@@ -140,6 +142,8 @@
                 .map(p => ({ ...p, matchPercent: calcularCompatibilidad(property, p) }))
                 .sort((a, b) => b.matchPercent - a.matchPercent)
                 .slice(0, 3);
+            // El % solo se muestra si el usuario tiene una propiedad publicada: es SU % con cada una.
+            const conMatch = typeof misPropiedadesParaMatch === 'function' && misPropiedadesParaMatch().length > 0;
 
             const v = property.seller;
             const avatarVendedor = v.avatar
@@ -159,7 +163,7 @@
                     <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
                 </div>` : `
                 <div class="seller-contact-open">
-                    <a href="https://wa.me/${v.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
+                    <a onclick="IP.sumarEstadistica('${String(property.id).replace(/'/g, "\\'")}', 'whatsapp')" href="https://wa.me/${v.phone}?text=Hola,%20me%20interesa%20coordinar%20una%20permuta%20por%20la%20propiedad:%20${encodeURIComponent(property.title)}" target="_blank" rel="noopener" class="btn btn-accent btn-block"><i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp</a>
                 </div>`;
 
             // Superficie cubierta y del terreno: opcionales. Si no se cargaron
@@ -220,13 +224,14 @@
                 <div style="margin-top: 4rem;">
                     <div class="section-header">
                         <div class="section-title">
-                            <h2>Opciones similares con % de match</h2>
+                            <h2>Opciones similares${conMatch ? ' con tu % de match' : ''}</h2>
                             <p>Inmuebles calculados por nuestro algoritmo en base a ubicación y características.</p>
                         </div>
                     </div>
 
                     <div class="grid-cards" style="margin-top: 1rem;">
-                        ${similarMatches.map(m => renderPropertyCard(m, m.matchPercent)).join('')}
+                        ${similarMatches.filter(puedeVerPropiedad).map(m => renderPropertyCard(m, mejorMatchPropio(m))).join('')}
+                        ${renderBloqueoPro(similarMatches.filter(m => !puedeVerPropiedad(m)), 'Pasate a Pro para ver más opciones')}
                     </div>
                 </div>
             `;
@@ -244,18 +249,18 @@
 
             if (!window.IP || IP.error) { cont.innerHTML = ''; return; }
 
-            if (!IP.user) {
-                cont.innerHTML = `<a href="publicar.html?modo=match" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Calculá gratis tu % de match con esta propiedad</a>`;
+            if (IP.user && property.ownerUid === IP.user.uid) {
+                cont.innerHTML = ''; // es tu propia publicación, no hay match que calcular
                 return;
             }
-            if (property.ownerUid === IP.user.uid) {
-                cont.innerHTML = ''; // es tu propia publicación, no hay match que calcular
+            if (!IP.user || !tienePlanCompleto()) {
+                cont.innerHTML = `<a href="planes.html" class="detail-match-cta"><i class="fa-solid fa-crown"></i> Pasate a Pro para ver tu % de match</a>`;
                 return;
             }
 
             const misPropiedades = misPropiedadesParaMatch();
             if (!misPropiedades.length) {
-                cont.innerHTML = `<a href="publicar.html?modo=match" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Calculá gratis tu % de match con esta propiedad</a>`;
+                cont.innerHTML = `<a href="publicar.html" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Publicá tu propiedad para ver tu % de match</a>`;
                 return;
             }
 

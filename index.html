@@ -205,6 +205,107 @@
         </div>
     </section>
 
+    <!-- Mini muestra de cómo se ve un match (ejemplos fijos, no datos reales) -->
+    <section class="md-section" id="muestra-match">
+        <div class="md-inner">
+            <div class="md-texto">
+                <span class="md-eyebrow">Ejemplo</span>
+                <h2>Así se ve un <span>match</span></h2>
+                <p>Cruzamos lo que tenés con lo que busca el otro. Cuanto más encajan, más alto el %.</p>
+                <a href="planes.html" class="btn btn-accent">Conocé los planes <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="md-demo" id="md-demo">
+                <div class="md-prop" id="md-a"></div>
+                <div class="md-pct"><b id="md-num">0</b><small>% match</small></div>
+                <div class="md-prop" id="md-b"></div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .md-section { padding: 5rem 2rem; border-top: 1px solid var(--ink-line); }
+        .md-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 0.75fr 1.25fr; gap: 3rem; align-items: center; }
+        .md-eyebrow { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); }
+        .md-texto h2 { font-size: 2.4rem; color: #fff; margin: 0.5rem 0 0.8rem; line-height: 1.15; }
+        .md-texto h2 span { color: var(--green); }
+        .md-texto p { color: var(--stone); font-size: 1.1rem; margin-bottom: 1.6rem; max-width: 420px; }
+        .md-demo { display: flex; align-items: flex-start; gap: 1.75rem; background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); transition: opacity .3s; }
+        .md-demo.cambiando { opacity: 0; }
+        .md-prop { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+        .md-prop img { width: 100%; height: 170px; border-radius: var(--radius-md); object-fit: cover; background: var(--ink-soft); }
+        .md-prop small { display: block; color: var(--stone-light); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; }
+        .md-prop b { display: block; color: #fff; font-size: 1.2rem; line-height: 1.3; }
+        .md-prop span { display: block; color: var(--green); font-size: 1.05rem; font-weight: 800; margin-top: 0.3rem; }
+        .md-pct { flex-shrink: 0; width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid var(--green); background: rgba(62,240,122,0.08); margin-top: 15px; transition: border-color .4s, background .4s; }
+        .md-pct b { font-size: 3rem; color: #fff; line-height: 1; }
+        .md-pct small { font-size: 0.75rem; color: var(--stone); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
+        @media (max-width: 1000px) {
+            .md-inner { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+            .md-texto p { margin-left: auto; margin-right: auto; }
+        }
+        @media (max-width: 600px) {
+            .md-section { padding: 3rem 1.25rem; }
+            .md-texto h2 { font-size: 1.9rem; }
+            .md-demo { gap: 0.9rem; padding: 1.1rem; }
+            .md-prop img { height: 110px; }
+            .md-prop b { font-size: 0.98rem; }
+            .md-prop span { font-size: 0.9rem; }
+            .md-pct { width: 88px; height: 88px; border-width: 3px; margin-top: 11px; }
+            .md-prop small { letter-spacing: 0.02em; font-size: 0.66rem; }
+            .md-pct b { font-size: 1.8rem; }
+            .md-pct small { font-size: 0.58rem; }
+        }
+    </style>
+
+    <script>
+        // Ejemplos de muestra (no son propiedades reales). Rotan cada 4 s.
+        (function muestraMatch() {
+            const IMG = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=70`;
+            const EJEMPLOS = [
+                { pct: 92, a: ['Casa en Villa Belgrano', 'U$S 180.000', 'photo-1568605114967-8130f3a36994'], b: ['Depto en Nueva Córdoba', 'U$S 170.000', 'photo-1560448204-e02f11c3d0e2'] },
+                { pct: 68, a: ['Casa en Mendiolaza', 'U$S 260.000', 'photo-1600596542815-ffad4c1539a9'], b: ['Depto en General Paz', 'U$S 95.000', 'photo-1522708323590-d24dbb6b0267'] },
+                { pct: 85, a: ['Terreno en Punilla', 'U$S 45.000', 'photo-1500382017468-9049fed747ef'], b: ['Local en el Centro', 'U$S 50.000', 'photo-1441986300917-64674bd600d8'] }
+            ];
+            const $ = id => document.getElementById(id);
+            const prop = (etiqueta, [titulo, precio, img]) =>
+                `<img src="${IMG(img)}" alt=""><div style="min-width:0"><small>${etiqueta}</small><b>${titulo}</b><span>${precio}</span></div>`;
+            let i = 0, arranco = false;
+
+            function contar(hasta) {
+                const el = $('md-num'), t0 = performance.now();
+                const paso = t => {
+                    const k = Math.min(1, (t - t0) / 900);
+                    el.textContent = Math.round(hasta * (1 - Math.pow(1 - k, 3)));
+                    if (k < 1) requestAnimationFrame(paso);
+                };
+                requestAnimationFrame(paso);
+            }
+
+            function mostrar() {
+                const e = EJEMPLOS[i], demo = $('md-demo');
+                demo.classList.add('cambiando');
+                setTimeout(() => {
+                    $('md-a').innerHTML = prop('Tu propiedad', e.a);
+                    $('md-b').innerHTML = prop('Otra propiedad', e.b);
+                    const c = e.pct >= 75 ? '62,240,122' : '255,181,71';
+                    const pct = document.querySelector('.md-pct');
+                    pct.style.borderColor = `rgb(${c})`;
+                    pct.style.background = `rgba(${c},0.08)`;
+                    demo.classList.remove('cambiando');
+                    contar(e.pct);
+                    i = (i + 1) % EJEMPLOS.length;
+                }, 300);
+            }
+
+            new IntersectionObserver(ent => {
+                if (!ent[0].isIntersecting || arranco) return;
+                arranco = true;
+                mostrar();
+                setInterval(mostrar, 4000);
+            }, { threshold: 0.3 }).observe($('muestra-match'));
+        })();
+    </script>
+
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">

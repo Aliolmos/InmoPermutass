@@ -66,9 +66,30 @@
 
     <main class="container">
         <div id="mis-plan" style="margin-top: -1rem;"></div>
+        <div id="mis-stats"></div>
         <div id="mis-grid" class="grid-cards"></div>
     </main>
 
+    <style>
+        .ip-stats { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: center; margin: 0 1.25rem 1rem; padding: 0.7rem 0.9rem; background: var(--ink-soft); border-radius: var(--radius-sm); color: var(--stone); font-size: 0.85rem; position: relative; }
+        .ip-stats span { display: inline-flex; align-items: center; gap: 0.35rem; color: #fff; font-weight: 700; }
+        .ip-stats small { color: var(--stone); font-weight: 500; font-size: 0.78rem; }
+        .ip-stats i { color: var(--green); }
+        .ip-stats--lock span { filter: blur(4px); user-select: none; }
+        .ip-stats-cta { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.4rem; color: #ffb547; font-weight: 800; font-size: 0.8rem; text-decoration: none; }
+        .ip-stats-cta i { color: #ffb547; }
+        .ip-stats-resumen { background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--radius-md); padding: 1.25rem 1.4rem; margin-bottom: 1.5rem; }
+        .ip-stats-tit { color: #fff; font-weight: 800; margin-bottom: 0.9rem; }
+        .ip-stats-tit i { color: var(--green); margin-right: 0.4rem; }
+        .ip-stats-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+        .ip-stats-nums div { background: var(--ink-soft); border-radius: var(--radius-sm); padding: 0.8rem 0.9rem; }
+        .ip-stats-nums b { display: block; font-size: 1.6rem; color: #fff; line-height: 1.1; }
+        .ip-stats-nums span { color: var(--stone); font-size: 0.8rem; }
+        .ip-stats-top { color: var(--stone); font-size: 0.85rem; margin: 0.9rem 0 0; }
+        .ip-stats-top i { color: #ffb547; margin-right: 0.3rem; }
+        @media (max-width: 600px) { .ip-stats-nums { grid-template-columns: 1fr; } .ip-stats-nums b { font-size: 1.3rem; } }
+        .btn-destacada-on { background: linear-gradient(135deg, #ffd66b, #ffb547); color: #1a1405; border: none; font-weight: 800; }
+    </style>
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
@@ -95,12 +116,102 @@
                             <span><i class="fa-solid fa-bed"></i> ${esc(p.bedrooms)} dorm. · ${esc(p.area)} m²</span>
                         </div>
                     </div>
+                    ${bloqueStats(p)}
                     <div class="ip-mis-actions">
                         <a href="propiedad.html?id=${idUrl}" class="btn btn-outline btn-sm"><i class="fa-solid fa-eye"></i> Ver</a>
                         <a href="publicar.html?editar=${idUrl}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen"></i> Editar</a>
                         <button type="button" class="btn btn-sm btn-danger-outline" onclick="borrarPropiedad('${idJs}', this)"><i class="fa-solid fa-trash"></i> Eliminar</button>
                     </div>
+                    ${botonDestacar(p, idJs)}
                 </div>`;
+        }
+
+        // ---------------- Estadísticas (Premium) ----------------
+        // Premium: números reales. Pro: borrosos, para que den ganas de pasarse.
+        let stats = {};            // { id: { visitas, whatsapp, favoritos, mes: {...} } }
+        let statsIds = '';         // para no volver a pedirlas si no cambió la lista
+
+        function esPro() {
+            const plan = IP.planActivo && IP.planActivo();
+            return !!(plan && plan.plan === 'pro');
+        }
+
+        // Con cuántas propiedades del catálogo hace match de 75% o más.
+        function matchesAltos(p) {
+            return getPropertiesPublicas().filter(o => calcularCompatibilidad(p, o) >= 75).length;
+        }
+
+        function bloqueStats(p) {
+            if (!esPremium() && !esPro()) return '';
+            const s = stats[p.id] || { visitas: 0, whatsapp: 0, favoritos: 0 };
+            const n = v => esPremium() ? v : '00';
+            return `<div class="ip-stats ${esPremium() ? '' : 'ip-stats--lock'}">
+                <span title="Visitas a la ficha"><i class="fa-solid fa-eye"></i> ${n(s.visitas)} <small>visitas</small></span>
+                <span title="Clics en WhatsApp"><i class="fa-brands fa-whatsapp"></i> ${n(s.whatsapp)} <small>WhatsApp</small></span>
+                <span title="Veces guardada en favoritos"><i class="fa-solid fa-heart"></i> ${n(s.favoritos)} <small>favoritos</small></span>
+                <span title="Propiedades con 75% o más de match"><i class="fa-solid fa-right-left"></i> ${esPremium() ? matchesAltos(p) : '00'} <small>matches +75%</small></span>
+                ${esPremium() ? '' : '<a href="planes.html" class="ip-stats-cta"><i class="fa-solid fa-lock"></i> Ver estadísticas con Premium</a>'}
+            </div>`;
+        }
+
+        function pintarResumen(mias) {
+            const cont = document.getElementById('mis-stats');
+            if (!esPremium() || !mias.length) { cont.innerHTML = ''; return; }
+            const suma = k => mias.reduce((t, p) => t + ((stats[p.id] && stats[p.id].mes[k]) || 0), 0);
+            const top = mias.slice().sort((a, b) => ((stats[b.id] || {}).visitas || 0) - ((stats[a.id] || {}).visitas || 0))[0];
+            const mesNombre = new Date().toLocaleDateString('es-AR', { month: 'long' });
+            cont.innerHTML = `
+                <div class="ip-stats-resumen">
+                    <div class="ip-stats-tit"><i class="fa-solid fa-chart-simple"></i> Tus estadísticas de ${mesNombre}</div>
+                    <div class="ip-stats-nums">
+                        <div><b>${suma('visitas')}</b><span>visitas</span></div>
+                        <div><b>${suma('whatsapp')}</b><span>contactos por WhatsApp</span></div>
+                        <div><b>${suma('favoritos')}</b><span>veces en favoritos</span></div>
+                    </div>
+                    ${top && (stats[top.id] || {}).visitas ? `<p class="ip-stats-top"><i class="fa-solid fa-trophy"></i> La más vista: <strong>${esc(top.title)}</strong> (${stats[top.id].visitas} visitas en total)</p>` : ''}
+                </div>`;
+        }
+
+        async function cargarStats(mias) {
+            if (!esPremium()) return;
+            const ids = mias.map(p => String(p.id));
+            if (ids.join() === statsIds) return;
+            statsIds = ids.join();
+            try {
+                stats = await IP.leerEstadisticas(ids);
+            } catch (e) {
+                console.warn('[InmoPermutas] No se pudieron leer las estadísticas:', e);
+                return;
+            }
+            renderMisPropiedades();
+        }
+
+        // Solo Premium: hasta 3 propiedades destacadas, que ve todo el mundo.
+        function esPremium() {
+            const plan = IP.planActivo && IP.planActivo();
+            return !!(plan && plan.plan === 'premium');
+        }
+
+        function botonDestacar(p, idJs) {
+            if (!esPremium()) return '';
+            const activa = esDestacada(p);
+            return `<div class="ip-mis-actions" style="padding-top:0;">
+                <button type="button" class="btn btn-sm ${activa ? 'btn-destacada-on' : 'btn-outline'}" onclick="destacar('${idJs}', ${!activa}, this)">
+                    <i class="fa-${activa ? 'solid' : 'regular'} fa-star"></i> ${activa ? 'Destacada · quitar' : 'Destacar'}
+                </button>
+            </div>`;
+        }
+
+        async function destacar(id, on, btn) {
+            btn.disabled = true;
+            try {
+                await IP.destacarPropiedad(id, on);
+                // La lista se repinta sola cuando la base avisa el cambio.
+            } catch (e) {
+                console.error('[InmoPermutas] Error al destacar:', e);
+                alert(e.message && !e.code ? e.message : 'No se pudo: ' + IP.mensajeError(e));
+                btn.disabled = false;
+            }
         }
 
         function pintarPlan(cantidad) {
@@ -109,11 +220,15 @@
             if (!IP.user || !IP.planCargado) { cont.innerHTML = ''; return; }
 
             if (plan) {
+                const destacadas = getProperties().filter(p => p.ownerUid === IP.user.uid && esDestacada(p)).length;
+                const extraDest = plan.plan === 'premium'
+                    ? ` · <i class="fa-solid fa-star" style="color:#ffb547;"></i> ${destacadas} de ${IP.MAX_DESTACADAS} destacadas`
+                    : '';
                 const tope = plan.max ? `${cantidad} de ${plan.max} propiedades` : `${cantidad} propiedad${cantidad === 1 ? '' : 'es'} (sin límite)`;
                 const lleno = plan.max && cantidad >= plan.max;
                 cont.innerHTML = `
                     <div class="ip-plan-bar">
-                        <span><i class="fa-solid fa-circle-check"></i> Plan <strong>${esc(plan.nombre)}</strong> activo hasta el ${plan.vence.toLocaleDateString('es-AR')} · ${tope}</span>
+                        <span><i class="fa-solid fa-circle-check"></i> Plan <strong>${esc(plan.nombre)}</strong> activo hasta el ${plan.vence.toLocaleDateString('es-AR')} · ${tope}${extraDest}</span>
                         ${lleno
                             ? `<a href="planes.html" class="btn btn-accent btn-sm">Pasate a Premium</a>`
                             : `<a href="publicar.html" class="btn btn-accent btn-sm"><i class="fa-solid fa-circle-plus"></i> Publicar nueva</a>`}
@@ -128,10 +243,7 @@
                 cont.innerHTML = `
                     <div class="ip-plan-bar ip-plan-bar--off">
                         <span><i class="fa-solid fa-lock"></i> No tenés un plan activo. Tus publicaciones siguen visibles, pero para publicar una nueva necesitás un plan.</span>
-                        <span style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                            <a href="publicar.html?modo=match" class="btn btn-outline btn-sm">Calcular mi match gratis</a>
-                            <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
-                        </span>
+                        <a href="planes.html" class="btn btn-accent btn-sm">Ver planes</a>
                     </div>`;
             }
         }
@@ -186,6 +298,8 @@
             }
 
             grid.innerHTML = mias.map(tarjetaMia).join('');
+            pintarResumen(mias);
+            cargarStats(mias);
         }
 
         async function borrarPropiedad(id, btn) {

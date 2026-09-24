@@ -1965,11 +1965,12 @@ header {
         gap: 0.22rem;
     }
 
-    /* + */
+    /* Publicar: ancho según el texto (la cuenta ahora va en el menú, hay lugar) */
     .nav-actions .btn-accent {
-        width: 28px !important;
+        width: auto !important;
         height: 28px !important;
         min-width: 28px !important;
+        padding: 0 0.6rem !important;
     }
 
     .nav-actions .btn-accent::before {
@@ -2290,3 +2291,33 @@ header {
 .property-surfaces li { display: flex; align-items: center; gap: 0.5rem; }
 .property-surfaces i { color: var(--green); }
 .property-surfaces strong { color: #ffffff; font-weight: 700; }
+/* Plan gratis: propiedades borrosas con cartel para pasarse a Pro */
+.pro-lock { grid-column: 1 / -1; position: relative; }
+.pro-lock-cards { filter: blur(8px); opacity: 0.55; pointer-events: none; user-select: none; }
+.pro-lock-cta { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 2.5rem 1rem; }
+.pro-lock-box {
+    position: sticky; top: 110px; max-width: 420px; text-align: center;
+    background: var(--ink-card); border: 1px solid rgba(62,240,122,0.45);
+    border-radius: var(--radius-lg); padding: 2rem 1.75rem; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.pro-lock-icon {
+    width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    color: var(--green); background: rgba(62,240,122,0.12); border: 1px solid rgba(62,240,122,0.5);
+}
+.pro-lock-box h3 { color: #fff; font-size: 1.25rem; margin-bottom: 0.5rem; }
+.pro-lock-box p { color: var(--stone); font-size: 0.92rem; line-height: 1.55; margin-bottom: 1.25rem; }
+
+/* Etiqueta de propiedad destacada (plan Premium) */
+.card-destacada-badge {
+    position: absolute; left: 0.75rem; bottom: 0.75rem; z-index: 2;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: linear-gradient(135deg, #ffd66b, #ffb547); color: #1a1405;
+    font-size: 0.72rem; font-weight: 800; padding: 0.3rem 0.65rem; border-radius: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+/* Celulares muy angostos: texto corto en el botón de publicar */
+@media (max-width: 360px) {
+    .nav-actions .btn-accent::after { content: "Publicar" !important; }
+}

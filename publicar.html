@@ -307,9 +307,6 @@
         const NOMBRES_PLAN = { pro: 'Pro', premium: 'Premium' };
         const paramsURL = new URLSearchParams(window.location.search);
         const EDITAR_ID = paramsURL.get('editar');       // ?editar=ID → editar una propiedad propia
-        // ?modo=match → "Calculá tu match": cualquiera (sin plan) carga su propiedad
-        // y qué busca. No se publica: se guarda privada y sirve para ver el % de match.
-        const MODO_MATCH = paramsURL.get('modo') === 'match' && !EDITAR_ID;
         const PAGO = paramsURL.get('pago');              // ok | pendiente (al volver de Mercado Pago)
         let esperaLarga = false;
         if (PAGO === 'ok' || PAGO === 'pendiente') {
@@ -400,23 +397,18 @@
                 const pendiente = sessionStorage.getItem('ip_plan_pendiente');
                 document.getElementById('publicar-sub').innerText = NOMBRES_PLAN[pendiente]
                     ? `Creá tu cuenta o ingresá para activar el plan ${NOMBRES_PLAN[pendiente]}.`
-                    : MODO_MATCH
-                        ? 'Creá tu cuenta gratis (o ingresá) para calcular tu % de match con todas las propiedades.'
-                        : 'Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.';
+                    : 'Necesitás una cuenta para publicar. Queda visible en el catálogo para todo el mundo.';
                 return;
             }
             mostrarPaso('estado-form');
             document.getElementById('publicar-sub').innerText = EDITAR_ID
                 ? 'Cambiá lo que necesites y guardá. Los cambios se ven al instante en el catálogo.'
-                : MODO_MATCH
-                    ? `Hola ${IP.nombreUsuario()}, contanos qué tenés y qué te gustaría recibir. No se publica ni lo ve nadie: solo lo usamos para mostrarte tu % de match.`
-                    : `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
+                : `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
             // Precargamos el nombre del vendedor con el de la cuenta.
             const campoNombre = document.getElementById('p-seller-name');
             if (!campoNombre.value) campoNombre.value = IP.nombreUsuario();
 
             if (EDITAR_ID) cargarEdicion();
-            if (MODO_MATCH) cargarPerfilMatch();
             actualizarBloqueo();
         });
 
@@ -430,13 +422,11 @@
             const box = document.getElementById('lock-box');
             const info = document.getElementById('plan-info');
 
-            // Editar lo que ya publicaste (o calcular tu match) no exige un plan vigente.
-            if (EDITAR_ID || MODO_MATCH) {
+            // Editar lo que ya publicaste no exige un plan vigente.
+            if (EDITAR_ID) {
                 wrap.classList.remove('locked');
                 card.inert = false;
-                info.innerHTML = MODO_MATCH
-                    ? `<div class="ip-plan-bar"><span><i class="fa-solid fa-eye-slash"></i> Esto <strong>no se publica</strong>: solo lo ves vos, para calcular tu % de match.</span>${IP.planActivo() ? '<a href="publicar.html" class="btn btn-outline btn-sm">Prefiero publicarla</a>' : ''}</div>`
-                    : '';
+                info.innerHTML = '';
                 return;
             }
 
@@ -471,8 +461,7 @@
                 box.innerHTML = `<div class="ip-lock-icon"><i class="fa-solid fa-lock"></i></div>
                     <h2>Consultá nuestros planes para publicar tu permuta</h2>
                     <p>Para publicar tu propiedad necesitás un plan activo. Elegí el que más te convenga y pagalo con Mercado Pago.</p>
-                    <a href="planes.html" class="btn btn-accent btn-block"><i class="fa-solid fa-tags"></i> Ver planes</a>
-                    <a href="publicar.html?modo=match" class="btn btn-outline btn-block" style="margin-top:0.6rem;"><i class="fa-solid fa-right-left"></i> Mientras tanto, calculá tu % de match gratis</a>`;
+                    <a href="planes.html" class="btn btn-accent btn-block"><i class="fa-solid fa-tags"></i> Ver planes</a>`;
             }
         }
 
@@ -543,15 +532,6 @@
 
             mediaExistente = Array.isArray(p.media) ? p.media.filter(m => m && m.url) : [];
             pintarPreview();
-        }
-
-        // Modo match: si ya había cargado su propiedad, la traemos para editarla.
-        let perfilCargado = false;
-        async function cargarPerfilMatch() {
-            if (perfilCargado) return;
-            perfilCargado = true;
-            await IP.perfilListo;
-            if (IP.perfilMatch) rellenarFormulario(IP.perfilMatch);
         }
 
         async function cargarEdicion() {
@@ -718,39 +698,6 @@
             const btn = document.getElementById('publish-submit');
             btn.disabled = true;
 
-            // Modo match: se guarda privado (sin fotos ni contacto) y listo.
-            if (MODO_MATCH) {
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Calculando…';
-                try {
-                    await IP.guardarPerfilMatch({
-                        title: document.getElementById('p-title').value.trim() || 'Mi propiedad',
-                        type: type,
-                        departamento: dep,
-                        localidad: localidad,
-                        barrio: barrio,
-                        location: nombreZonaPropia,
-                        city: nombreZonaPropia === 'Córdoba' ? 'Capital' : 'Córdoba',
-                        price: Number(document.getElementById('p-price').value),
-                        currency: "U$S",
-                        bedrooms: Number(document.getElementById('p-bedrooms').value),
-                        area: Number(document.getElementById('p-area').value),
-                        superficieCubierta: num('p-cubierta'),
-                        superficieTerreno: num('p-terreno'),
-                        wants: wants
-                    });
-                    document.getElementById('form-success').innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Listo! Te llevamos al catálogo para ver tus matches…';
-                    document.getElementById('form-success').classList.add('show');
-                    document.getElementById('publish-form').style.display = 'none';
-                    setTimeout(() => { window.location.href = 'catalogo.html'; }, 1100);
-                } catch (e) {
-                    console.error('[InmoPermutas] Error al guardar el perfil de match:', e);
-                    alert('No se pudo guardar: ' + IP.mensajeError(e));
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Ver mis matches';
-                }
-                return;
-            }
-
             try {
                 // 0) Para publicar una propiedad nueva hace falta un plan vigente
                 //    y no haber llegado al tope de propiedades de ese plan.
@@ -859,22 +806,6 @@
             zonaConectar('w-dep-2', 'w-city-2', 'Departamento (opcional)', 'w-barrio-2');
             document.getElementById('google-logo').innerHTML =
                 (typeof IP_GOOGLE_SVG !== 'undefined' ? IP_GOOGLE_SVG : '');
-
-            if (MODO_MATCH) {
-                document.title = 'Calculá tu match — InmoPermutas';
-                document.getElementById('publicar-titulo').innerText = 'Calculá tu % de match';
-                document.getElementById('publicar-badge').innerHTML = '<i class="fa-solid fa-right-left"></i> Gratis';
-                document.getElementById('publish-submit').innerHTML = '<i class="fa-solid fa-right-left"></i> Ver mis matches';
-                const titulo = document.getElementById('p-title');
-                titulo.required = false;
-                titulo.placeholder = 'Ej: Mi casa en Villa Belgrano (opcional)';
-                // Sin fotos ni datos de contacto: no se publica.
-                ['p-media', 'p-seller-name', 'p-seller-phone'].forEach(id => {
-                    const el = document.getElementById(id);
-                    el.required = false;
-                    el.closest('.form-field').style.display = 'none';
-                });
-            }
         })();
     </script>
     <script src="js/asistente.js"></script>

@@ -95,10 +95,14 @@
                 return;
             }
 
-            grid.innerHTML = favProps.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
+            const visibles = favProps.filter(puedeVerPropiedad);
+            const bloqueadas = favProps.filter(p => !puedeVerPropiedad(p));
+            grid.innerHTML = visibles.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('')
+                + renderBloqueoPro(bloqueadas, 'Para ver todos tus favoritos pasate a Pro');
         }
 
         document.addEventListener('DOMContentLoaded', renderFavorites);
+        document.addEventListener('ip-plan', renderFavorites);
     </script>
     <script src="js/asistente.js"></script>
 </body>

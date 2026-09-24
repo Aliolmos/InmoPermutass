@@ -248,8 +248,20 @@ function iaLinkCatalogo(c) {
     return "catalogo.html" + (q ? "?" + q : "");
 }
 
+// El % solo se muestra si el usuario ya tiene una propiedad publicada.
+function iaMostrarPorcentaje() {
+    return typeof misPropiedadesParaMatch === "function" && misPropiedadesParaMatch().length > 0;
+}
+
 function iaTarjetaResultado(r) {
     const p = r.prop;
+    // Plan gratis: lo que no puede ver aparece borroso y sin link.
+    if (typeof puedeVerPropiedad === "function" && !puedeVerPropiedad(p)) return `
+        <a class="ia-res ia-res--lock" href="planes.html" title="Pasate a Pro para verla">
+            <span class="ia-res-img" style="background-image:url('${p.image}')"></span>
+            <span class="ia-res-info"><span class="ia-res-title">${p.title}</span><span class="ia-res-meta">${p.location}, ${p.city}</span></span>
+            <span class="ia-res-lock"><i class="fa-solid fa-lock"></i> Pro</span>
+        </a>`;
     return `
         <a class="ia-res" href="propiedad.html?id=${p.id}">
             <span class="ia-res-img" style="background-image:url('${p.image}')"></span>
@@ -258,7 +270,7 @@ function iaTarjetaResultado(r) {
                 <span class="ia-res-meta">${p.location}, ${p.city} · ${p.bedrooms} dorm. · ${p.area} m²</span>
                 <span class="ia-res-price">${p.currency} ${p.price.toLocaleString("es-AR")}</span>
             </span>
-            <span class="ia-res-score">${r.score}%<small>afinidad</small></span>
+            ${iaMostrarPorcentaje() ? `<span class="ia-res-score">${r.score}%<small>afinidad</small></span>` : ""}
         </a>`;
 }
 
@@ -422,6 +434,8 @@ const IA_ESTILOS = `
 .ia-res-title { font-size:.83rem; font-weight:700; color: var(--ink,#0a0f1e); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ia-res-meta { font-size:.72rem; color: var(--stone,#5b6779); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ia-res-price { font-size:.8rem; font-weight:800; color: var(--ink,#0a0f1e); }
+.ia-res--lock .ia-res-img, .ia-res--lock .ia-res-info { filter: blur(5px); }
+.ia-res-lock { flex-shrink:0; font-size:.72rem; font-weight:800; color: var(--green,#3ef07a); white-space:nowrap; }
 .ia-res-score { flex-shrink:0; text-align:center; font-size:.9rem; font-weight:800; color: var(--green-text,#4f8a1a); line-height:1.1; }
 .ia-res-score small { display:block; font-size:.55rem; text-transform:uppercase; letter-spacing:.03em; color: var(--stone-light,#8a94a6); font-weight:700; }
 

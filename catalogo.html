@@ -59,13 +59,12 @@
                 <div class="section-title">
                     <h1 style="font-size: 1.75rem; font-weight: 600;">Catálogo de Permutas</h1>
                     <p>Explorá inmuebles listos para el intercambio inteligente.</p>
-                    <div id="match-cta" style="margin-top: 1rem;"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <div class="container">
+    <div class="container" id="featured-section" style="display:none;">
         <div class="section-header">
             <div class="section-title">
                 <h2>Propiedades <span>destacadas</span></h2>
@@ -152,7 +151,6 @@
             else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
             else if (sort === 'area-desc') filtered.sort((a, b) => b.area - a.area);
 
-            pintarMatchCta();
             const grid = document.getElementById('catalog-grid');
 
             if (filtered.length === 0) {
@@ -160,23 +158,12 @@
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
+            // Plan gratis: las que puede ver van primero y el resto, borroso.
+            const visibles = filtered.filter(puedeVerPropiedad);
+            const bloqueadas = filtered.filter(p => !puedeVerPropiedad(p));
+            grid.innerHTML = visibles.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('')
+                + renderBloqueoPro(bloqueadas, 'Para ver todas las propiedades pasate a Pro');
         }
-
-        // Aviso arriba del catálogo: invita a calcular el match o muestra contra qué se calcula.
-        function pintarMatchCta() {
-            const cont = document.getElementById('match-cta');
-            if (!cont || !window.IP || IP.error) return;
-            const mias = IP.user ? misPropiedadesParaMatch() : [];
-            if (!mias.length) {
-                cont.innerHTML = `<a href="publicar.html?modo=match" class="detail-match-cta"><i class="fa-solid fa-right-left"></i> Calculá gratis tu % de match con cada propiedad</a>`;
-            } else if (mias[0].id === 'perfil-match') {
-                cont.innerHTML = `<span class="detail-match-pct"><i class="fa-solid fa-arrows-rotate"></i> Viendo tu % de match · <a href="publicar.html?modo=match" style="color: var(--green);">Editar mi propiedad</a></span>`;
-            } else {
-                cont.innerHTML = '';
-            }
-        }
-        document.addEventListener('ip-auth', pintarMatchCta);
 
         function resetFilters() {
             document.getElementById('filter-type').value = '';
@@ -193,6 +180,9 @@
             if (params.get('type')) document.getElementById('filter-type').value = params.get('type');
             if (params.get('location')) document.getElementById('filter-location').value = params.get('location');
         }
+
+        // Cuando termina de cargar el plan (o cambia), se vuelve a pintar todo.
+        document.addEventListener('ip-plan', () => { applyCatalogFilters(); renderFeaturedProperties(); });
 
         document.addEventListener('DOMContentLoaded', () => {
             loadFiltersFromURL();

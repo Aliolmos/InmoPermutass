@@ -206,13 +206,11 @@ function getPropertiesPublicas() {
 // Mejor % de match entre una propiedad y alguna de las propias del usuario
 // que está mirando. Devuelve undefined si no corresponde mostrarlo: sin
 // sesión, sin propiedades propias publicadas, o si la propiedad es propia.
-// Propiedades del usuario contra las que se calcula el match: las que tiene
-// publicadas o, si no publicó ninguna, la que cargó en "Calculá tu match".
+// Propiedades del usuario contra las que se calcula el match (las que publicó).
+// El % de match es de los planes pagos: sin plan activo no se calcula.
 function misPropiedadesParaMatch() {
-    if (!window.IP || !IP.user) return [];
-    const publicadas = getProperties().filter(x => !x.esDemo && x.ownerUid === IP.user.uid);
-    if (publicadas.length) return publicadas;
-    return IP.perfilMatch ? [IP.perfilMatch] : [];
+    if (!window.IP || !IP.user || !tienePlanCompleto()) return [];
+    return getProperties().filter(x => !x.esDemo && x.ownerUid === IP.user.uid);
 }
 
 function mejorMatchPropio(p) {
@@ -290,6 +288,9 @@ function toggleFavorite(id) {
         favs = favs.filter(f => f !== id);
     } else {
         favs.push(id);
+        // Estadísticas (Premium): cuántas veces la guardaron en favoritos.
+        const p = getProperties().find(x => String(x.id) === id);
+        if (p && !p.esDemo && window.IP && IP.sumarEstadistica) IP.sumarEstadistica(id, 'favoritos', p);
     }
     localStorage.setItem('favorites', JSON.stringify(favs));
     updateFavCount();
@@ -330,6 +331,60 @@ function handleFavoriteClick(event, id) {
 }
 // ---------------------------------------------------------------------------
 
+// --- Plan gratis: qué propiedades puede ver ----------------------------------
+// Sin plan activo (o sin sesión) se ven las destacadas (las eligen los usuarios
+// Premium, las ve todo el mundo) y 3 propiedades más del catálogo. El resto
+// aparece borroso con un botón para pasarse a Pro.
+const CANT_GRATIS = 3;
+
+function esDestacada(p) {
+    return Number(p.destacadaHasta) > Date.now();
+}
+
+function getDestacadas() {
+    return getProperties().filter(p => !p.esDemo && esDestacada(p));
+}
+
+function tienePlanCompleto() {
+    if (!window.IP) return false;
+    if (IP.esAdmin && IP.esAdmin()) return true;
+    return !!(IP.planActivo && IP.planActivo());
+}
+
+// Las 3 que se ven gratis además de las destacadas: las 3 más nuevas que no son destacadas.
+function idsGratis() {
+    return getPropertiesPublicas().filter(p => !esDestacada(p)).slice(0, CANT_GRATIS).map(p => String(p.id));
+}
+
+function puedeVerPropiedad(p) {
+    if (tienePlanCompleto()) return true;
+    if (esDestacada(p)) return true;                                        // las destacadas las ve todo el mundo
+    if (window.IP && IP.user && p.ownerUid === IP.user.uid) return true;   // las propias, siempre
+    return idsGratis().includes(String(p.id));
+}
+
+// Bloque de tarjetas borrosas con el cartel para pasarse a Pro.
+// Muestra como mucho "max" de muestra, para no hacer una pared borrosa infinita.
+function renderBloqueoPro(props, titulo, max = 6) {
+    if (!props.length) return '';
+    const muestra = props.slice(0, max);
+    return `
+        <div class="pro-lock">
+            <div class="pro-lock-cards grid-cards" aria-hidden="true" inert>
+                ${muestra.map(p => renderPropertyCard(p)).join('')}
+            </div>
+            <div class="pro-lock-cta">
+                <div class="pro-lock-box">
+                    <span class="pro-lock-icon"><i class="fa-solid fa-lock"></i></span>
+                    <h3>${titulo}</h3>
+                    <p>${props.length} propiedad${props.length === 1 ? '' : 'es'} más esperándote. Pasate al plan Pro para ver todo el catálogo y tu % de match.</p>
+                    <a href="planes.html" class="btn btn-accent"><i class="fa-solid fa-crown"></i> Pasate a Pro</a>
+                </div>
+            </div>
+        </div>`;
+}
+// ---------------------------------------------------------------------------
+
 // Tarjeta de propiedad reutilizable (home, catálogo, favoritos y "opciones
 // similares" de la ficha de detalle).
 // matchPercent es opcional: solo tiene sentido mostrarlo cuando se está
@@ -342,6 +397,7 @@ function renderPropertyCard(p, matchPercent) {
         <div class="card">
             <div class="card-img" style="background-image: url('${p.image}')" role="img" aria-label="${p.title}">
                 ${tieneVideo ? `<span class="card-video-badge"><i class="fa-solid fa-circle-play"></i> Video</span>` : ''}
+                ${esDestacada(p) ? `<span class="card-destacada-badge"><i class="fa-solid fa-star"></i> Destacada</span>` : ''}
                 <button class="fav-btn ${fav ? 'is-fav' : ''}" onclick="handleFavoriteClick(event, '${id}')" aria-label="Guardar en favoritos" title="Guardar en favoritos">
                     <i class="fa-${fav ? 'solid' : 'regular'} fa-heart"></i>
                 </button>
@@ -367,9 +423,14 @@ function renderPropertyCard(p, matchPercent) {
 function renderFeaturedProperties() {
     const container = document.getElementById('featured-grid');
     if (!container) return;
+    // Las destacadas (elegidas por usuarios Premium) se ven para todos, con o sin plan.
+    // Si no hay ninguna, la sección no se muestra.
+    const destacadas = getDestacadas();
+    const seccion = document.getElementById('featured-section');
+    if (seccion) seccion.style.display = destacadas.length ? '' : 'none';
+    container.innerHTML = destacadas.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
+
     const props = getPropertiesPublicas();
-    const featured = props.slice(0, 6);
-    container.innerHTML = featured.map(p => renderPropertyCard(p, mejorMatchPropio(p))).join('');
 
     const countText = document.getElementById('active-count-text');
     if (countText) {
@@ -387,6 +448,9 @@ function toggleMobileNav() {
 // Por ahora el formulario no manda el mensaje a ningún lado real (no hay
 // backend de correo conectado): solo valida los campos y muestra un aviso
 // de que se recibió, para no dejar al usuario sin respuesta visual.
+// Casilla donde llegan los mensajes del formulario de contacto del pie de página.
+const MAIL_CONTACTO = 'inmopermutas@gmail.com';
+
 function initFooterContactForm() {
     const yearEl = document.getElementById('footer-year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -394,14 +458,64 @@ function initFooterContactForm() {
     const form = document.getElementById('contact-form');
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const msgEl = document.getElementById('contact-form-msg');
-        if (msgEl) {
-            msgEl.textContent = '¡Gracias! Recibimos tu mensaje y te vamos a contactar a la brevedad.';
+        const btn = form.querySelector('button[type="submit"]');
+        const original = btn.innerHTML;
+        const avisar = (texto, error) => {
+            if (!msgEl) return;
+            msgEl.textContent = texto;
+            msgEl.style.color = error ? '#ff8fa3' : '';
             msgEl.classList.add('show');
+        };
+        const datos = Object.fromEntries(new FormData(form));
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando…';
+        try {
+            // Con EmailJS configurado (js/backend.js → IP_EMAILJS) sale con el diseño de
+            // emailjs-plantilla-contacto.html; si no, va por FormSubmit como respaldo.
+            const ej = typeof IP_EMAILJS !== 'undefined' ? IP_EMAILJS : {};
+            const r = ej.serviceId && ej.contactoTemplateId && ej.publicKey
+                ? await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        service_id: ej.serviceId,
+                        template_id: ej.contactoTemplateId,
+                        user_id: ej.publicKey,
+                        template_params: {
+                            asunto: `Consulta de ${datos.nombre} — InmoPermutas`,
+                            nombre: datos.nombre,
+                            email: datos.email,
+                            mensaje: datos.mensaje,
+                            fecha: new Date().toLocaleString('es-AR')
+                        }
+                    })
+                })
+                : await fetch('https://formsubmit.co/ajax/' + MAIL_CONTACTO, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    _subject: `Consulta de ${datos.nombre} — InmoPermutas`,
+                    _template: 'table',
+                    _replyto: datos.email,          // al responder, le contestás directo a la persona
+                    _captcha: 'false',
+                    Nombre: datos.nombre,
+                    Email: datos.email,
+                    Mensaje: datos.mensaje
+                })
+            });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            avisar('¡Gracias! Recibimos tu mensaje y te vamos a contactar a la brevedad.');
+            form.reset();
+        } catch (err) {
+            console.warn('[InmoPermutas] No se pudo enviar el contacto:', err);
+            avisar(`No se pudo enviar. Probá de nuevo o escribinos a ${MAIL_CONTACTO}.`, true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = original;
         }
-        form.reset();
     });
 }
 

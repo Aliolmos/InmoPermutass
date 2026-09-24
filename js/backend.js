@@ -56,12 +56,17 @@ const IP_PLANES = {
     premium: { nombre: "Premium", max: null }   // null = ilimitadas
 };
 
-// Mail donde te llegan los avisos (alguien pidió o canceló un plan).
-// Se mandan con FormSubmit (gratis, sin cuenta). La PRIMERA vez te llega un mail
-// de FormSubmit para confirmar: tocás "Activate Form" y listo.
-// Después podés reemplazar el mail por el código que te dan (ej: "a1b2c3d4...")
-// para que tu dirección no quede visible en el código de la página.
-const IP_MAIL_AVISOS = "aliolmos19@gmail.com";
+// Avisos por mail (alguien pidió o canceló un plan).
+// Se mandan con EmailJS desde tu Gmail, con la plantilla de emailjs-plantilla.html
+// (asunto, diseño y remitente "InmoPermutas"). Completá los 3 datos de tu cuenta
+// de EmailJS; mientras estén vacíos, se usa FormSubmit como respaldo.
+const IP_EMAILJS = {
+    serviceId:  "service_yhd2skg",   // Email Services → Service ID   (ej: "service_ab12cd3")
+    templateId: "template_l93edb9",   // Plantilla de avisos de plan → Template ID (ej: "template_xy98zw7")
+    contactoTemplateId: "template_tjjbesr",   // Plantilla del formulario de contacto → Template ID
+    publicKey:  "YvQzvKWDcVj4pSyf1"    // Account → General → Public Key (ej: "AbC1dEfGhIjK2lMn")
+};
+const IP_MAIL_AVISOS = "aliolmos19@gmail.com";   // solo para el respaldo con FormSubmit
 
 // UIDs de Firebase que pueden entrar a admin.html (Authentication → Users → User UID).
 // Si agregás uno, agregalo también en firestore.rules.
@@ -122,7 +127,6 @@ IP.ready = (async function ipInit() {
             }
             IP.user = user;
             ipRegistrarUsuario(user);
-            IP.perfilListo = ipCargarPerfilMatch(user);
             ipEscucharPlan(user);
             ipPintarSesion();
             document.dispatchEvent(new CustomEvent("ip-auth", { detail: user }));
@@ -172,7 +176,9 @@ function ipEscucharPropiedades() {
                     media: Array.isArray(d.media) ? d.media : [],
                     seller: d.seller || { name: "Propietario", avatar: "", phone: "" },
                     wants: d.wants || { types: [], locations: [] },
-                    ownerUid: d.ownerUid
+                    ownerUid: d.ownerUid,
+                    // Destacada por un usuario Premium: se ve para todos hasta esta fecha (ms).
+                    destacadaHasta: d.destacada && d.destacadaVence ? d.destacadaVence.toMillis() : 0
                 };
             });
             IP.propsCargadas = true;
@@ -217,42 +223,6 @@ async function ipEstaBloqueado(user) {
     }
 }
 
-/* ------------- Perfil de match (propiedad privada, sin publicar) ---------- */
-// Cualquier usuario (incluso sin plan) puede cargar su propiedad y qué busca
-// para ver su % de match en el catálogo. Se guarda en usuarios/{uid}.perfilMatch:
-// no se publica ni la ve nadie más.
-IP.perfilMatch = null;
-IP.perfilListo = Promise.resolve();
-
-async function ipCargarPerfilMatch(user) {
-    IP.perfilMatch = null;
-    if (!user) return;
-    try {
-        const doc = await IP.db.collection("usuarios").doc(user.uid).get();
-        const d = doc.exists && doc.data().perfilMatch;
-        IP.perfilMatch = d ? { ...d, id: "perfil-match", ownerUid: user.uid } : null;
-    } catch (e) {
-        console.warn("[InmoPermutas] No se pudo leer el perfil de match:", e.code);
-    }
-    if (typeof refrescarVista === "function") refrescarVista();
-}
-
-IP.guardarPerfilMatch = async function (datos) {
-    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
-    await IP.db.collection("usuarios").doc(IP.user.uid).set({
-        perfilMatch: { ...datos, actualizado: firebase.firestore.FieldValue.serverTimestamp() }
-    }, { merge: true });
-    IP.perfilMatch = { ...datos, id: "perfil-match", ownerUid: IP.user.uid };
-};
-
-IP.borrarPerfilMatch = async function () {
-    if (!IP.user) return;
-    await IP.db.collection("usuarios").doc(IP.user.uid).set({
-        perfilMatch: firebase.firestore.FieldValue.delete()
-    }, { merge: true });
-    IP.perfilMatch = null;
-};
-
 // Deja registrado a cada usuario en "usuarios/{uid}" para que aparezca en el panel admin.
 function ipRegistrarUsuario(user) {
     if (!user) return;
@@ -287,7 +257,8 @@ function ipEscucharPlan(user) {
             plan: d.plan,
             nombre: d.nombrePlan || d.plan,
             max: d.maxPropiedades || null,   // null = ilimitadas
-            vence: d.vence.toDate()
+            vence: d.vence.toDate(),
+            venceTs: d.vence   // el Timestamp original (las destacadas vencen exactamente igual)
         } : null;
         IP.pedido = d && d.pedido && IP_PLANES[d.pedido] ? {
             plan: d.pedido,
@@ -313,19 +284,35 @@ IP.planActivo = function () {
 // Guarda el pedido del plan y manda al usuario a pagar a Mercado Pago.
 // El plan se activa cuando el admin confirma el pago desde admin.html.
 // Te manda un mail de aviso. Nunca frena al usuario: si falla, sigue igual.
-async function ipAvisarAdmin(asunto, datos) {
-    if (!IP_MAIL_AVISOS) return;
-    const envio = fetch("https://formsubmit.co/ajax/" + IP_MAIL_AVISOS, {
-        method: "POST",
-        keepalive: true,   // que llegue aunque la página se vaya a Mercado Pago
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-            _subject: asunto,
-            _template: "table",
-            ...datos,
-            "Panel admin": location.origin + location.pathname.replace(/[^/]*$/, "") + "admin.html"
+async function ipAvisarAdmin(aviso) {
+    const panel = location.origin + location.pathname.replace(/[^/]*$/, "") + "admin.html";
+    const datos = { ...aviso, link_admin: panel, fecha: new Date().toLocaleString("es-AR") };
+    const conEmailJS = IP_EMAILJS.serviceId && IP_EMAILJS.templateId && IP_EMAILJS.publicKey;
+
+    const envio = (conEmailJS
+        ? fetch("https://api.emailjs.com/api/v1.0/email/send", {
+            method: "POST",
+            keepalive: true,   // que llegue aunque la página se vaya a Mercado Pago
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                service_id: IP_EMAILJS.serviceId,
+                template_id: IP_EMAILJS.templateId,
+                user_id: IP_EMAILJS.publicKey,
+                template_params: datos
+            })
         })
-    }).catch(e => console.warn("[InmoPermutas] No se pudo mandar el aviso:", e));
+        : fetch("https://formsubmit.co/ajax/" + IP_MAIL_AVISOS, {
+            method: "POST",
+            keepalive: true,
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({
+                _subject: datos.asunto, _template: "table",
+                Aviso: datos.titulo, Plan: datos.plan, Nombre: datos.nombre, Email: datos.email,
+                [datos.extra_label]: datos.extra_valor, Fecha: datos.fecha,
+                "Qué hacer": datos.que_hacer, "Panel admin": panel
+            })
+        })
+    ).catch(e => console.warn("[InmoPermutas] No se pudo mandar el aviso:", e));
     // Esperamos como mucho 2,5 s para no demorar al usuario.
     await Promise.race([envio, new Promise(r => setTimeout(r, 2500))]);
 }
@@ -346,13 +333,19 @@ IP.comprarPlan = async function (planId) {
         canceladoAt: firebase.firestore.FieldValue.delete()
     }, { merge: true });
     const actual = IP.planActivo();
-    await ipAvisarAdmin(`Nuevo pedido: plan ${IP_PLANES[planId].nombre} — ${IP.nombreUsuario()}`, {
-        "Aviso": actual && actual.plan === planId ? "Quiere RENOVAR su plan" : "Pidió un plan nuevo",
-        "Plan": IP_PLANES[planId].nombre,
-        "Nombre": IP.nombreUsuario(),
-        "Email": IP.user.email || "",
-        "Fecha": new Date().toLocaleString("es-AR"),
-        "Qué hacer": "Revisá en Mercado Pago que el pago esté acreditado y activalo desde el panel admin."
+    const renueva = actual && actual.plan === planId;
+    await ipAvisarAdmin({
+        asunto: `🔔 ACTIVACIÓN DE PLAN ${IP_PLANES[planId].nombre.toUpperCase()} — InmoPermutas`,
+        titulo: renueva ? "Renovación de plan" : "Nuevo pedido de plan",
+        subtitulo: `${IP.nombreUsuario()} ${renueva ? "quiere renovar" : "eligió"} el plan ${IP_PLANES[planId].nombre} y fue a pagar a Mercado Pago.`,
+        color: "#3ef07a",
+        plan: IP_PLANES[planId].nombre,
+        nombre: IP.nombreUsuario(),
+        email: IP.user.email || "",
+        extra_label: "Tipo",
+        extra_valor: renueva ? "Renovación" : "Plan nuevo",
+        que_hacer: "Revisá en Mercado Pago que la suscripción esté autorizada y activá el plan desde el panel admin.",
+        boton: "Activar desde el panel"
     });
     window.location.href = IP_LINKS_MP[planId];
     return { redirigiendo: true };
@@ -375,19 +368,37 @@ IP.cancelarPlan = async function () {
         pedido: firebase.firestore.FieldValue.delete(),
         pedidoAt: firebase.firestore.FieldValue.delete()
     }, { merge: true });
-    await ipAvisarAdmin(`Canceló su plan — ${IP.nombreUsuario()}`, {
-        "Aviso": plan ? `Canceló el plan ${plan.nombre}` : `Canceló el pedido del plan ${pedido ? pedido.nombre : ""}`,
-        "Nombre": IP.nombreUsuario(),
-        "Email": IP.user.email || "",
-        "Puede usarlo hasta": plan ? plan.vence.toLocaleDateString("es-AR") : "—",
-        "Fecha": new Date().toLocaleString("es-AR"),
-        "Qué hacer": "Fijate que la suscripción también quede cancelada en Mercado Pago para que no le sigan cobrando."
+    const nombrePlan = plan ? plan.nombre : (pedido ? pedido.nombre : "");
+    await ipAvisarAdmin({
+        asunto: `⚠️ CANCELACIÓN DE PLAN ${nombrePlan.toUpperCase()} — InmoPermutas`,
+        titulo: plan ? "Plan cancelado" : "Pedido cancelado",
+        subtitulo: `${IP.nombreUsuario()} canceló ${plan ? "su plan" : "su pedido del plan"} ${nombrePlan}.`,
+        color: "#ff5470",
+        plan: nombrePlan,
+        nombre: IP.nombreUsuario(),
+        email: IP.user.email || "",
+        extra_label: "Puede usarlo hasta",
+        extra_valor: plan ? plan.vence.toLocaleDateString("es-AR") : "—",
+        que_hacer: "Fijate que la suscripción también quede cancelada en Mercado Pago para que no le sigan cobrando.",
+        boton: "Ver en el panel"
     });
 };
 
 /* ---------------------------- Panel admin --------------------------------- */
 
 const IP_DIA = 24 * 60 * 60 * 1000;
+
+// Actualiza las destacadas de un usuario: con fecha, siguen hasta ese día; con null, se apagan.
+async function ipActualizarDestacadas(uid, vence) {
+    const snap = await IP.db.collection(IP_COLECCION)
+        .where("ownerUid", "==", uid).where("destacada", "==", true).get();
+    if (snap.empty) return;
+    const lote = IP.db.batch();
+    snap.forEach(d => lote.update(d.ref, vence
+        ? { destacadaVence: vence }
+        : { destacada: false, destacadaVence: firebase.firestore.FieldValue.delete() }));
+    await lote.commit();
+}
 
 IP.admin = {
     // Junta usuarios, suscripciones y cantidad de propiedades en una sola lista.
@@ -473,6 +484,8 @@ IP.admin = {
             activadoAt: firebase.firestore.FieldValue.serverTimestamp(),
             activadoPor: IP.user.email || IP.user.uid
         }, { merge: true });
+        const nuevoVence = firebase.firestore.Timestamp.fromDate(new Date(desde.getTime() + dias * IP_DIA));
+        await ipActualizarDestacadas(uid, planId === "premium" ? nuevoVence : null);
     },
 
     // Corta el plan ahora mismo (queda como "debe pagar").
@@ -482,6 +495,7 @@ IP.admin = {
             pedido: firebase.firestore.FieldValue.delete(),
             pedidoAt: firebase.firestore.FieldValue.delete()
         }, { merge: true });
+        await ipActualizarDestacadas(uid, null);
     },
 
     // Da de baja a un usuario: borra sus propiedades (con fotos y videos), su plan
@@ -503,7 +517,10 @@ IP.admin = {
         const archivos = [];
         props.forEach(d => (d.data().media || []).forEach(m => archivos.push(m.path)));
         const lote = IP.db.batch();
-        props.forEach(d => lote.delete(d.ref));
+        props.forEach(d => {
+            lote.delete(d.ref);
+            lote.delete(IP.db.collection("estadisticas").doc(d.id));
+        });
         lote.delete(IP.db.collection("suscripciones").doc(uid));
         lote.delete(IP.db.collection("usuarios").doc(uid));
         await lote.commit();
@@ -548,6 +565,58 @@ IP.borrarArchivos = async function (paths) {
     ));
 };
 
+/* ------------------- Estadísticas de publicaciones (Premium) -------------- */
+// Cada propiedad tiene un documento en estadisticas/{id} con contadores:
+//   visitas, whatsapp, favoritos        → totales
+//   v_2026_9, w_2026_9, f_2026_9        → del mes (año_mes, en hora UTC)
+// Cualquier visitante suma de a 1 (las reglas no dejan poner otro número) y
+// solo el dueño (o el admin) puede leerlos.
+const IP_STATS = { visitas: "v", whatsapp: "w", favoritos: "f" };
+
+function ipClaveMes(letra, fecha = new Date()) {
+    return `${letra}_${fecha.getUTCFullYear()}_${fecha.getUTCMonth() + 1}`;
+}
+
+// Suma 1 a un contador. Nunca frena la página: si falla, se ignora.
+// Visitas y WhatsApp cuentan como mucho 1 vez por día por navegador.
+IP.sumarEstadistica = async function (id, tipo, prop) {
+    try {
+        await IP.ready;
+        await IP.authListo;
+        if (IP.error || !IP_STATS[tipo] || !id) return;
+        if (prop && IP.user && prop.ownerUid === IP.user.uid) return;   // lo propio no cuenta
+        if (tipo !== "favoritos") {
+            const clave = `ip_stat_${tipo}_${id}`, hoy = new Date().toDateString();
+            try {
+                if (localStorage.getItem(clave) === hoy) return;
+                localStorage.setItem(clave, hoy);
+            } catch (e) { /* sin localStorage, contamos igual */ }
+        }
+        const inc = firebase.firestore.FieldValue.increment(1);
+        await IP.db.collection("estadisticas").doc(String(id)).set({
+            [tipo]: inc,
+            [ipClaveMes(IP_STATS[tipo])]: inc
+        }, { merge: true });
+    } catch (e) {
+        console.warn("[InmoPermutas] No se pudo sumar la estadística:", e.code || e.message);
+    }
+};
+
+// Lee las estadísticas de varias propiedades (solo funciona para el dueño).
+//   → { id: { visitas, whatsapp, favoritos, mes: { visitas, whatsapp, favoritos } } }
+IP.leerEstadisticas = async function (ids) {
+    const docs = await Promise.all(ids.map(id =>
+        IP.db.collection("estadisticas").doc(String(id)).get().catch(() => null)));
+    const res = {};
+    ids.forEach((id, i) => {
+        const d = docs[i] && docs[i].exists ? docs[i].data() : {};
+        const mes = {};
+        Object.entries(IP_STATS).forEach(([tipo, letra]) => mes[tipo] = d[ipClaveMes(letra)] || 0);
+        res[id] = { visitas: d.visitas || 0, whatsapp: d.whatsapp || 0, favoritos: d.favoritos || 0, mes };
+    });
+    return res;
+};
+
 IP.eliminarPropiedad = async function (id) {
     if (!IP.user) throw new Error("Tenés que iniciar sesión.");
     const ref = IP.db.collection(IP_COLECCION).doc(String(id));
@@ -555,8 +624,33 @@ IP.eliminarPropiedad = async function (id) {
     if (!doc.exists) return;
     const d = doc.data();
     if (d.ownerUid !== IP.user.uid) throw new Error("Solo podés eliminar tus propias publicaciones.");
+    // Primero las estadísticas (las reglas miran la propiedad para saber quién es el dueño).
+    await IP.db.collection("estadisticas").doc(String(id)).delete().catch(() => {});
     await ref.delete();
     await IP.borrarArchivos((d.media || []).map(m => m.path));
+};
+
+// Plan Premium: marcar/desmarcar una propiedad propia como destacada (máx. 3).
+// La destacada se ve para todos, con o sin plan, hasta que vence el Premium.
+const IP_MAX_DESTACADAS = 3;
+IP.MAX_DESTACADAS = IP_MAX_DESTACADAS;
+
+IP.destacarPropiedad = async function (id, destacar) {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
+    const ref = IP.db.collection(IP_COLECCION).doc(String(id));
+    if (!destacar) {
+        await ref.update({ destacada: false, destacadaVence: firebase.firestore.FieldValue.delete() });
+        return;
+    }
+    const plan = IP.planActivo();
+    if (!plan || plan.plan !== "premium") throw new Error("Destacar propiedades es exclusivo del plan Premium.");
+    const mias = await IP.db.collection(IP_COLECCION)
+        .where("ownerUid", "==", IP.user.uid).where("destacada", "==", true).get();
+    const vigentes = mias.docs.filter(d => d.id !== String(id) && d.data().destacadaVence && d.data().destacadaVence.toDate() > new Date());
+    if (vigentes.length >= IP_MAX_DESTACADAS) {
+        throw new Error(`Ya tenés ${IP_MAX_DESTACADAS} propiedades destacadas. Quitá una para destacar otra.`);
+    }
+    await ref.update({ destacada: true, destacadaVence: plan.venceTs });
 };
 
 // Cuántas propiedades tiene publicadas el usuario (para el tope de su plan).
@@ -664,6 +758,7 @@ IP.mensajeError = function (e) {
 /* ------------------- Chip de sesión en el header -------------------------- */
 
 function ipPintarSesion() {
+    ipPintarMenuCelular();
     document.querySelectorAll(".nav-actions").forEach(cont => {
         let chip = cont.querySelector(".ip-user-chip");
         let mis = cont.querySelector(".ip-mis-link");
@@ -702,6 +797,31 @@ function ipPintarSesion() {
             <button type="button" class="ip-logout" title="Cerrar sesión" onclick="IP.logout()">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>`;
+    });
+}
+
+// En el celular, la cuenta (Mis propiedades, Admin, Salir) va adentro del menú
+// de las 3 rayitas, así la barra de arriba no queda toda apretada.
+function ipPintarMenuCelular() {
+    document.querySelectorAll(".nav-menu").forEach(menu => {
+        let bloque = menu.querySelector(".ip-nav-cuenta");
+        if (!IP.user) {
+            if (bloque) bloque.remove();
+            return;
+        }
+        if (!bloque) {
+            bloque = document.createElement("div");
+            bloque.className = "ip-nav-cuenta";
+            menu.appendChild(bloque);
+        }
+        const foto = IP.user.photoURL
+            ? `<img src="${IP.user.photoURL}" alt="">`
+            : `<span class="ip-user-ini">${IP.nombreUsuario().charAt(0).toUpperCase()}</span>`;
+        bloque.innerHTML = `
+            <div class="ip-nav-user">${foto}<span>${IP.nombreUsuario()}</span></div>
+            <a href="mis-propiedades.html"><i class="fa-solid fa-house-user"></i> Mis propiedades</a>
+            ${IP.esAdmin() ? '<a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>' : ''}
+            <a href="#" onclick="IP.logout(); return false;"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>`;
     });
 }
 
@@ -776,6 +896,17 @@ const IP_CSS = `
     font-size: 0.8rem; text-decoration: underline; cursor: pointer; margin-top: 1rem;
 }
 .ip-auth-link:hover { color: #3ef07a; }
+
+/* Cuenta dentro del menú del celular */
+.ip-nav-cuenta { display: none; }
+@media (max-width: 900px) {
+    .nav-actions .ip-user-chip, .nav-actions .ip-mis-link, .nav-actions .ip-admin-link { display: none; }
+    .ip-nav-cuenta { display: block; width: 100%; border-top: 1px solid var(--ink-line, rgba(255,255,255,0.12)); margin-top: 0.4rem; padding-top: 0.4rem; }
+    .ip-nav-cuenta a { display: flex; align-items: center; gap: 0.6rem; }
+    .ip-nav-cuenta a i { width: 18px; text-align: center; color: #3ef07a; }
+    .ip-nav-user { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 2rem 0.5rem; color: #fff; font-weight: 700; font-size: 0.92rem; }
+    .ip-nav-user img, .ip-nav-user .ip-user-ini { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3ef07a, #2f7ffa); color: #0a0f1e; font-weight: 800; }
+}
 
 /* Publicar bloqueado hasta contratar un plan */
 .ip-lock-wrap { position: relative; }
