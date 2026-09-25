@@ -92,6 +92,18 @@
             <div class="ip-auth-error" id="auth-error"></div>
 
             <form id="auth-form">
+                <div class="form-field" id="campo-foto">
+                    <label>Foto de perfil <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                    <div class="ip-avatar-drop" id="avatar-drop" tabindex="0" role="button" aria-label="Elegir foto de perfil">
+                        <div class="ip-avatar-prev" id="avatar-prev"><i class="fa-solid fa-user"></i></div>
+                        <div class="ip-avatar-txt">
+                            <strong id="avatar-titulo">Arrastrá tu foto acá</strong>
+                            <span id="avatar-sub">o tocá para elegirla desde tu compu o celular</span>
+                        </div>
+                        <button type="button" class="ip-avatar-quitar" id="avatar-quitar" title="Quitar foto" aria-label="Quitar foto" hidden><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="file" id="a-foto" accept="image/*" hidden>
+                </div>
                 <div class="form-field" id="campo-nombre">
                     <label for="a-nombre">Tu nombre</label>
                     <input type="text" id="a-nombre" placeholder="Nombre y apellido" autocomplete="name">
@@ -335,6 +347,7 @@
             document.getElementById('tab-registro').classList.toggle('active', esRegistro);
             document.getElementById('tab-ingreso').classList.toggle('active', !esRegistro);
             document.getElementById('campo-nombre').style.display = esRegistro ? '' : 'none';
+            document.getElementById('campo-foto').style.display = esRegistro ? '' : 'none';
             document.getElementById('a-nombre').required = esRegistro;
             document.getElementById('auth-submit').innerText = esRegistro ? 'Crear cuenta' : 'Ingresar';
             document.getElementById('auth-titulo').innerText = esRegistro ? 'Creá tu cuenta' : 'Ingresá a tu cuenta';
@@ -373,7 +386,8 @@
             try {
                 if (modoAuth === 'registro') {
                     if (!nombre) throw { message: 'Escribí tu nombre.' };
-                    await IP.registrarMail(nombre, email, pass);
+                    btn.innerText = fotoPerfil ? 'Creando cuenta y subiendo foto…' : 'Creando cuenta…';
+                    await IP.registrarMail(nombre, email, pass, fotoPerfil);
                 } else {
                     await IP.loginMail(email, pass);
                 }
@@ -381,8 +395,56 @@
                 mostrarError(IP.mensajeError(e));
             } finally {
                 btn.disabled = false;
+                btn.innerText = modoAuth === 'registro' ? 'Crear cuenta' : 'Ingresar';
             }
         });
+
+        // ---------------- Foto de perfil (registro) ----------------
+        // Se puede arrastrar una imagen al recuadro o tocarlo para elegirla.
+        let fotoPerfil = null;
+        const MAX_PERFIL_MB = 10;
+
+        function elegirFotoPerfil(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) return mostrarError('La foto de perfil tiene que ser una imagen (JPG, PNG, etc.).');
+            if (file.size > MAX_PERFIL_MB * 1048576) return mostrarError(`La foto supera ${MAX_PERFIL_MB} MB. Probá con una más liviana.`);
+            limpiarError();
+            fotoPerfil = file;
+            const prev = document.getElementById('avatar-prev');
+            const vieja = prev.querySelector('img');
+            if (vieja) URL.revokeObjectURL(vieja.src);
+            prev.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Tu foto de perfil">`;
+            document.getElementById('avatar-titulo').innerText = '¡Lista tu foto!';
+            document.getElementById('avatar-sub').innerText = 'Tocá o arrastrá otra para cambiarla';
+            document.getElementById('avatar-quitar').hidden = false;
+        }
+
+        function quitarFotoPerfil() {
+            fotoPerfil = null;
+            const prev = document.getElementById('avatar-prev');
+            const img = prev.querySelector('img');
+            if (img) URL.revokeObjectURL(img.src);
+            prev.innerHTML = '<i class="fa-solid fa-user"></i>';
+            document.getElementById('avatar-titulo').innerText = 'Arrastrá tu foto acá';
+            document.getElementById('avatar-sub').innerText = 'o tocá para elegirla desde tu compu o celular';
+            document.getElementById('avatar-quitar').hidden = true;
+        }
+
+        (function conectarFotoPerfil() {
+            const zona = document.getElementById('avatar-drop');
+            const input = document.getElementById('a-foto');
+            zona.addEventListener('click', e => { if (!e.target.closest('#avatar-quitar')) input.click(); });
+            zona.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+            input.addEventListener('change', () => { elegirFotoPerfil(input.files[0]); input.value = ''; });
+            document.getElementById('avatar-quitar').addEventListener('click', e => { e.stopPropagation(); quitarFotoPerfil(); });
+            ['dragenter', 'dragover'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add('arrastrando'); }));
+            ['dragleave', 'drop'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove('arrastrando'); }));
+            zona.addEventListener('drop', e => elegirFotoPerfil(e.dataTransfer.files[0]));
+            // Si suelta la imagen fuera del recuadro, que el navegador no la abra (se perdería lo cargado).
+            ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => {
+                if (!e.target.closest || !e.target.closest('.ip-avatar-drop, .ip-upload-drop')) e.preventDefault();
+            }));
+        })();
 
         // Cada vez que cambia el estado de la sesión decidimos qué se muestra:
         // el formulario solo si hay alguien logueado (y, para publicar, con plan).
@@ -404,9 +466,13 @@
             document.getElementById('publicar-sub').innerText = EDITAR_ID
                 ? 'Cambiá lo que necesites y guardá. Los cambios se ven al instante en el catálogo.'
                 : `Hola ${IP.nombreUsuario()}, contanos qué ofrecés y qué te gustaría recibir a cambio.`;
-            // Precargamos el nombre del vendedor con el de la cuenta.
+            // Precargamos el nombre y el WhatsApp del vendedor con los de su perfil.
             const campoNombre = document.getElementById('p-seller-name');
             if (!campoNombre.value) campoNombre.value = IP.nombreUsuario();
+            IP.perfilListo.then(() => {
+                const campoWsp = document.getElementById('p-seller-phone');
+                if (!campoWsp.value && IP.perfil && IP.perfil.whatsapp) campoWsp.value = IP.perfil.whatsapp;
+            });
 
             if (EDITAR_ID) cargarEdicion();
             actualizarBloqueo();
@@ -755,7 +821,9 @@
                     media: media,
                     seller: {
                         name: document.getElementById('p-seller-name').value.trim(),
-                        avatar: avatarPrevio || (IP.user && IP.user.photoURL) || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+                        // Sin foto de perfil se muestra la inicial del nombre (no una foto de stock).
+                        avatar: (IP.user && IP.user.photoURL) || avatarPrevio || "",
+                        tipo: (IP.perfil && IP.perfil.tipo) || "particular",
                         phone: document.getElementById('p-seller-phone').value.trim().replace(/\D/g, '')
                     },
                     wants: wants

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi perfil — InmoPermutas</title>
+    <meta name="description" content="Editá tu perfil de InmoPermutas: foto, nombre de la inmobiliaria y WhatsApp.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-page="perfil">
+
+    <header>
+        <div class="nav-container">
+            <a href="index.html#inicio" class="logo-brand">
+                <div class="logo-graphic">
+                    <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+                        <defs>
+                            <linearGradient id="brandGreen" x1="10" y1="15" x2="42" y2="65" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#a8f14d"/>
+                                <stop offset="1" stop-color="#1fa851"/>
+                            </linearGradient>
+                            <linearGradient id="brandBlue" x1="24" y1="60" x2="106" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#5bd0ff"/>
+                                <stop offset="1" stop-color="#1f5fd6"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 60 6 L 103 40 L 103 66" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 60 6 L 24 34 L 24 60" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 10 46 L 24 62 L 40 46" stroke="url(#brandGreen)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 98 64 C 112 84 72 94 34 78" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 36 64 L 19 78 L 36 92" stroke="url(#brandBlue)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text-group">
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
+                </div>
+            </a>
+            <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html">Inicio</a>
+                <a href="catalogo.html">Propiedades</a>
+                <a href="planes.html">Planes</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="favoritos.html" class="icon-btn" id="fav-icon-btn" aria-label="Favoritos" title="Favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="fav-count" id="fav-count">0</span>
+                </a>
+                <a href="publicar.html" class="btn btn-accent"><i class="fa-solid fa-circle-plus"></i> Publicar</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-band">
+        <div class="container" style="padding-bottom: 2.5rem;">
+            <div class="section-header">
+                <div class="section-title">
+                    <h1 style="font-size: 1.75rem; font-weight: 600;">Mi perfil</h1>
+                    <p>Así te ven los demás en tus publicaciones.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container" style="max-width: 720px; padding-top: 0;">
+        <div id="pf-estado" class="pf-card"><p class="pf-cargando"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando tu perfil…</p></div>
+
+        <form id="pf-form" class="pf-card" hidden>
+            <div id="pf-aviso"></div>
+
+            <!-- Foto -->
+            <div class="pf-foto-fila">
+                <div class="pf-avatar-drop" id="pf-drop" tabindex="0" role="button" aria-label="Cambiar foto de perfil">
+                    <div class="pf-avatar" id="pf-avatar"></div>
+                    <span class="pf-avatar-cam"><i class="fa-solid fa-camera"></i></span>
+                </div>
+                <div class="pf-foto-txt">
+                    <strong>Foto de perfil</strong>
+                    <span>Arrastrá una imagen sobre la foto o tocala para elegirla desde tu compu o celular. Si sos inmobiliaria, usá tu logo.</span>
+                    <button type="button" class="pf-link" id="pf-quitar-foto">Quitar foto</button>
+                </div>
+                <input type="file" id="pf-foto" accept="image/*" hidden>
+            </div>
+
+            <!-- Tipo -->
+            <div class="form-field">
+                <label>¿Cómo publicás?</label>
+                <div class="pf-tipos">
+                    <label class="pf-tipo"><input type="radio" name="tipo" value="inmobiliaria"><span><i class="fa-solid fa-building"></i> Inmobiliaria</span></label>
+                    <label class="pf-tipo"><input type="radio" name="tipo" value="particular"><span><i class="fa-solid fa-user"></i> Particular</span></label>
+                </div>
+            </div>
+
+            <!-- Nombre -->
+            <div class="form-field">
+                <label for="pf-nombre" id="pf-nombre-label">Nombre de la inmobiliaria</label>
+                <input type="text" id="pf-nombre" maxlength="60" required>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="form-field">
+                <label for="pf-wsp">WhatsApp de contacto <span style="font-weight:400; color:var(--stone-light);">(opcional)</span></label>
+                <input type="text" id="pf-wsp" inputmode="numeric" placeholder="Ej: 5493511234567">
+                <p class="form-hint">Código de país + área, sin espacios ni el "+". Si lo completás, se usa en todas tus publicaciones.</p>
+            </div>
+
+            <!-- Email (solo lectura) -->
+            <div class="form-field">
+                <label>Email de la cuenta</label>
+                <input type="email" id="pf-email" disabled>
+            </div>
+
+            <div class="pf-nota"><i class="fa-solid fa-clock-rotate-left"></i><span>Al guardar se actualizan todas tus publicaciones. Después vas a poder volver a cambiar tu perfil en <strong>15 días</strong>.</span></div>
+
+            <button type="submit" class="btn btn-accent btn-block" id="pf-guardar"><i class="fa-solid fa-floppy-disk"></i> Guardar perfil</button>
+        </form>
+    </main>
+
+    <style>
+        .pf-card { background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 3rem; }
+        .pf-card .form-field { margin-bottom: 1.25rem; }
+        .pf-card .form-field label { display: block; margin-bottom: 0.45rem; }
+        .pf-cargando { color: var(--stone); text-align: center; margin: 1rem 0; }
+        .pf-foto-fila { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.75rem; }
+        .pf-avatar-drop { position: relative; flex-shrink: 0; width: 112px; height: 112px; border-radius: 50%; cursor: pointer; outline: none; }
+        .pf-avatar { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.6rem; font-weight: 800; color: #0a0f1e; background: linear-gradient(135deg, #3ef07a, #2f7ffa); border: 3px solid rgba(62,240,122,0.5); transition: border-color .15s, transform .15s; }
+        .pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .pf-avatar-drop:hover .pf-avatar, .pf-avatar-drop:focus-visible .pf-avatar { border-color: var(--green); }
+        .pf-avatar-drop.arrastrando .pf-avatar { border-color: var(--green); border-style: dashed; transform: scale(1.04); }
+        .pf-avatar-cam { position: absolute; right: 2px; bottom: 2px; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green); color: #0a0f1e; border: 3px solid var(--ink-card); font-size: 0.85rem; }
+        .pf-foto-txt { display: flex; flex-direction: column; gap: 0.3rem; color: var(--stone); font-size: 0.88rem; line-height: 1.45; }
+        .pf-foto-txt strong { color: #fff; font-size: 1rem; }
+        .pf-link { align-self: flex-start; background: none; border: none; padding: 0; margin-top: 0.2rem; color: #ff8fa3; font: inherit; font-size: 0.82rem; text-decoration: underline; cursor: pointer; }
+        .pf-tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .pf-tipo input { position: absolute; opacity: 0; pointer-events: none; }
+        .pf-tipo span { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem; border: 1px solid var(--ink-line); border-radius: var(--radius-sm); color: var(--stone); font-weight: 700; cursor: pointer; transition: all .15s; }
+        .pf-tipo input:checked + span { background: rgba(62,240,122,0.12); border-color: var(--green); color: var(--green); }
+        .pf-tipo input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
+        .pf-nota { display: flex; gap: 0.6rem; align-items: flex-start; background: rgba(255,181,71,0.08); border: 1px solid rgba(255,181,71,0.35); border-radius: var(--radius-sm); padding: 0.8rem 1rem; color: var(--stone); font-size: 0.86rem; line-height: 1.5; margin: 0.5rem 0 1.25rem; }
+        .pf-nota i { color: #ffb547; margin-top: 0.2rem; }
+        .pf-nota strong { color: #fff; }
+        .pf-bloqueado { display: flex; gap: 0.75rem; align-items: flex-start; background: rgba(47,127,250,0.1); border: 1px solid rgba(47,127,250,0.4); border-radius: var(--radius-sm); padding: 0.9rem 1rem; color: #cfe0ff; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; }
+        .pf-bloqueado i { color: #7fb0ff; margin-top: 0.2rem; }
+        .pf-ok { background: rgba(62,240,122,0.1); border-color: rgba(62,240,122,0.45); color: #c9f9da; }
+        .pf-ok i { color: var(--green); }
+        #pf-form[inert] .pf-foto-fila, #pf-form[inert] .form-field, #pf-form[inert] .pf-nota, #pf-form[inert] #pf-guardar { opacity: 0.5; }
+        @media (max-width: 560px) {
+            .pf-card { padding: 1.4rem; }
+            .pf-foto-fila { flex-direction: column; text-align: center; }
+            .pf-link { align-self: center; }
+        }
+    </style>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+        const $ = id => document.getElementById(id);
+        let fotoNueva = null;      // File elegido
+        let quitarFoto = false;
+
+        function pintarAvatar(url) {
+            const nombre = $('pf-nombre').value || IP.nombreUsuario() || '?';
+            $('pf-avatar').innerHTML = url ? `<img src="${url}" alt="Foto de perfil">` : nombre.charAt(0).toUpperCase();
+            $('pf-quitar-foto').hidden = !url;
+        }
+
+        function actualizarEtiquetaNombre() {
+            const inmo = document.querySelector('input[name="tipo"]:checked').value === 'inmobiliaria';
+            $('pf-nombre-label').innerText = inmo ? 'Nombre de la inmobiliaria' : 'Tu nombre';
+            $('pf-nombre').placeholder = inmo ? 'Ej: Inmobiliaria Sur' : 'Nombre y apellido';
+        }
+
+        function elegirFoto(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) return alert('La foto tiene que ser una imagen (JPG, PNG, etc.).');
+            if (file.size > 10 * 1048576) return alert('La foto supera 10 MB. Probá con una más liviana.');
+            fotoNueva = file;
+            quitarFoto = false;
+            pintarAvatar(URL.createObjectURL(file));
+        }
+
+        function pintarBloqueo() {
+            const proxima = IP.proximaEdicionPerfil();
+            const form = $('pf-form');
+            form.inert = !!proxima;
+            $('pf-aviso').innerHTML = proxima
+                ? `<div class="pf-bloqueado"><i class="fa-solid fa-lock"></i><span>Ya editaste tu perfil hace poco. Vas a poder volver a cambiarlo el <strong>${proxima.toLocaleDateString('es-AR')}</strong>.</span></div>`
+                : '';
+        }
+
+        function cargarFormulario() {
+            const p = IP.perfil || {};
+            document.querySelector(`input[name="tipo"][value="${p.tipo === 'inmobiliaria' ? 'inmobiliaria' : 'particular'}"]`).checked = true;
+            $('pf-nombre').value = p.nombre || IP.nombreUsuario();
+            $('pf-wsp').value = p.whatsapp || '';
+            $('pf-email').value = IP.user.email || '';
+            fotoNueva = null;
+            quitarFoto = false;
+            actualizarEtiquetaNombre();
+            pintarAvatar(p.foto);
+            pintarBloqueo();
+            $('pf-estado').hidden = true;
+            $('pf-form').hidden = false;
+        }
+
+        // Foto: tocar o arrastrar
+        (function conectarFoto() {
+            const zona = $('pf-drop'), input = $('pf-foto');
+            zona.addEventListener('click', () => input.click());
+            zona.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+            input.addEventListener('change', () => { elegirFoto(input.files[0]); input.value = ''; });
+            ['dragenter', 'dragover'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add('arrastrando'); }));
+            ['dragleave', 'drop'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove('arrastrando'); }));
+            zona.addEventListener('drop', e => elegirFoto(e.dataTransfer.files[0]));
+            ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (!e.target.closest || !e.target.closest('#pf-drop')) e.preventDefault(); }));
+            $('pf-quitar-foto').addEventListener('click', () => { fotoNueva = null; quitarFoto = true; pintarAvatar(''); });
+        })();
+
+        document.querySelectorAll('input[name="tipo"]').forEach(r => r.addEventListener('change', actualizarEtiquetaNombre));
+        $('pf-nombre').addEventListener('input', () => { if (!$('pf-avatar').querySelector('img')) pintarAvatar(''); });
+
+        $('pf-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = $('pf-guardar');
+            if (!confirm(`¿Guardar los cambios?\n\nSe actualizan todas tus publicaciones y no vas a poder volver a cambiar tu perfil por ${IP.DIAS_PERFIL} días.`)) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando…';
+            try {
+                const cant = await IP.guardarPerfil({
+                    tipo: document.querySelector('input[name="tipo"]:checked').value,
+                    nombre: $('pf-nombre').value,
+                    whatsapp: $('pf-wsp').value,
+                    foto: fotoNueva,
+                    quitarFoto
+                });
+                cargarFormulario();
+                $('pf-aviso').innerHTML = `<div class="pf-bloqueado pf-ok"><i class="fa-solid fa-circle-check"></i><span>¡Perfil guardado!${cant ? ` Se actualizaron tus ${cant} publicacion${cant === 1 ? '' : 'es'}.` : ''} Vas a poder volver a cambiarlo el <strong>${IP.proximaEdicionPerfil().toLocaleDateString('es-AR')}</strong>.</span></div>`;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                console.error('[InmoPermutas] Error al guardar el perfil:', err);
+                alert('No se pudo guardar: ' + (err.code === 'permission-denied'
+                    ? `todavía no pasaron ${IP.DIAS_PERFIL} días desde tu último cambio.`
+                    : IP.mensajeError(err)));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar perfil';
+            }
+        });
+
+        (async () => {
+            await IP.ready;
+            await IP.authListo;
+            if (IP.error) { $('pf-estado').innerHTML = '<p class="pf-cargando">No pudimos conectar con la base de datos. Probá recargar en unos minutos.</p>'; return; }
+            if (!IP.user) {
+                $('pf-estado').innerHTML = '<p class="pf-cargando"><i class="fa-solid fa-user-lock"></i> Ingresá a tu cuenta para editar tu perfil.</p><a href="publicar.html" class="btn btn-accent btn-block">Ingresar</a>';
+                return;
+            }
+            await IP.perfilListo;
+            cargarFormulario();
+        })();
+    </script>
+    <script src="js/asistente.js"></script>
+</body>
+</html>

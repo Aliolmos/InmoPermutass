@@ -127,6 +127,7 @@ IP.ready = (async function ipInit() {
             }
             IP.user = user;
             ipRegistrarUsuario(user);
+            IP.perfilListo = ipCargarPerfil(user);
             ipEscucharPlan(user);
             ipPintarSesion();
             document.dispatchEvent(new CustomEvent("ip-auth", { detail: user }));
@@ -223,6 +224,81 @@ async function ipEstaBloqueado(user) {
     }
 }
 
+/* ------------------------------- Mi perfil -------------------------------- */
+// El perfil vive en usuarios/{uid}: tipo (inmobiliaria | particular), nombre,
+// foto y WhatsApp. Se puede cambiar cada IP_DIAS_PERFIL días (lo controlan
+// también las reglas de Firestore con el campo perfilEditadoAt).
+const IP_DIAS_PERFIL = 15;
+IP.DIAS_PERFIL = IP_DIAS_PERFIL;
+IP.perfil = null;
+IP.perfilListo = Promise.resolve();
+
+async function ipCargarPerfil(user) {
+    IP.perfil = null;
+    if (!user) return;
+    try {
+        const doc = await IP.db.collection("usuarios").doc(user.uid).get();
+        const d = doc.exists ? doc.data() : {};
+        IP.perfil = {
+            tipo: d.tipo || "particular",
+            nombre: d.nombre || IP.nombreUsuario(),
+            foto: d.foto || user.photoURL || "",
+            whatsapp: d.whatsapp || "",
+            editadoAt: d.perfilEditadoAt ? d.perfilEditadoAt.toDate() : null
+        };
+    } catch (e) {
+        console.warn("[InmoPermutas] No se pudo leer el perfil:", e.code);
+    }
+    document.dispatchEvent(new CustomEvent("ip-perfil"));
+}
+
+// Fecha desde la que se puede volver a editar (null = ya se puede).
+IP.proximaEdicionPerfil = function () {
+    const ultima = IP.perfil && IP.perfil.editadoAt;
+    if (!ultima) return null;
+    const proxima = new Date(ultima.getTime() + IP_DIAS_PERFIL * 24 * 60 * 60 * 1000);
+    return proxima > new Date() ? proxima : null;
+};
+
+// Guarda el perfil y lo copia a todas las publicaciones del usuario.
+//   datos = { tipo, nombre, whatsapp, foto: File | null, quitarFoto: bool }
+IP.guardarPerfil = async function (datos) {
+    if (!IP.user) throw new Error("Tenés que iniciar sesión.");
+    const proxima = IP.proximaEdicionPerfil();
+    if (proxima) throw new Error(`Podés volver a editar tu perfil el ${proxima.toLocaleDateString("es-AR")}.`);
+
+    const nombre = String(datos.nombre || "").trim();
+    if (!nombre) throw new Error("Escribí el nombre que querés mostrar.");
+    const whatsapp = String(datos.whatsapp || "").replace(/\D/g, "");
+    const tipo = datos.tipo === "inmobiliaria" ? "inmobiliaria" : "particular";
+
+    let foto = datos.quitarFoto ? "" : (IP.perfil && IP.perfil.foto) || IP.user.photoURL || "";
+    if (datos.foto) foto = await ipSubirFotoPerfil(IP.user, datos.foto);
+
+    await IP.user.updateProfile({ displayName: nombre, photoURL: foto || null });
+    await IP.db.collection("usuarios").doc(IP.user.uid).set({
+        nombre, foto, tipo, whatsapp,
+        perfilEditadoAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // Todas sus publicaciones muestran el nombre, la foto y el tipo nuevos.
+    const props = await IP.db.collection(IP_COLECCION).where("ownerUid", "==", IP.user.uid).get();
+    if (!props.empty) {
+        const lote = IP.db.batch();
+        props.forEach(d => lote.update(d.ref, {
+            "seller.name": nombre,
+            "seller.avatar": foto,
+            "seller.tipo": tipo,
+            ...(whatsapp ? { "seller.phone": whatsapp } : {})
+        }));
+        await lote.commit();
+    }
+
+    await ipCargarPerfil(IP.user);
+    ipPintarSesion();
+    return props.size;
+};
+
 // Deja registrado a cada usuario en "usuarios/{uid}" para que aparezca en el panel admin.
 function ipRegistrarUsuario(user) {
     if (!user) return;
@@ -230,7 +306,7 @@ function ipRegistrarUsuario(user) {
     IP.db.collection("usuarios").doc(user.uid).set({
         email: user.email || "",
         nombre: user.displayName || (user.email || "").split("@")[0],
-        foto: user.photoURL || "",
+        ...(user.photoURL ? { foto: user.photoURL } : {}),
         alta: firebase.firestore.Timestamp.fromDate(alta),
         ultimoIngreso: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).catch(e => console.warn("[InmoPermutas] No se pudo registrar el usuario:", e.code));
@@ -715,11 +791,46 @@ IP.loginGoogle = async function () {
     }
 };
 
-IP.registrarMail = async function (nombre, email, password) {
+// Crea la cuenta con email. "foto" (opcional) es un File de imagen: se recorta
+// cuadrada, se achica y se sube como foto de perfil.
+IP.registrarMail = async function (nombre, email, password, foto) {
     const cred = await IP.auth.createUserWithEmailAndPassword(email, password);
-    if (nombre) await cred.user.updateProfile({ displayName: nombre });
+    const cambios = {};
+    if (nombre) cambios.displayName = nombre;
+    if (foto) {
+        try {
+            cambios.photoURL = await ipSubirFotoPerfil(cred.user, foto);
+        } catch (e) {
+            // Si la foto falla, la cuenta se crea igual (sin foto).
+            console.warn("[InmoPermutas] No se pudo subir la foto de perfil:", e.code || e.message);
+        }
+    }
+    if (Object.keys(cambios).length) await cred.user.updateProfile(cambios);
+    if (cambios.photoURL) {
+        await IP.db.collection("usuarios").doc(cred.user.uid)
+            .set({ foto: cambios.photoURL }, { merge: true }).catch(() => {});
+    }
+    ipPintarSesion();
     return cred.user;
 };
+
+// Recorta la imagen al centro en un cuadrado de 400 px (JPEG) y la sube a
+// Storage dentro de la carpeta del usuario. Devuelve la URL pública.
+async function ipSubirFotoPerfil(user, file) {
+    let bmp;
+    try { bmp = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+    catch (_) { bmp = await createImageBitmap(file); }
+    const lado = Math.min(bmp.width, bmp.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = Math.min(400, lado);
+    canvas.getContext("2d").drawImage(bmp,
+        (bmp.width - lado) / 2, (bmp.height - lado) / 2, lado, lado,
+        0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.85));
+    const ref = IP.storage.ref().child(`propiedades/${user.uid}/perfil_${Date.now()}.jpg`);
+    await ref.put(blob, { contentType: "image/jpeg", cacheControl: "public,max-age=31536000" });
+    return ref.getDownloadURL();
+}
 
 IP.loginMail = function (email, password) {
     return IP.auth.signInWithEmailAndPassword(email, password);
@@ -793,7 +904,7 @@ function ipPintarSesion() {
             : `<span class="ip-user-ini">${IP.nombreUsuario().charAt(0).toUpperCase()}</span>`;
         chip.innerHTML = `
             ${foto}
-            <span class="ip-user-name">${IP.nombreUsuario()}</span>
+            <a href="perfil.html" class="ip-user-name" title="Mi perfil">${IP.nombreUsuario()}</a>
             <button type="button" class="ip-logout" title="Cerrar sesión" onclick="IP.logout()">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>`;
@@ -819,6 +930,7 @@ function ipPintarMenuCelular() {
             : `<span class="ip-user-ini">${IP.nombreUsuario().charAt(0).toUpperCase()}</span>`;
         bloque.innerHTML = `
             <div class="ip-nav-user">${foto}<span>${IP.nombreUsuario()}</span></div>
+            <a href="perfil.html"><i class="fa-solid fa-id-card"></i> Mi perfil</a>
             <a href="mis-propiedades.html"><i class="fa-solid fa-house-user"></i> Mis propiedades</a>
             ${IP.esAdmin() ? '<a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>' : ''}
             <a href="#" onclick="IP.logout(); return false;"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>`;
@@ -840,7 +952,8 @@ const IP_CSS = `
     display: inline-flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, #3ef07a, #2f7ffa); color: #0a0f1e; font-weight: 800;
 }
-.ip-user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ip-user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; text-decoration: none; }
+a.ip-user-name:hover { color: #3ef07a; }
 .ip-logout {
     background: transparent; border: none; color: var(--stone, #aab3c8);
     cursor: pointer; padding: 0.2rem 0.3rem; font-size: 0.9rem;
@@ -884,6 +997,29 @@ const IP_CSS = `
 .ip-tab.active { background: rgba(62,240,122,0.12); border-color: #3ef07a; color: #3ef07a; }
 
 .ip-auth-card .form-field { text-align: left; margin-bottom: 0.9rem; }
+
+/* Foto de perfil al registrarse (arrastrar o elegir) */
+.ip-avatar-drop {
+    position: relative; display: flex; align-items: center; gap: 1rem;
+    padding: 0.9rem 1rem; border: 2px dashed var(--ink-line, rgba(255,255,255,0.18));
+    border-radius: var(--radius-md, 14px); background: rgba(255,255,255,0.02);
+    cursor: pointer; transition: border-color .15s, background .15s;
+}
+.ip-avatar-drop:hover, .ip-avatar-drop:focus-visible { border-color: #3ef07a; outline: none; }
+.ip-avatar-drop.arrastrando { border-color: #3ef07a; background: rgba(62,240,122,0.08); }
+.ip-avatar-prev {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    color: #3ef07a; background: rgba(62,240,122,0.1); border: 2px solid rgba(62,240,122,0.45);
+}
+.ip-avatar-prev img { width: 100%; height: 100%; object-fit: cover; }
+.ip-avatar-txt { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85rem; color: var(--stone, #aab3c8); line-height: 1.35; }
+.ip-avatar-txt strong { color: #fff; font-size: 0.92rem; }
+.ip-avatar-quitar {
+    position: absolute; top: 0.5rem; right: 0.5rem; width: 26px; height: 26px; border-radius: 50%;
+    border: none; background: rgba(255,84,112,0.15); color: #ff8fa3; cursor: pointer; font-size: 0.8rem;
+}
+.ip-avatar-quitar:hover { background: rgba(255,84,112,0.3); }
 
 .ip-auth-error {
     display: none; background: rgba(255,84,112,0.12); border: 1px solid #ff5470;
@@ -1035,4 +1171,4 @@ const IP_GOOGLE_SVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/sv
 <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.2 5.6c4.2-3.9 6.6-9.6 6.6-17z"/>
 <path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C1 16.3 0 20 0 24s1 7.7 2.6 10.8l7.9-6.1z"/>
 <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.6-3.7-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
-</svg>`;
+</svg>`;

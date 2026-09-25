@@ -214,8 +214,11 @@
                         <div class="seller-head">
                             <div class="seller-avatar-ring">${avatarVendedor}</div>
                             <h3>${property.seller.name}</h3>
-                            <span class="seller-chip"><i class="fa-solid fa-user-check"></i> Propietario particular</span>
-                            <p class="seller-role">Publica directamente, sin inmobiliaria</p>
+                            ${v.tipo === 'inmobiliaria'
+                                ? `<span class="seller-chip"><i class="fa-solid fa-building"></i> Inmobiliaria</span>
+                                   <p class="seller-role">Publicado por una inmobiliaria</p>`
+                                : `<span class="seller-chip"><i class="fa-solid fa-user-check"></i> Propietario particular</span>
+                                   <p class="seller-role">Publica directamente, sin inmobiliaria</p>`}
                         </div>
                         ${contactoHTML}
                     </div>
