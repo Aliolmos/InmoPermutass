@@ -33,7 +33,7 @@
                     </svg>
                 </div>
                 <div class="logo-text-group">
-                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot">.com</span></div>
+                    <div class="logo-title">Inmo<span class="accent-green">Permutas</span><span class="logo-dot"></span></div>
                     <div class="logo-tagline">TU PROPIEDAD, <span class="accent-green">OTRA OPORTUNIDAD</span></div>
                 </div>
             </a>
@@ -57,6 +57,38 @@
         <!-- Se inyecta dinámicamente con JS según el ID de la URL -->
     </main>
 
+    <!-- Visor de fotos a pantalla completa -->
+    <div class="visor" id="visor" onclick="if (event.target === this || event.target.classList.contains('visor-media')) cerrarVisor()">
+        <button type="button" class="visor-cerrar" onclick="cerrarVisor()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="visor-flecha visor-flecha--izq" onclick="moverVisor(-1)" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="visor-media"></div>
+        <button type="button" class="visor-flecha visor-flecha--der" onclick="moverVisor(1)" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+        <span class="visor-cont"></span>
+    </div>
+
+    <style>
+        #gallery-main { position: relative; }
+        #gallery-main img.property-hero-img { cursor: zoom-in; }
+        .visor-lupa { position: absolute; right: 0.9rem; bottom: 1.6rem; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(10,15,30,0.8); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 0.45rem 0.8rem; border-radius: 30px; cursor: pointer; backdrop-filter: blur(4px); }
+        .visor-lupa:hover { background: rgba(10,15,30,0.95); color: var(--green); }
+        .visor { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(5,8,16,0.96); }
+        .visor.abierto { display: flex; }
+        .visor-media { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 3.5rem 4.5rem; box-sizing: border-box; }
+        .visor-media img, .visor-media video { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        .visor-cerrar, .visor-flecha { position: absolute; border: none; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); color: #fff; font-size: 1.2rem; cursor: pointer; transition: background .15s; }
+        .visor-cerrar:hover, .visor-flecha:hover { background: rgba(62,240,122,0.25); }
+        .visor-cerrar { top: 1rem; right: 1rem; }
+        .visor-flecha--izq { left: 1rem; top: 50%; transform: translateY(-50%); }
+        .visor-flecha--der { right: 1rem; top: 50%; transform: translateY(-50%); }
+        .visor-flecha[hidden] { display: none; }
+        .visor-cont { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); color: var(--stone); font-size: 0.85rem; font-weight: 700; }
+        @media (max-width: 600px) {
+            .visor-media { padding: 3.5rem 0.5rem; }
+            .visor-flecha { top: auto; bottom: 0.6rem; transform: none; width: 42px; height: 42px; }
+            .visor-lupa { bottom: 1.3rem; font-size: 0.72rem; }
+        }
+    </style>
+
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/backend.js"></script>
@@ -70,14 +102,68 @@
         // Galería de fotos y videos. Si la propiedad no tiene archivos subidos
         // (o es una publicación vieja), se muestra solo la imagen principal.
         let galeriaItems = [];
+        let fotoActual = 0;
+
+        // ---------------- Visor: ver la foto completa ----------------
+        // Al tocar la foto principal se abre en pantalla completa, sin recortar.
+        // Se pasa con las flechas, deslizando en el celu o con el teclado.
+        let visorIdx = 0;
+
+        function abrirVisor(i) {
+            visorIdx = i;
+            pintarVisor();
+            document.getElementById('visor').classList.add('abierto');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarVisor() {
+            const v = document.getElementById('visor');
+            v.classList.remove('abierto');
+            v.querySelector('.visor-media').innerHTML = '';   // corta el video si había uno
+            document.body.style.overflow = '';
+        }
+
+        function moverVisor(paso) {
+            visorIdx = (visorIdx + paso + galeriaItems.length) % galeriaItems.length;
+            pintarVisor();
+        }
+
+        function pintarVisor() {
+            const it = galeriaItems[visorIdx];
+            const v = document.getElementById('visor');
+            v.querySelector('.visor-media').innerHTML = it.type === 'video'
+                ? `<video src="${it.url}" controls autoplay playsinline></video>`
+                : `<img src="${it.url}" alt="">`;
+            const varias = galeriaItems.length > 1;
+            v.querySelector('.visor-cont').textContent = varias ? `${visorIdx + 1} / ${galeriaItems.length}` : '';
+            v.querySelectorAll('.visor-flecha').forEach(b => b.hidden = !varias);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (!document.getElementById('visor').classList.contains('abierto')) return;
+            if (e.key === 'Escape') cerrarVisor();
+            if (e.key === 'ArrowRight') moverVisor(1);
+            if (e.key === 'ArrowLeft') moverVisor(-1);
+        });
+
+        // Deslizar con el dedo en el celu
+        let toqueX = null;
+        document.addEventListener('touchstart', e => { if (e.target.closest('#visor')) toqueX = e.touches[0].clientX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            if (toqueX === null) return;
+            const dx = e.changedTouches[0].clientX - toqueX;
+            toqueX = null;
+            if (Math.abs(dx) > 50 && galeriaItems.length > 1) moverVisor(dx < 0 ? 1 : -1);
+        });
 
         function pintarGaleriaPrincipal(i) {
             const it = galeriaItems[i];
             const main = document.getElementById('gallery-main');
             if (!it || !main) return;
+            fotoActual = i;
             main.innerHTML = it.type === 'video'
                 ? `<video src="${it.url}" controls playsinline class="property-hero-img" style="object-fit:contain;"></video>`
-                : `<img src="${it.url}" alt="" class="property-hero-img">`;
+                : `<img src="${it.url}" alt="" class="property-hero-img" onclick="abrirVisor(${i})"><span class="visor-lupa" onclick="abrirVisor(${i})"><i class="fa-solid fa-expand"></i> Ver completa</span>`;
             document.querySelectorAll('.property-media-thumb').forEach((t, k) => t.classList.toggle('active', k === i));
         }
 
@@ -87,7 +173,7 @@
             const primero = galeriaItems[0];
             const principal = primero.type === 'video'
                 ? `<video src="${primero.url}" controls playsinline class="property-hero-img" style="object-fit:contain;"></video>`
-                : `<img src="${primero.url}" alt="${property.title}" class="property-hero-img">`;
+                : `<img src="${primero.url}" alt="${property.title}" class="property-hero-img" onclick="abrirVisor(0)"><span class="visor-lupa" onclick="abrirVisor(0)"><i class="fa-solid fa-expand"></i> Ver completa</span>`;
             const thumbs = galeriaItems.length > 1 ? `
                 <div class="property-media-thumbs">
                     ${galeriaItems.map((m, i) => `
